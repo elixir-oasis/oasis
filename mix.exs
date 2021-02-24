@@ -1,6 +1,8 @@
 defmodule Oasis.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/elixir-oasis/oasis"
+
   def project do
     [
       app: :oasis,
@@ -8,6 +10,8 @@ defmodule Oasis.MixProject do
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      description: description(),
+      package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
       test_coverage: [tool: ExCoveralls],
       preferred_cli_env: [
@@ -26,6 +30,10 @@ defmodule Oasis.MixProject do
     ]
   end
 
+  defp description do
+    "Oasis (WIP)"
+  end
+
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
@@ -36,7 +44,18 @@ defmodule Oasis.MixProject do
       {:ex_json_schema, "~> 0.7"},
       {:plug_cowboy, "~> 2.0", only: [:dev, :test]},
       {:finch, "~> 0.6", only: [:dev, :test]},
-      {:excoveralls, "~> 0.10", only: :test}
+      {:excoveralls, "~> 0.10", only: :test},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+    ]
+  end
+
+  defp package do
+    [
+      files: ["lib", "mix.exs", "README.md", "LICENSE.md"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => @source_url
+      }
     ]
   end
 
