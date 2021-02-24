@@ -1,0 +1,9 @@
+{
+  "skip_files": [
+    "lib/oasis.ex",
+    "lib/mix/tasks/plug.gen.oas.ex"
+  ],
+  "coverage_options": {
+    "treat_no_relevant_lines_as_covered": true
+  }
+}
