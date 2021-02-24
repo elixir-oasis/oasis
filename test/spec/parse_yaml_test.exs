@@ -1,4 +1,4 @@
-defmodule Oasis.Test.Spec.ParseTest do
+defmodule Oasis.Spec.ParseYarmlTest do
   use ExUnit.Case
 
   @yaml_dir Path.expand("./yaml", __DIR__)

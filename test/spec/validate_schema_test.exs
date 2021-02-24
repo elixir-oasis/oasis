@@ -1,4 +1,4 @@
-defmodule Oasis.Test.Spec.ValidateSchemaTest do
+defmodule Oasis.Spec.ValidateSchemaTest do
   use ExUnit.Case
 
   import Oasis.Test.Support.Spec

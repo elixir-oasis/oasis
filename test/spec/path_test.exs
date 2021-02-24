@@ -1,4 +1,4 @@
-defmodule Oasis.Test.Spec.PathTest do
+defmodule Oasis.Spec.PathTest do
   use ExUnit.Case
 
   alias Oasis.Spec.Path

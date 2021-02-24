@@ -1,4 +1,4 @@
-defmodule Oasis.Test.Validator do
+defmodule Oasis.ValidatorTest do
   use ExUnit.Case
 
   alias Oasis.Validator

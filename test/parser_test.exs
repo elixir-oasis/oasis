@@ -1,4 +1,4 @@
-defmodule Oasis.Test.Parser do
+defmodule Oasis.ParserTest do
   use ExUnit.Case
 
   import Oasis.Parser

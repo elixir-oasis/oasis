@@ -1,4 +1,4 @@
-defmodule Oasis.Test.Spec.UtilsTest do
+defmodule Oasis.Spec.UtilsTest do
   use ExUnit.Case
 
   test "expand $ref" do
