@@ -762,7 +762,7 @@ defmodule Oasis.ValidatorTest do
     name = "test_param"
     input = "input_str"
 
-    assert_raise CaseClauseError, ~r/no case clause matching: "UNKNOWN_JSON_SCHEMA"/, fn ->
+    assert_raise FunctionClauseError, ~r/no function clause matching/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
   end
