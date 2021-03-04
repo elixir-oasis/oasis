@@ -5,7 +5,8 @@ defmodule Oasis.Gen.Plug.PreTestPostUrlencoded do
   plug(Plug.Parsers,
     parsers: [:urlencoded],
     pass: ["*/*"],
-    body_reader: {Oasis.CacheRawBodyReader, :read_body, []} # may support an option to off/on this.
+    # may support an option to off/on this.
+    body_reader: {Oasis.CacheRawBodyReader, :read_body, []}
   )
 
   plug(Oasis.Plug.RequestValidator,

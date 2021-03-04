@@ -11,5 +11,4 @@ defmodule Oasis.Gen.Plug.TestPostNonValidate do
     resp_body = Jason.encode!(%{"body_params" => conn.body_params})
     send_resp(conn, 200, resp_body)
   end
-
 end

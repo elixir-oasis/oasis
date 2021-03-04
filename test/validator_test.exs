@@ -790,10 +790,13 @@ defmodule Oasis.ValidatorTest do
     }
 
     input = %{"key" => "value"}
-    assert_raise Plug.BadRequestError, ~r/Required properties name, fav_number were not present. for the body request/, fn ->
-      Validator.parse_and_validate!(param, "body", "body_request", input)
-    end
-    
+
+    assert_raise Plug.BadRequestError,
+                 ~r/Required properties name, fav_number were not present. for the body request/,
+                 fn ->
+                   Validator.parse_and_validate!(param, "body", "body_request", input)
+                 end
+
     input = %{"fav_number" => 1, "name" => "test_name"}
     result = Validator.parse_and_validate!(param, "body", "body_request", input)
     assert result == %{"fav_number" => 1, "name" => "test_name"}

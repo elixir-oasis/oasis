@@ -119,6 +119,7 @@ defmodule Oasis.ParserTest do
       "minItems" => 2,
       "maxItems" => 3
     }
+
     assert parse(type, ["1", "2", "3"]) == ["1", "2", "3"]
     assert parse(type, ["1"]) == ["1"]
     assert parse(type, ["1", "2", "3", "4", "5"]) == ["1", "2", "3", "4", "5"]
@@ -127,6 +128,7 @@ defmodule Oasis.ParserTest do
       "type" => "array",
       "uniqueItems" => true
     }
+
     assert parse(type, ["a", "a", "b"]) == ["a", "a", "b"]
     assert parse(type, ["1"]) == ["1"]
   end
@@ -166,10 +168,22 @@ defmodule Oasis.ParserTest do
 
     # ignore `add` field sinece `additionalProperties: false`
     input = %{"number" => "1600", "street_name" => "hello", "flag" => "true", "add" => "added1"}
-    assert parse(type, input) == %{"number" => 1600, "street_name" => "hello", "flag" => true, "add" => "added1"}
+
+    assert parse(type, input) == %{
+             "number" => 1600,
+             "street_name" => "hello",
+             "flag" => true,
+             "add" => "added1"
+           }
 
     input = %{"number" => "1600", "street_name" => "hello", "flag" => "true", "add" => 1}
-    assert parse(type, input) == %{"number" => 1600, "street_name" => "hello", "flag" => true, "add" => 1}
+
+    assert parse(type, input) == %{
+             "number" => 1600,
+             "street_name" => "hello",
+             "flag" => true,
+             "add" => 1
+           }
 
     type = %{
       "type" => "object",
@@ -183,8 +197,21 @@ defmodule Oasis.ParserTest do
     }
 
     # process additional properties
-    input = %{"number" => "1600", "street_name" => "hello", "flag" => "true", "add" => "100", "add2" => "-1"}
-    assert parse(type, input) == %{"number" => 1600, "street_name" => "hello", "flag" => true, "add" => 100, "add2" => -1}
+    input = %{
+      "number" => "1600",
+      "street_name" => "hello",
+      "flag" => "true",
+      "add" => "100",
+      "add2" => "-1"
+    }
+
+    assert parse(type, input) == %{
+             "number" => 1600,
+             "street_name" => "hello",
+             "flag" => true,
+             "add" => 100,
+             "add2" => -1
+           }
 
     input = %{"number" => "1600", "street_name" => "hello", "flag" => "true"}
     assert parse(type, input) == %{"number" => 1600, "street_name" => "hello", "flag" => true}
@@ -203,6 +230,7 @@ defmodule Oasis.ParserTest do
       "minProperties" => 2,
       "maxProperties" => 3
     }
+
     input = %{"tmp" => "1"}
     assert parse(type, input) == input
   end
@@ -226,10 +254,24 @@ defmodule Oasis.ParserTest do
     assert parse(type, input) == %{"name" => "testname", "credit_card" => 123}
 
     input = %{"name" => "testname", "credit_card" => "123", "unknown" => "unknown"}
-    assert parse(type, input) == %{"name" => "testname", "credit_card" => 123, "unknown" => "unknown"}
 
-    input = %{"name" => "testname", "credit_card" => "123", "billing_address" => "billing_address 123"}
-    assert parse(type, input) == %{"name" => "testname", "credit_card" => 123, "billing_address" => "billing_address 123"}
+    assert parse(type, input) == %{
+             "name" => "testname",
+             "credit_card" => 123,
+             "unknown" => "unknown"
+           }
+
+    input = %{
+      "name" => "testname",
+      "credit_card" => "123",
+      "billing_address" => "billing_address 123"
+    }
+
+    assert parse(type, input) == %{
+             "name" => "testname",
+             "credit_card" => 123,
+             "billing_address" => "billing_address 123"
+           }
 
     # schema dependencies
     type = %{
@@ -248,8 +290,20 @@ defmodule Oasis.ParserTest do
         }
       }
     }
-    input = %{"name" => "testname", "credit_card" => "123", "billing_address" => "billing_address 123", "added_number" => "0504"}
-    assert parse(type, input) == %{"name" => "testname", "credit_card" => 123, "billing_address" => "billing_address 123", "added_number" => 504}
+
+    input = %{
+      "name" => "testname",
+      "credit_card" => "123",
+      "billing_address" => "billing_address 123",
+      "added_number" => "0504"
+    }
+
+    assert parse(type, input) == %{
+             "name" => "testname",
+             "credit_card" => 123,
+             "billing_address" => "billing_address 123",
+             "added_number" => 504
+           }
   end
 
   test "parse object with array" do
@@ -304,19 +358,20 @@ defmodule Oasis.ParserTest do
         }
       ]
     }
+
     assert parse(type, input) == %{
-      "name" => "Test",
-      "credit_card" => 456,
-      "options" => [
-        "abc",
-        89.98,
-        %{
-          "field1" => 90.0,
-          "field2" => false,
-          "field3" => "inner_test"
-        }
-      ]
-    }
+             "name" => "Test",
+             "credit_card" => 456,
+             "options" => [
+               "abc",
+               89.98,
+               %{
+                 "field1" => 90.0,
+                 "field2" => false,
+                 "field3" => "inner_test"
+               }
+             ]
+           }
   end
 
   test "parse array with object" do
@@ -345,6 +400,7 @@ defmodule Oasis.ParserTest do
       ["1", "89.1", "0.01"],
       "10"
     ]
+
     assert parse(type, input) == [1, ["a", "b"], [1.0, 89.1, 0.01], 10.0]
 
     input = [
@@ -356,7 +412,6 @@ defmodule Oasis.ParserTest do
     assert_raise ArgumentError, ~r/argument error/, fn ->
       parse(type, input) == [1, ["a", "b"], [1.0, 89.1, 0.01]]
     end
-
   end
 
   test "parse object with pattern properties" do
@@ -376,6 +431,7 @@ defmodule Oasis.ParserTest do
     assert parse(type, input) == %{"builtin" => 123.0}
 
     input = %{"builtin" => "123abc"}
+
     assert_raise ArgumentError, ~r/argument error/, fn ->
       parse(type, input)
     end
@@ -393,6 +449,7 @@ defmodule Oasis.ParserTest do
     assert parse(type, input) == %{"builtin" => 0.0, "Iunknown" => "abc"}
 
     input = %{"builtin" => "1", "I_2" => "abc"}
+
     assert_raise ArgumentError, ~r/argument error/, fn ->
       parse(type, input)
     end

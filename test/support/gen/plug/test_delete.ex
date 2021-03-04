@@ -10,13 +10,11 @@ defmodule Oasis.Gen.Plug.TestDelete do
     |> put_resp_content_type("application/json")
     |> send_resp(
       200,
-      Jason.encode!(
-        %{
-          "conn_params" => conn.params,
-          "query_params" => conn.query_params,
-          "body_params" => conn.body_params
-        }
-      )
+      Jason.encode!(%{
+        "conn_params" => conn.params,
+        "query_params" => conn.query_params,
+        "body_params" => conn.body_params
+      })
     )
   end
 

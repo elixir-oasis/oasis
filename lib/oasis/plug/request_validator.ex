@@ -60,13 +60,18 @@ defmodule Oasis.Plug.RequestValidator do
     conn
   end
 
-  defp process_body(%{body_params: body_params, req_headers: req_headers, params: params} = conn, body_schema) when is_map(body_schema) do
-    matched_schema = 
+  defp process_body(
+         %{body_params: body_params, req_headers: req_headers, params: params} = conn,
+         body_schema
+       )
+       when is_map(body_schema) do
+    matched_schema =
       req_headers
       |> List.keyfind("content-type", 0)
       |> schema_may_match_by_request(body_schema)
-    
-    body_params = Oasis.Validator.parse_and_validate!(matched_schema, "body", "body_request", body_params)
+
+    body_params =
+      Oasis.Validator.parse_and_validate!(matched_schema, "body", "body_request", body_params)
 
     params = params |> Map.merge(body_params)
 
@@ -95,23 +100,26 @@ defmodule Oasis.Plug.RequestValidator do
   defp schema_may_match_by_request({"content-type", "multipart/mixed" <> _}, definition) do
     schema_by_request_content_type("multipart/mixed", definition)
   end
+
   defp schema_may_match_by_request({"content-type", "multipart/form-data" <> _}, definition) do
     schema_by_request_content_type("multipart/form-data", definition)
   end
+
   defp schema_may_match_by_request({"content-type", content_type}, definition) do
     schema_by_request_content_type(content_type, definition)
   end
 
   defp schema_by_request_content_type(content_type, %{"content" => content} = definition) do
     matched = Map.take(content, [content_type])
+
     if matched != %{} do
       %{definition | "content" => matched}
     else
       nil
     end
   end
+
   defp schema_by_request_content_type(_content_type, _definition) do
     nil
   end
-
 end

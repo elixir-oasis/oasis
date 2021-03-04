@@ -23,7 +23,7 @@ defmodule Oasis.Gen.Plug.PreTestDelete do
           schema: %{"type" => "integer"}
         },
         "required" => true
-      },
+      }
     }
   )
 

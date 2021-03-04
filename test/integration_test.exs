@@ -20,7 +20,10 @@ defmodule Oasis.IntegrationTest do
 
     headers = [{"content-type", "application/x-www-form-urlencoded"}]
     body = "v1=k1&v2=k2"
-    assert {:ok, response} = Finch.build(:post, "#{url}/test_post_non_validate", headers, body) |> Finch.request(TestFinch)
+
+    assert {:ok, response} =
+             Finch.build(:post, "#{url}/test_post_non_validate", headers, body)
+             |> Finch.request(TestFinch)
 
     body = Jason.decode!(response.body)
     assert %{"v1" => "k1", "v2" => "k2"} == body["body_params"]
@@ -107,7 +110,6 @@ defmodule Oasis.IntegrationTest do
     assert response.status == 400 and
              response.body ==
                "Fail to transfer the value \"invalid_id\" of the path parameter \"id\" by schema: %{\"type\" => \"integer\"}"
-
   end
 
   test "missing required query parameter", %{url: url} do
@@ -324,8 +326,10 @@ defmodule Oasis.IntegrationTest do
 
     headers = [{"content-type", "application/x-www-form-urlencoded"}]
     body = "name=v1&fav_number=1"
+
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_urlencoded?q1=123", headers, body) |> Finch.request(TestFinch)
+             Finch.build(:post, "#{url}/test_post_urlencoded?q1=123", headers, body)
+             |> Finch.request(TestFinch)
 
     body = Jason.decode!(response.body)
 
@@ -339,8 +343,15 @@ defmodule Oasis.IntegrationTest do
     # in this case, will keep parameters of request body in the `conn.params`,
     # follow the process priority of `Plug`.
     body = "name=v1&fav_number=1"
+
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_urlencoded?name=fromquery&fav_number=abc", headers, body) |> Finch.request(TestFinch)
+             Finch.build(
+               :post,
+               "#{url}/test_post_urlencoded?name=fromquery&fav_number=abc",
+               headers,
+               body
+             )
+             |> Finch.request(TestFinch)
 
     body = Jason.decode!(response.body)
     body_params = body["body_params"]
@@ -351,16 +362,20 @@ defmodule Oasis.IntegrationTest do
     assert body_params == params
 
     body = "name=v1&fav_number=abc"
+
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_urlencoded", headers, body) |> Finch.request(TestFinch)
+             Finch.build(:post, "#{url}/test_post_urlencoded", headers, body)
+             |> Finch.request(TestFinch)
 
     assert response.status == 400 and
              response.body ==
                "Fail to transfer the value %{\"fav_number\" => \"abc\", \"name\" => \"v1\"} of the body request by schema: %{\"properties\" => %{\"fav_number\" => %{\"maximum\" => 3, \"minimum\" => 1, \"type\" => \"integer\"}, \"name\" => %{\"type\" => \"string\"}}, \"required\" => [\"name\", \"fav_number\"], \"type\" => \"object\"}"
 
     body = "name=v1&fav_number=0"
+
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_urlencoded", headers, body) |> Finch.request(TestFinch)
+             Finch.build(:post, "#{url}/test_post_urlencoded", headers, body)
+             |> Finch.request(TestFinch)
 
     assert response.status == 400 and
              response.body ==
@@ -385,7 +400,8 @@ defmodule Oasis.IntegrationTest do
     """
 
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart) |> Finch.request(TestFinch)
+             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart)
+             |> Finch.request(TestFinch)
 
     body = Jason.decode!(response.body)
     body_params = body["body_params"]
@@ -405,11 +421,12 @@ defmodule Oasis.IntegrationTest do
     """
 
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart) |> Finch.request(TestFinch)
+             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart)
+             |> Finch.request(TestFinch)
 
     assert response.status == 400 and
-      response.body ==
-        "Expected the value to be <= 10 for the body request in \"#/id\", but got %{\"id\" => 20, \"username\" => \"hello\"}"
+             response.body ==
+               "Expected the value to be <= 10 for the body request in \"#/id\", but got %{\"id\" => 20, \"username\" => \"hello\"}"
   end
 
   test "post multipart/mixed", %{url: url} do
@@ -431,12 +448,20 @@ defmodule Oasis.IntegrationTest do
     """
 
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart) |> Finch.request(TestFinch)
+             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart)
+             |> Finch.request(TestFinch)
 
     body = Jason.decode!(response.body)
     body_params = body["body_params"]
 
-    assert %{"id" => "testid", "addresses" => [%{"number" => 1, "name" => "testname1"}, %{"number" => 2, "name" => "testname2"}]} == body_params
+    assert %{
+             "id" => "testid",
+             "addresses" => [
+               %{"number" => 1, "name" => "testname1"},
+               %{"number" => 2, "name" => "testname2"}
+             ]
+           } == body_params
+
     assert body_params == body["params"]
 
     # missing required `addresses`
@@ -453,11 +478,12 @@ defmodule Oasis.IntegrationTest do
     """
 
     assert {:ok, response} =
-             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart) |> Finch.request(TestFinch)
+             Finch.build(:post, "#{url}/test_post_multipart", headers, multipart)
+             |> Finch.request(TestFinch)
 
     assert response.status == 400 and
-      response.body ==
-        "Required property addresses was not present. for the body request, but got %{\"id\" => \"testid\"}"
+             response.body ==
+               "Required property addresses was not present. for the body request, but got %{\"id\" => \"testid\"}"
   end
 
   test "delete request with body schema validation", %{url: url} do
@@ -472,15 +498,19 @@ defmodule Oasis.IntegrationTest do
     assert response.body == "Required the query parameter \"id\" is missing"
 
     query_string = URI.encode_query(id: 1, relation_ids: Jason.encode!([1, 2, 3]))
+
     assert {:ok, response} =
-             Finch.build(:delete, "#{url}/test_delete?" <> query_string, headers, body) |> Finch.request(TestFinch)
+             Finch.build(:delete, "#{url}/test_delete?" <> query_string, headers, body)
+             |> Finch.request(TestFinch)
 
     assert response.body ==
-      "Type mismatch. Expected String but got Integer. for the query parameter \"relation_ids\" in \"#/0\", but got [1, 2, 3]"
+             "Type mismatch. Expected String but got Integer. for the query parameter \"relation_ids\" in \"#/0\", but got [1, 2, 3]"
 
     query_string = URI.encode_query(id: 1, relation_ids: Jason.encode!(["1", "2", "3"]))
+
     assert {:ok, response} =
-             Finch.build(:delete, "#{url}/test_delete?" <> query_string, headers, body) |> Finch.request(TestFinch)
+             Finch.build(:delete, "#{url}/test_delete?" <> query_string, headers, body)
+             |> Finch.request(TestFinch)
 
     assert response.status == 200
 
@@ -494,5 +524,4 @@ defmodule Oasis.IntegrationTest do
     # parse query parameters
     assert %{"id" => 1, "relation_ids" => ["1", "2", "3"]} == body["query_params"]
   end
-
 end

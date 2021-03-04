@@ -156,8 +156,7 @@ defmodule Oasis.Validator do
 
   defp raise_fail_to_schema_validate("body", _, value, message, "#") do
     raise Plug.BadRequestError,
-      message:
-        "#{message} for the body request, but got #{inspect(value)}"
+      message: "#{message} for the body request, but got #{inspect(value)}"
   end
 
   defp raise_fail_to_schema_validate(use_in, name, value, message, "#") do
@@ -168,10 +167,7 @@ defmodule Oasis.Validator do
 
   defp raise_fail_to_schema_validate("body", _, value, message, path) do
     raise Plug.BadRequestError,
-      message:
-        "#{message} for the body request in #{inspect(path)}, but got #{
-          inspect(value)
-        }"
+      message: "#{message} for the body request in #{inspect(path)}, but got #{inspect(value)}"
   end
 
   defp raise_fail_to_schema_validate(use_in, name, value, message, path) do
@@ -181,5 +177,4 @@ defmodule Oasis.Validator do
           inspect(value)
         }"
   end
-
 end
