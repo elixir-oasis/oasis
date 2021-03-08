@@ -40,7 +40,7 @@ defmodule Oasis.Spec.Path do
       Enum.reduce(paths, %{}, fn path, acc ->
         {path_expr, _info} = path
         path = map_path(path)
-        Map.put(acc, path_expr, path)
+        Map.put(acc, format_url(path_expr), path)
       end)
 
     schema = Map.put(schema, "paths", paths)

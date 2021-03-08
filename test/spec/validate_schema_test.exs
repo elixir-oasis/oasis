@@ -222,7 +222,7 @@ defmodule Oasis.Spec.ValidateSchemaTest do
       |> yaml_to_json_schema()
       |> Oasis.Spec.Path.build()
 
-    query = root.schema["paths"]["/content/{id}"]["get"]["parameters"]["query"]
+    query = root.schema["paths"]["/content/:id"]["get"]["parameters"]["query"]
 
     assert length(query) == 1
     assert Enum.at(query, 0)["name"] == "tag"
