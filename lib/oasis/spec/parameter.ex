@@ -6,10 +6,6 @@ defmodule Oasis.Spec.Parameter do
   @locations ["query", "head", "path", "cookie"]
 
   def build(path_expr, parameter) do
-    check_field(path_expr, parameter)
-  end
-
-  defp check_field(path_expr, parameter) do
     parameter
     |> check_schema_or_content(parameter["schema"], parameter["content"])
     |> check_name(path_expr)

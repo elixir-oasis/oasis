@@ -33,6 +33,8 @@ defmodule Oasis.Spec.Path do
     end)
   end
 
+  def supported_http_verbs(), do: @supported_http_verbs
+
   def build(%{schema: schema} = root) do
     paths = schema["paths"] || %{}
 

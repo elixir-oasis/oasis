@@ -87,5 +87,4 @@ defmodule Oasis.HTTPServer.PlugRouter do
     message = Map.get(reason, :message, "Something went wrong")
     send_resp(conn, conn.status, message)
   end
-
 end
