@@ -105,7 +105,7 @@ defmodule Mix.Oasis.Router do
   end
 
   defp step1_merge_parameters(%{"parameters" => parameters} = operation) do
-    prepared_parameter_schemas =
+    parameter_schemas =
       @check_parameter_fields
       |> Enum.reduce(%{}, fn location, acc ->
         parameters_to_location = Map.get(parameters, location)
@@ -115,7 +115,7 @@ defmodule Mix.Oasis.Router do
         to_schema_opt(params_to_schema, location, acc)
       end)
 
-    {prepared_parameter_schemas, operation}
+    {parameter_schemas, operation}
   end
 
   defp step1_merge_parameters(operation), do: {%{}, operation}
@@ -135,13 +135,13 @@ defmodule Mix.Oasis.Router do
         end
       end)
 
-    prepared = %{
+    body_schema = %{
       "content" => content,
       "required" => Map.get(request_body, "required")
     }
 
     {
-      Map.put(acc, :body_schema, prepared),
+      Map.put(acc, :body_schema, body_schema),
       operation
     }
   end
@@ -151,28 +151,22 @@ defmodule Mix.Oasis.Router do
   defp group_schemas_by_location(location, parameters)
        when location in @check_parameter_fields and is_list(parameters) do
     Enum.reduce(parameters, %{}, fn param, acc ->
-      param = map_parameter(param)
-
-      if param == nil do
-        acc
-      else
-        Map.merge(acc, param)
-      end
+      map_parameter(param, acc)
     end)
   end
 
-  defp group_schemas_by_location(_location, _), do: nil
+  defp group_schemas_by_location(_location, _parameters), do: nil
 
-  defp map_parameter(%{"name" => name, "schema" => schema} = parameter) do
+  defp map_parameter(%{"name" => name, "schema" => schema} = parameter, acc) do
     prepared = %{
       "schema" => %ExJsonSchema.Schema.Root{schema: schema},
       "required" => Map.get(parameter, "required")
     }
 
-    %{name => prepared}
+    Map.merge(acc, %{name => prepared})
   end
 
-  defp map_parameter(_), do: nil
+  defp map_parameter(_, acc), do: acc
 
   defp to_schema_opt(_, nil, acc), do: acc
 
