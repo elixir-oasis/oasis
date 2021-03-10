@@ -37,7 +37,7 @@ defmodule Oasis.Gen.Plug.PreTestQuery do
   )
 
   def call(conn, opts) do
-    conn |> super(opts) |> Oasis.Gen.Plug.TestQuery.call(opts)
+    conn |> super(opts) |> Oasis.Gen.Plug.TestQuery.call(opts) |> halt()
   end
 
   def handle_errors(conn, error) do

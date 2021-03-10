@@ -17,7 +17,7 @@ defmodule Oasis.Gen.Plug.PreTestHeader do
   )
 
   def call(conn, opts) do
-    conn |> super(opts) |> Oasis.Gen.Plug.TestHeader.call(opts)
+    conn |> super(opts) |> Oasis.Gen.Plug.TestHeader.call(opts) |> halt()
   end
 
   def handle_errors(conn, error) do

@@ -30,7 +30,7 @@ defmodule Oasis.Gen.Plug.PreTestPostUrlencoded do
   )
 
   def call(conn, opts) do
-    conn |> super(opts) |> Oasis.Gen.Plug.TestPost.call(opts)
+    conn |> super(opts) |> Oasis.Gen.Plug.TestPost.call(opts) |> halt()
   end
 
   def handle_errors(conn, error) do

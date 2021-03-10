@@ -14,7 +14,7 @@ defmodule Oasis.Gen.Plug.PreTestCookie do
   )
 
   def call(conn, opts) do
-    conn |> super(opts) |> Oasis.Gen.Plug.TestCookie.call(opts)
+    conn |> super(opts) |> Oasis.Gen.Plug.TestCookie.call(opts) |> halt()
   end
 
   def handle_errors(conn, error) do
