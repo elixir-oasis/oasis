@@ -33,6 +33,12 @@ defmodule Mix.OasisTest do
     assert module_name == "MyAppModuleName" and
              file_name == "my_app_module_name.ex"
 
+    name = "My...App.ModuleName"
+    {module_name, file_name} = Mix.Oasis.module_name(name)
+
+    assert module_name == "MyAppModuleName" and
+             file_name == "my_app_module_name.ex"
+
     name = "my/app"
     {module_name, file_name} = Mix.Oasis.module_name(name)
 
@@ -62,6 +68,7 @@ defmodule Mix.OasisTest do
 
     # `operation_id` in high priority compares to `http_verb` with `url` if
     # both exists
+
     router = %{operation_id: "SayHi", http_verb: :post, url: "/hi"}
     {module_name, file_name} = Mix.Oasis.module_name(router)
 
@@ -184,6 +191,29 @@ defmodule Mix.OasisTest do
         assert file_path4 == "lib/oasis/gen/get_my_post.ex" and router.http_verb == "get" and
           router.operation_id == nil
     end)
+  end
+
+  test "Mix.Oasis.new/2 invalid spec" do
+    spec = %{
+      "components" => %{
+        "schemas" => %{
+           "User" => %{
+             "properties" => %{
+               "id" => %{"format" => "int64", "type" => "integer"},
+               "name" => %{"type" => "string"}
+             },
+             "required" => ["id", "name"],
+             "type" => "object"
+            }
+          }
+        },
+      "info" => %{"title" => "Test API", "version" => "1.0.0"},
+      "openapi" => "3.1.0"
+    }
+
+    assert_raise RuntimeError, ~r/could not find any paths defined/, fn ->
+      Mix.Oasis.new(spec, [])
+    end
   end
 
   test "Mix.Oasis.new/2 multi urls" do
@@ -319,4 +349,74 @@ defmodule Mix.OasisTest do
         assert router.plug_module == Oasis.Gen.DeletePet
     end)
   end
+
+  test "Mix.Oasis.new/2 optional options" do
+    paths_spec = %{
+      "paths" => %{
+        "/say_hello" => %{
+          "get" => %{
+            "parameters" => %{
+              "query" => [
+                %{
+                  "name" => "username",
+                  "required" => true,
+                  "schema" => %{"type" => "string"}
+                }
+              ]
+            },
+            "operationId" => "hello",
+            "name_space" => "Wont.Use"
+          }
+        }
+      }
+    }
+
+    [router | plugs] = Mix.Oasis.new(paths_spec, [name_space: "Try.MyOpenAPI"])
+
+    {_, router_file_path, _, router_module_name, binding} = router
+
+    assert router_file_path == "lib/try/my_open_api/router.ex"
+    assert router_module_name == Try.MyOpenAPI.Router
+    assert length(binding.routers) == 1
+
+    [pre_plug_file, plug_file] = plugs
+
+    {_, path, template, module, binding} = pre_plug_file
+    assert path == "lib/try/my_open_api/pre_hello.ex"
+    assert template == "pre_plug.ex"
+    assert module == Try.MyOpenAPI.PreHello
+    assert binding.pre_plug_module == Try.MyOpenAPI.PreHello
+    assert binding.plug_module == Try.MyOpenAPI.Hello
+
+    {_, path, template, module, binding} = plug_file
+    assert path == "lib/try/my_open_api/hello.ex"
+    assert template == "plug.ex"
+    assert module == Try.MyOpenAPI.Hello
+    assert binding.pre_plug_module == Try.MyOpenAPI.PreHello
+    assert binding.plug_module == Try.MyOpenAPI.Hello
+
+    [router | plugs] = Mix.Oasis.new(paths_spec, [name_space: "Try.Test.OpenAPI2", router: "SuperRouter"])
+
+    {_, router_file_path, _, router_module_name, binding} = router
+    assert router_file_path == "lib/try/test/open_api2/super_router.ex"
+    assert router_module_name == Try.Test.OpenAPI2.SuperRouter
+    assert length(binding.routers) == 1
+
+    [pre_plug_file, plug_file] = plugs
+
+    {_, path, template, module, binding} = pre_plug_file
+    assert path == "lib/try/test/open_api2/pre_hello.ex"
+    assert template == "pre_plug.ex"
+    assert module == Try.Test.OpenAPI2.PreHello
+    assert binding.pre_plug_module == Try.Test.OpenAPI2.PreHello
+    assert binding.plug_module == Try.Test.OpenAPI2.Hello
+
+    {_, path, template, module, binding} = plug_file
+    assert path == "lib/try/test/open_api2/hello.ex"
+    assert template == "plug.ex"
+    assert module == Try.Test.OpenAPI2.Hello
+    assert binding.pre_plug_module == Try.Test.OpenAPI2.PreHello
+    assert binding.plug_module == Try.Test.OpenAPI2.Hello
+  end
+
 end

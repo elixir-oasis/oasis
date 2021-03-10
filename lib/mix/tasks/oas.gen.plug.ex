@@ -54,7 +54,7 @@ defmodule Mix.Tasks.Oas.Gen.Plug do
         mix oas.gen.plug --file path/to/file.yml --name-space Test --router Router
 
     By default the `--name-space` is "Oasis.Gen", and by default
-    the `--router` is "Router", both of them are optional.
+    the `--router` is "Router", these two options are optional.
     """)
   end
 end

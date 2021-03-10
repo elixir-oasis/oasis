@@ -41,7 +41,13 @@ defmodule Mix.Oasis do
   end
 
   def name_space(name_space) when is_bitstring(name_space) do
-    target_dir = Recase.to_path(name_space) |> String.downcase()
+    target_dir =
+      name_space
+      |> String.split(".")
+      |> Enum.filter(&(&1 != ""))
+      |> Enum.map(&(Recase.to_snake(&1)))
+      |> Enum.join("/")
+      |> String.downcase()
 
     {
       Path.join(["lib", target_dir]),
