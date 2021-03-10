@@ -140,17 +140,16 @@ defmodule Mix.OasisTest do
 
     [router_file | plug_files] = files
 
-    {:eex, file_path, _router_template_file_name, router_module_name, %{routers: binding_pre_routers}} = router_file
+    {:eex, file_path, _router_template_file_name, router_module_name,
+     %{routers: binding_pre_routers}} = router_file
 
     assert file_path == "lib/oasis/gen/router.ex" and router_module_name == Oasis.Gen.Router and
-
-    assert length(binding_pre_routers) == 2
+             assert(length(binding_pre_routers) == 2)
 
     Enum.map(plug_files, fn
       {_, file_path1, "pre_plug.ex", Oasis.Gen.PreAddPet, router} ->
-
         assert file_path1 == "lib/oasis/gen/pre_add_pet.ex" and router.http_verb == "post" and
-          router.operation_id == "addPet"
+                 router.operation_id == "addPet"
 
         body_schema = router.body_schema
 
@@ -165,19 +164,21 @@ defmodule Mix.OasisTest do
         schema = body_schema["content"]["application/x-www-form-urlencoded"]
         assert is_struct(schema, ExJsonSchema.Schema.Root)
 
-        assert ExJsonSchema.Validator.valid?(schema, %{"name" => "test-name", "fav_number" => 1}) == true
+        assert ExJsonSchema.Validator.valid?(schema, %{"name" => "test-name", "fav_number" => 1}) ==
+                 true
+
         assert ExJsonSchema.Validator.valid?(schema, %{"fav_number" => 1}) == false
-        assert ExJsonSchema.Validator.valid?(schema, %{"name" => "test-name", "fav_number" => 10}) == false
+
+        assert ExJsonSchema.Validator.valid?(schema, %{"name" => "test-name", "fav_number" => 10}) ==
+                 false
 
       {_, file_path2, "plug.ex", Oasis.Gen.AddPet, router} ->
-
         assert file_path2 == "lib/oasis/gen/add_pet.ex" and router.http_verb == "post" and
-          router.operation_id == "addPet"
+                 router.operation_id == "addPet"
 
       {_, file_path3, "pre_plug.ex", Oasis.Gen.PreGetMyPost, router} ->
-
         assert file_path3 == "lib/oasis/gen/pre_get_my_post.ex" and router.http_verb == "get" and
-          router.operation_id == nil
+                 router.operation_id == nil
 
         assert router.query_schema != nil and router.body_schema == nil
 
@@ -187,9 +188,8 @@ defmodule Mix.OasisTest do
         assert ExJsonSchema.Validator.valid?(schema, ["a", "b", "c"]) == true
 
       {_, file_path4, "plug.ex", Oasis.Gen.GetMyPost, router} ->
-
         assert file_path4 == "lib/oasis/gen/get_my_post.ex" and router.http_verb == "get" and
-          router.operation_id == nil
+                 router.operation_id == nil
     end)
   end
 
@@ -197,16 +197,16 @@ defmodule Mix.OasisTest do
     spec = %{
       "components" => %{
         "schemas" => %{
-           "User" => %{
-             "properties" => %{
-               "id" => %{"format" => "int64", "type" => "integer"},
-               "name" => %{"type" => "string"}
-             },
-             "required" => ["id", "name"],
-             "type" => "object"
-            }
+          "User" => %{
+            "properties" => %{
+              "id" => %{"format" => "int64", "type" => "integer"},
+              "name" => %{"type" => "string"}
+            },
+            "required" => ["id", "name"],
+            "type" => "object"
           }
-        },
+        }
+      },
       "info" => %{"title" => "Test API", "version" => "1.0.0"},
       "openapi" => "3.1.0"
     }
@@ -281,21 +281,22 @@ defmodule Mix.OasisTest do
       }
     }
 
-    files = Mix.Oasis.new(paths_spec, [router: "my_test_router"])
+    files = Mix.Oasis.new(paths_spec, router: "my_test_router")
 
     assert length(files) == 7
 
     [router_file | plug_files] = files
 
-    {:eex, file_path, _router_template_file_name, router_module_name, %{routers: binding_pre_routers}} = router_file
+    {:eex, file_path, _router_template_file_name, router_module_name,
+     %{routers: binding_pre_routers}} = router_file
 
     assert file_path == "lib/oasis/gen/my_test_router.ex" and
-      router_module_name == Oasis.Gen.MyTestRouter
+             router_module_name == Oasis.Gen.MyTestRouter
 
     assert length(binding_pre_routers) == 3
 
     # the defined router(s) in "router.ex" file are sorted by url in asc order
-    urls = Enum.map(binding_pre_routers, fn(router) -> router.url end) 
+    urls = Enum.map(binding_pre_routers, fn router -> router.url end)
 
     assert urls == ["/delete_pet", "/queryPet", "/queryPet"]
 
@@ -308,7 +309,9 @@ defmodule Mix.OasisTest do
         assert ExJsonSchema.Validator.valid?(schema, 1) == true
         assert ExJsonSchema.Validator.valid?(schema, "abc") == false
 
-        %{"token" => %{"schema" => token_schema}, "appid" => %{"schema" => appid_schema}} = router.header_schema
+        %{"token" => %{"schema" => token_schema}, "appid" => %{"schema" => appid_schema}} =
+          router.header_schema
+
         assert ExJsonSchema.Validator.valid?(token_schema, "1") == true
         assert ExJsonSchema.Validator.valid?(token_schema, 1) == false
 
@@ -371,7 +374,7 @@ defmodule Mix.OasisTest do
       }
     }
 
-    [router | plugs] = Mix.Oasis.new(paths_spec, [name_space: "Try.MyOpenAPI"])
+    [router | plugs] = Mix.Oasis.new(paths_spec, name_space: "Try.MyOpenAPI")
 
     {_, router_file_path, _, router_module_name, binding} = router
 
@@ -395,7 +398,8 @@ defmodule Mix.OasisTest do
     assert binding.pre_plug_module == Try.MyOpenAPI.PreHello
     assert binding.plug_module == Try.MyOpenAPI.Hello
 
-    [router | plugs] = Mix.Oasis.new(paths_spec, [name_space: "Try.Test.OpenAPI2", router: "SuperRouter"])
+    [router | plugs] =
+      Mix.Oasis.new(paths_spec, name_space: "Try.Test.OpenAPI2", router: "SuperRouter")
 
     {_, router_file_path, _, router_module_name, binding} = router
     assert router_file_path == "lib/try/test/open_api2/super_router.ex"
@@ -418,5 +422,4 @@ defmodule Mix.OasisTest do
     assert binding.pre_plug_module == Try.Test.OpenAPI2.PreHello
     assert binding.plug_module == Try.Test.OpenAPI2.Hello
   end
-
 end

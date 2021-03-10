@@ -45,7 +45,7 @@ defmodule Mix.Oasis do
       name_space
       |> String.split(".")
       |> Enum.filter(&(&1 != ""))
-      |> Enum.map(&(Recase.to_snake(&1)))
+      |> Enum.map(&Recase.to_snake(&1))
       |> Enum.join("/")
       |> String.downcase()
 
