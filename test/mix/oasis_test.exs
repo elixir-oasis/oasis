@@ -76,7 +76,310 @@ defmodule Mix.OasisTest do
              file_name == "say_hi.ex"
   end
 
-  test "Mix.Oasis.new/2 with request body and parameters" do
+  test "Mix.Oasis.new/2 invalid spec" do
+    spec = %{
+      "components" => %{
+        "schemas" => %{
+          "User" => %{
+            "properties" => %{
+              "id" => %{"format" => "int64", "type" => "integer"},
+              "name" => %{"type" => "string"}
+            },
+            "required" => ["id", "name"],
+            "type" => "object"
+          }
+        }
+      },
+      "info" => %{"title" => "Test API", "version" => "1.0.0"},
+      "openapi" => "3.1.0"
+    }
+
+    assert_raise RuntimeError, ~r/could not find any paths defined/, fn ->
+      Mix.Oasis.new(spec, [])
+    end
+  end
+
+  test "Mix.Oasis.new/2 with x-oasis-name-space from Paths Object" do
+    operation = %{
+      "parameters" => %{
+        "query" => [
+          %{
+            "name" => "id",
+            "required" => true,
+            "schema" => %{"type" => "integer"}
+          }
+        ]
+      }
+    }
+
+    paths_spec = %{
+      "paths" => %{
+        "/id" => %{
+          "get" => operation
+        },
+        "x-oasis-name-space" => "GlobalNameSpaceFromPathsObject"
+      }
+    }
+
+    [router_file | plug_files] = Mix.Oasis.new(paths_spec, [])
+
+    {_, file_path, _, router_module_name, _} = router_file
+
+    assert file_path == "lib/global_name_space_from_paths_object/router.ex"
+    assert router_module_name == GlobalNameSpaceFromPathsObject.Router
+
+    [pre_plug_file, plug_file] = plug_files
+
+    {_, file_path, _, router_module_name, _} = pre_plug_file
+    assert file_path == "lib/oasis/gen/pre_get_id.ex"
+    assert router_module_name == Oasis.Gen.PreGetId
+
+    {_, file_path, _, router_module_name, _} = plug_file
+    assert file_path == "lib/oasis/gen/get_id.ex"
+    assert router_module_name == Oasis.Gen.GetId
+
+    [router_file | _plug_files] = Mix.Oasis.new(paths_spec, [name_space: "My", router: "V1.AppRouter"])
+
+    {_, file_path, _, router_module_name, _} = router_file
+
+    assert file_path == "lib/my/v1_app_router.ex"
+    assert router_module_name == My.V1AppRouter
+  end
+
+  test "Mix.Oasis.new/2 with x-oasis-name-space from Operation Object" do
+    # The `x-oasis-name-space` extension defined in Operation Object or Paths Object,
+    # they won't affect each other.
+    #
+    # when it's in Operation Object, it applies to its Plug's scope when generates code.
+    # when it's in Paths Object, it applies to the Router's scope when generates code.
+    operation = %{
+      "parameters" => %{
+        "query" => [
+          %{
+            "name" => "id",
+            "required" => true,
+            "schema" => %{"type" => "integer"}
+          }
+        ]
+      }
+    }
+
+    paths_spec = %{
+      "paths" => %{
+        "/id" => %{
+          "get" => Map.put(operation, "x-oasis-name-space", "GetNameSpaceFromOperationObject"),
+          "delete" => Map.put(operation, "x-oasis-name-space", "DeleteNameSpaceFromOperationObject"),
+        },
+      }
+    }
+
+    [router_file | plug_files] = Mix.Oasis.new(paths_spec, [])
+    {_, file_path, _, router_module_name, _} = router_file
+
+    assert file_path == "lib/oasis/gen/router.ex"
+    assert router_module_name == Oasis.Gen.Router
+
+    Enum.map(plug_files, fn
+      {_, file_path, "pre_plug.ex", GetNameSpaceFromOperationObject.PreGetId, router} ->
+        assert file_path == "lib/get_name_space_from_operation_object/pre_get_id.ex"
+        assert router.plug_module == GetNameSpaceFromOperationObject.GetId
+      {_, file_path, "plug.ex", GetNameSpaceFromOperationObject.GetId, router} ->
+        assert file_path == "lib/get_name_space_from_operation_object/get_id.ex"
+        assert router.plug_module == GetNameSpaceFromOperationObject.GetId
+      {_, file_path, "pre_plug.ex", DeleteNameSpaceFromOperationObject.PreDeleteId, router} ->
+        assert file_path == "lib/delete_name_space_from_operation_object/pre_delete_id.ex"
+        assert router.plug_module == DeleteNameSpaceFromOperationObject.DeleteId
+      {_, file_path, "plug.ex", DeleteNameSpaceFromOperationObject.DeleteId, router} ->
+        assert file_path == "lib/delete_name_space_from_operation_object/delete_id.ex"
+        assert router.plug_module == DeleteNameSpaceFromOperationObject.DeleteId
+    end)
+
+    paths_spec = put_in(paths_spec, ["paths", "x-oasis-name-space"], "Global")
+
+    [router_file | plug_files2] = Mix.Oasis.new(paths_spec, [])
+
+    {_, file_path, _, router_module_name, _} = router_file
+
+    assert file_path == "lib/global/router.ex"
+    assert router_module_name == Global.Router
+
+    assert plug_files2 == plug_files
+  end
+
+  test "Mix.Oasis.new/2 skip missing-schema request body" do
+    delete = %{
+      "requestBody" => %{
+        "content" => %{
+          "text/plain" => %{
+            "examples" => %{
+              "cat" => %{
+                "summary" => "test summary",
+                "value" => "white"
+              }
+            }
+          }
+        },
+        "required" => true
+      }
+    }
+
+    paths_spec = %{
+      "paths" => %{
+        "/del" => %{
+          "delete" => delete
+        }
+      }
+    }
+
+    [_router | plug_files] = Mix.Oasis.new(paths_spec, [])
+
+    Enum.map(plug_files, fn(plug_file) ->
+      {_, _, _, _, binding} = plug_file
+      assert binding.body_schema == nil
+    end)
+  end
+
+  test "Mix.Oasis.new/2 skip missing-schema/-name in parameter" do
+    operation = %{
+      "parameters" => %{
+        "query" => [
+          %{
+            "schema" => %{"type" => "integer"},
+            "required" => false
+          },
+          %{
+            "name" => "username",
+            "required" => true
+          }
+        ]
+      }
+    }
+
+    paths_spec = %{
+      "paths" => %{
+        "/test" => %{
+          "get" => operation
+        }
+      }
+    }
+
+    [router_file | _plug_files] = Mix.Oasis.new(paths_spec, [])
+
+    {_, _, _, _, binding} = router_file
+
+    Enum.map(binding.routers, fn(router) ->
+      assert router.query_schema == nil
+    end)
+  end
+
+  test "Mix.Oasis.new/2 with text/plain request body" do
+    put = %{
+      "requestBody" => %{
+        "content" => %{
+          "text/plain" => %{
+            "schema" => %{
+              "items" => %{"type" => "integer"},
+              "type" => "array"
+            }
+          }
+        },
+        "required" => true
+      }
+    }
+
+    paths_spec = %{
+      "paths" => %{
+        "/new" => %{
+          "put" => put
+        }
+      }
+    }
+
+    [router_file | plug_files] = Mix.Oasis.new(paths_spec, [router: "my_router", name_space: "Hello"])
+
+    {_, file_path, "router.ex", router_module_name, _} = router_file
+
+    assert file_path == "lib/hello/my_router.ex"
+    assert router_module_name == Hello.MyRouter
+
+    [pre_plug, _] = plug_files
+    {_, pre_plug_file_path, "pre_plug.ex", pre_plug_module_name, binding} = pre_plug
+
+    assert pre_plug_file_path == "lib/hello/pre_put_new.ex"
+    assert pre_plug_module_name == Hello.PrePutNew
+
+    body_schema = binding.body_schema
+
+    assert Map.get(body_schema, "required") == true
+    assert is_map(get_in(body_schema, ["content", "text/plain"]))
+  end
+
+  test "Mix.Oasis.new/2 with multipart request body" do
+    post = %{
+      "requestBody" => %{
+        "content" => %{
+          "multipart/form-data" => %{
+            "schema" => %{
+              "items" => %{"type" => "integer"},
+              "type" => "array"
+            }
+          },
+          "multipart/mixed" => %{
+            "schema" => %{
+              "properties" => %{
+                "id" => %{"type" => "string"},
+                "addresses" => %{
+                  "type" => "array",
+                  "items" => %{
+                    "type" => "array",
+                    "items" => %{
+                      "type" => "object",
+                      "properties" => %{
+                        "number" => %{"type" => "integer"},
+                        "name" => %{"type" => "string"}
+                      },
+                      "required" => ["number", "name"]
+                    }
+                  }
+                }
+              },
+              "required" => ["id", "addresses"],
+              "type" => "object"
+            }
+          }
+        }
+      }
+    }
+
+    paths_spec = %{
+      "paths" => %{
+        "/submit" => %{
+          "post" => post
+        }
+      }
+    }
+
+    [router_file | plug_files] = Mix.Oasis.new(paths_spec, [])
+
+    {_, file_path, "router.ex", router_module_name, _} = router_file
+    assert file_path == "lib/oasis/gen/router.ex"
+    assert router_module_name == Oasis.Gen.Router
+
+    [pre_plug, _] = plug_files
+
+    {_, pre_plug_file_path, "pre_plug.ex", pre_plug_module_name, binding} = pre_plug
+    assert pre_plug_file_path == "lib/oasis/gen/pre_post_submit.ex"
+    assert pre_plug_module_name == Oasis.Gen.PrePostSubmit
+
+    body_schema = binding.body_schema
+    assert Map.get(body_schema, "required") == nil
+    assert is_map(get_in(body_schema, ["content", "multipart/form-data"]))
+    assert is_map(get_in(body_schema, ["content", "multipart/mixed"]))
+
+    assert binding.plug_parsers =~ ~s/parsers: [:multipart]/
+  end
+
+  test "Mix.Oasis.new/2 with urlencoded and json request body" do
     post = %{
       "description" => "Creates a new pet in the store. Duplicates are allowed",
       "operationId" => "addPet",
@@ -193,30 +496,7 @@ defmodule Mix.OasisTest do
     end)
   end
 
-  test "Mix.Oasis.new/2 invalid spec" do
-    spec = %{
-      "components" => %{
-        "schemas" => %{
-          "User" => %{
-            "properties" => %{
-              "id" => %{"format" => "int64", "type" => "integer"},
-              "name" => %{"type" => "string"}
-            },
-            "required" => ["id", "name"],
-            "type" => "object"
-          }
-        }
-      },
-      "info" => %{"title" => "Test API", "version" => "1.0.0"},
-      "openapi" => "3.1.0"
-    }
-
-    assert_raise RuntimeError, ~r/could not find any paths defined/, fn ->
-      Mix.Oasis.new(spec, [])
-    end
-  end
-
-  test "Mix.Oasis.new/2 multi urls" do
+  test "Mix.Oasis.new/2 multi paths" do
     operation1 = %{
       "parameters" => %{
         "path" => [
@@ -259,6 +539,11 @@ defmodule Mix.OasisTest do
             "schema" => %{"type" => "string"}
           }
         ],
+      }
+    }
+
+    operation3 = %{
+      "parameters" => %{
         "cookie" => [
           %{
             "name" => "session_id",
@@ -273,7 +558,7 @@ defmodule Mix.OasisTest do
       "paths" => %{
         "/queryPet" => %{
           "get" => operation2,
-          "put" => operation2
+          "put" => operation3
         },
         "/delete_pet" => %{
           "delete" => operation1
@@ -303,11 +588,21 @@ defmodule Mix.OasisTest do
     Enum.map(plug_files, fn
       {_, file_path, "pre_plug.ex", Oasis.Gen.PrePutQueryPet, router} ->
         assert file_path == "lib/oasis/gen/pre_put_query_pet.ex" and router.http_verb == "put"
-        assert router.header_schema != nil and router.cookie_schema != nil
+        assert router.header_schema == nil and router.cookie_schema != nil
 
         %{"session_id" => %{"schema" => schema}} = router.cookie_schema
         assert ExJsonSchema.Validator.valid?(schema, 1) == true
         assert ExJsonSchema.Validator.valid?(schema, "abc") == false
+
+
+      {_, file_path, "plug.ex", Oasis.Gen.PutQueryPet, router} ->
+        assert file_path == "lib/oasis/gen/put_query_pet.ex" and router.http_verb == "put"
+        assert router.header_schema == nil and router.cookie_schema != nil
+
+        assert router.plug_module == Oasis.Gen.PutQueryPet
+        assert router.pre_plug_module == Oasis.Gen.PrePutQueryPet
+
+      {_, file_path, "pre_plug.ex", Oasis.Gen.PreGetQueryPet, router} ->
 
         %{"token" => %{"schema" => token_schema}, "appid" => %{"schema" => appid_schema}} =
           router.header_schema
@@ -318,19 +613,12 @@ defmodule Mix.OasisTest do
         assert ExJsonSchema.Validator.valid?(appid_schema, "abc") == true
         assert ExJsonSchema.Validator.valid?(appid_schema, 100) == false
 
-      {_, file_path, "plug.ex", Oasis.Gen.PutQueryPet, router} ->
-        assert file_path == "lib/oasis/gen/put_query_pet.ex" and router.http_verb == "put"
-
-        assert router.plug_module == Oasis.Gen.PutQueryPet
-        assert router.pre_plug_module == Oasis.Gen.PrePutQueryPet
-
-      {_, file_path, "pre_plug.ex", Oasis.Gen.PreGetQueryPet, router} ->
         assert file_path == "lib/oasis/gen/pre_get_query_pet.ex" and router.http_verb == "get"
-        assert router.header_schema != nil and router.cookie_schema != nil
+        assert router.header_schema != nil and router.cookie_schema == nil
 
       {_, file_path, "plug.ex", Oasis.Gen.GetQueryPet, router} ->
         assert file_path == "lib/oasis/gen/get_query_pet.ex" and router.http_verb == "get"
-        assert router.header_schema != nil and router.cookie_schema != nil
+        assert router.header_schema != nil and router.cookie_schema == nil
 
       {_, file_path, "pre_plug.ex", Oasis.Gen.PreDeletePet, router} ->
         assert file_path == "lib/oasis/gen/pre_delete_pet.ex" and router.http_verb == "delete"
