@@ -72,12 +72,12 @@ defmodule Mix.Oasis.Router do
 
   defp generate_router_file(paths_spec, routers, opts) do
     name_space = opts[:name_space] || Map.get(paths_spec, "x-oasis-name-space")
-    {target_dir, name_space} = Mix.Oasis.name_space(name_space)
+    {name_space, dir} = Mix.Oasis.name_space(name_space)
 
     module_name = Keyword.get(opts, :router) || "Router"
     {module_name, file_name} = Mix.Oasis.module_alias(module_name)
 
-    target = Path.join([target_dir, file_name])
+    target = Path.join([dir, file_name])
 
     routers = Enum.sort(routers, &(&1.url < &2.url))
 
@@ -297,7 +297,7 @@ defmodule Mix.Oasis.Router do
   end
 
   defp template_plugs_in_pair(%__MODULE__{name_space: name_space} = router) do
-    {target_dir, name_space} = Mix.Oasis.name_space(name_space)
+    {name_space, dir} = Mix.Oasis.name_space(name_space)
 
     {module_name, plug_file_name} = Mix.Oasis.module_alias(router)
     {pre_plug_module_name, pre_plug_file_name} = Mix.Oasis.module_alias("Pre#{module_name}")
@@ -312,9 +312,9 @@ defmodule Mix.Oasis.Router do
 
     {
       [
-        {:eex, Path.join([target_dir, pre_plug_file_name]), "pre_plug.ex", pre_plug_module,
+        {:eex, Path.join([dir, pre_plug_file_name]), "pre_plug.ex", pre_plug_module,
          router},
-        {:new_eex, Path.join([target_dir, plug_file_name]), "plug.ex", plug_module, router}
+        {:new_eex, Path.join([dir, plug_file_name]), "plug.ex", plug_module, router}
       ],
       router
     }

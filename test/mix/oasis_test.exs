@@ -2,28 +2,15 @@ defmodule Mix.OasisTest do
   use ExUnit.Case, async: true
 
   test "name space" do
-    {default_path, default_name_space} = Mix.Oasis.name_space(nil)
+    assert Mix.Oasis.name_space(nil) == {"Oasis.Gen", "lib/oasis/gen"}
 
-    assert default_path == "lib/oasis/gen" and
-             default_name_space == Oasis.Gen
+    assert Mix.Oasis.name_space("My.App") == {"My.App", "lib/my/app"}
 
-    input = "My.App"
-    {path, name_space} = Mix.Oasis.name_space(input)
+    assert Mix.Oasis.name_space("My...App") == {"My.App", "lib/my/app"}
 
-    assert path == "lib/my/app" and
-             name_space == My.App
+    assert Mix.Oasis.name_space("my123") == {"My123", "lib/my123"}
 
-    input = "my123"
-    {path, name_space} = Mix.Oasis.name_space(input)
-
-    assert path == "lib/my123" and
-             name_space == :"Elixir.my123"
-
-    input = "My.APP"
-    {path, name_space} = Mix.Oasis.name_space(input)
-
-    assert path == "lib/my/app" and
-             name_space == My.APP
+    assert Mix.Oasis.name_space("My.APP") == {"My.App", "lib/my/app"}
   end
 
   test "module alias" do
@@ -38,6 +25,9 @@ defmodule Mix.OasisTest do
 
     name = "my123"
     assert Mix.Oasis.module_alias(name) == {"My123", "my123.ex"}
+
+    name = "My.APP"
+    assert Mix.Oasis.module_alias(name) == {"My.App", "my/app.ex"}
 
     name = "My...App.ModuleName"
     assert Mix.Oasis.module_alias(name) == {"My.App.ModuleName", "my/app/module_name.ex"}
@@ -652,7 +642,7 @@ defmodule Mix.OasisTest do
     {_, router_file_path, _, router_module_name, binding} = router
 
     assert router_file_path == "lib/try/my_open_api/router.ex"
-    assert router_module_name == Try.MyOpenAPI.Router
+    assert router_module_name == Try.MyOpenApi.Router
     assert length(binding.routers) == 1
 
     [pre_plug_file, plug_file] = plugs
@@ -660,23 +650,23 @@ defmodule Mix.OasisTest do
     {_, path, template, module, binding} = pre_plug_file
     assert path == "lib/try/my_open_api/pre_hello.ex"
     assert template == "pre_plug.ex"
-    assert module == Try.MyOpenAPI.PreHello
-    assert binding.pre_plug_module == Try.MyOpenAPI.PreHello
-    assert binding.plug_module == Try.MyOpenAPI.Hello
+    assert module == Try.MyOpenApi.PreHello
+    assert binding.pre_plug_module == Try.MyOpenApi.PreHello
+    assert binding.plug_module == Try.MyOpenApi.Hello
 
     {_, path, template, module, binding} = plug_file
     assert path == "lib/try/my_open_api/hello.ex"
     assert template == "plug.ex"
-    assert module == Try.MyOpenAPI.Hello
-    assert binding.pre_plug_module == Try.MyOpenAPI.PreHello
-    assert binding.plug_module == Try.MyOpenAPI.Hello
+    assert module == Try.MyOpenApi.Hello
+    assert binding.pre_plug_module == Try.MyOpenApi.PreHello
+    assert binding.plug_module == Try.MyOpenApi.Hello
 
     [router | plugs] =
       Mix.Oasis.new(paths_spec, name_space: "Try.Test.OpenAPI2", router: "SuperRouter")
 
     {_, router_file_path, _, router_module_name, binding} = router
     assert router_file_path == "lib/try/test/open_api2/super_router.ex"
-    assert router_module_name == Try.Test.OpenAPI2.SuperRouter
+    assert router_module_name == Try.Test.OpenApi2.SuperRouter
     assert length(binding.routers) == 1
 
     [pre_plug_file, plug_file] = plugs
@@ -684,15 +674,15 @@ defmodule Mix.OasisTest do
     {_, path, template, module, binding} = pre_plug_file
     assert path == "lib/try/test/open_api2/pre_hello.ex"
     assert template == "pre_plug.ex"
-    assert module == Try.Test.OpenAPI2.PreHello
-    assert binding.pre_plug_module == Try.Test.OpenAPI2.PreHello
-    assert binding.plug_module == Try.Test.OpenAPI2.Hello
+    assert module == Try.Test.OpenApi2.PreHello
+    assert binding.pre_plug_module == Try.Test.OpenApi2.PreHello
+    assert binding.plug_module == Try.Test.OpenApi2.Hello
 
     {_, path, template, module, binding} = plug_file
     assert path == "lib/try/test/open_api2/hello.ex"
     assert template == "plug.ex"
-    assert module == Try.Test.OpenAPI2.Hello
-    assert binding.pre_plug_module == Try.Test.OpenAPI2.PreHello
-    assert binding.plug_module == Try.Test.OpenAPI2.Hello
+    assert module == Try.Test.OpenApi2.Hello
+    assert binding.pre_plug_module == Try.Test.OpenApi2.PreHello
+    assert binding.plug_module == Try.Test.OpenApi2.Hello
   end
 end

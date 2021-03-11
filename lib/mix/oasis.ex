@@ -35,24 +35,21 @@ defmodule Mix.Oasis do
 
   def name_space(nil) do
     {
-      "lib/oasis/gen",
-      default_name_space()
+      "Oasis.Gen",
+      "lib/oasis/gen"
     }
   end
 
   def name_space(name_space) when is_bitstring(name_space) do
-    path =
-      name_space
-      |> split_module_alias()
-      |> module_alias_to_path()
+    splited = split_module_alias(name_space)
+
+    path = module_alias_to_path(splited)
 
     {
-      Path.join(["lib", path]),
-      Module.concat([name_space])
+      conact_module_alias(splited),
+      Path.join(["lib", path])
     }
   end
-
-  defp default_name_space(), do: Oasis.Gen
 
   defp split_module_alias(str) do
     str |> String.split(".") |> Enum.filter(&(&1 != ""))
@@ -64,7 +61,6 @@ defmodule Mix.Oasis do
     |> Enum.join("/")
     |> String.downcase()
   end
-
 
   def module_alias(name) when is_bitstring(name) do
     process_module_alias(name)
