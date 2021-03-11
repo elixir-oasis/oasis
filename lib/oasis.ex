@@ -7,6 +7,14 @@ defmodule Oasis do
     """
   end
 
+  defmodule FileNotFoundError do
+    defexception message: "failed to open file to generate modules"
+
+    @moduledoc """
+    Error raised when use an invalid file path to generate corresponding modules
+    """
+  end
+
   defmodule CacheRawBodyReader do
     def read_body(conn, opts) do
       {:ok, body, conn} = Plug.Conn.read_body(conn, opts)

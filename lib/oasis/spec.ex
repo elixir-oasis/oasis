@@ -19,8 +19,20 @@ defmodule Oasis.Spec do
     |> Spec.Path.build()
   end
 
-  defp build_json_schema(error) do
-    error
+  defp build_json_schema({:error, %YamlElixir.FileNotFoundError{message: message}}) do
+    {:error, %Oasis.FileNotFoundError{message: message}}
+  end
+  defp build_json_schema({:error, %YamlElixir.ParsingError{message: message}}) do
+    {:error, %Oasis.InvalidSpecError{message: "Failed to parse yaml file: #{message}"}}
+  end
+  defp build_json_schema({:error, %Oasis.FileNotFoundError{} = error}) do
+    {:error, error}
+  end
+  defp build_json_schema({:error, %Oasis.InvalidSpecError{} = error}) do
+    {:error, error}
+  end
+  defp build_json_schema({:error, %Jason.DecodeError{data: data}}) do
+    {:error, %Oasis.InvalidSpecError{message: "Failed to parse json file: `#{data}`"}}
   end
 
   defp extract_path_suffix(path) do
@@ -28,25 +40,20 @@ defmodule Oasis.Spec do
     {suffix, path}
   end
 
-  defp read_file({type, path})
-       when type == "yaml"
-       when type == ".yml" do
-    case YamlElixir.read_from_file(path) do
-      {:ok, data} ->
-        {:ok, data}
+  defp read_file({type, path}) when type == "yaml" or type == ".yml" do
+    YamlElixir.read_from_file(path)
+  end
 
-      {:error, error} ->
-        Logger.error("Input invalid yaml content: #{inspect(error)}")
+  defp read_file({"json", path}) do
+    case File.read(path) do
+      {:ok, content} ->
+        Jason.decode(content)
+      {:error, posix} ->
+        {:error, %Oasis.FileNotFoundError{message: "Failed to open file #{inspect(path)} with error #{posix}"}}
     end
   end
 
-  defp read_file({"json", _path}) do
-    :todo
-  end
-
-  defp read_file({invalid_type, path}) do
-    Logger.error(
-      "Input invalid file type: #{invalid_type} from path: #{inspect(path)}, please use a file in json or yaml format."
-    )
+  defp read_file({invalid_type, _path}) do
+    {:error, %Oasis.InvalidSpecError{message: "Expect a yml/yaml or json format file, but got: `#{invalid_type}`"}}
   end
 end
