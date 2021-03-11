@@ -56,13 +56,16 @@ defmodule Oasis.Spec.Parameter do
 
   defp check_name(%{"in" => "header", "name" => name} = parameter, _path_expr)
        when is_bitstring(name) do
-    # If `in` is "header" and the name field is "Accept", "Content-Type" or "Authorization", the parameter definition SHALL be ignored.
-    name = name |> String.trim() |> String.downcase()
+    # If `in` is "header" and the name field is "Accept", "Content-Type" or "Authorization",
+    # the parameter definition SHALL be ignored.
+    lowercase = name |> String.trim() |> String.downcase()
 
-    if name in ["accept", "content-type", "authorization"] do
+    if lowercase in ["accept", "content-type", "authorization"] do
       nil
     else
-      parameter
+      # Since `Plug` converts all names of header parameters in lowercase by default,
+      # we need to do the same conversion as well when define schema of header parameter.
+      Map.put(parameter, "name", lowercase)
     end
   end
 
@@ -75,7 +78,7 @@ defmodule Oasis.Spec.Parameter do
 
   defp check_name(%{"name" => name} = parameter, path_expr) when is_bitstring(name) do
     if String.trim(name) == "" do
-      raise InvalidSpecError, "The name of the parameter is missed in the path: `#{path_expr}`"
+      raise InvalidSpecError, "The name of the parameter is missing in the path: `#{path_expr}`"
     end
 
     parameter
@@ -89,6 +92,6 @@ defmodule Oasis.Spec.Parameter do
   end
 
   defp check_name(_parameter, path_expr) do
-    raise InvalidSpecError, "The name of the parameter is missed in the path: `#{path_expr}`"
+    raise InvalidSpecError, "The name of the parameter is missing in the path: `#{path_expr}`"
   end
 end
