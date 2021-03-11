@@ -14,6 +14,11 @@ defmodule Mix.OasisTest do
   end
 
   test "module alias" do
+    name = ".."
+    assert_raise RuntimeError, ~r/input invalid module alias: `#{name}`/, fn ->
+      Mix.Oasis.module_alias(name)
+    end
+
     name = "My.App.ModuleName"
     assert Mix.Oasis.module_alias(name) == {"My.App.ModuleName", "my/app/module_name.ex"}
 

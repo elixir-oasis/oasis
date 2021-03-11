@@ -83,7 +83,7 @@ defmodule Mix.Oasis do
     {last_alias, prefix_aliases} = List.pop_at(splited, -1)
 
     if last_alias == nil do
-      raise "input invalid module alias: `#{inspect(name)}`"
+      raise "input invalid module alias: `#{name}`"
     end
 
     module_alias_and_file_path(last_alias, prefix_aliases, splited)
