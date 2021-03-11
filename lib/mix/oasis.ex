@@ -35,47 +35,83 @@ defmodule Mix.Oasis do
 
   def name_space(nil) do
     {
-      Path.join(["lib", "oasis", "gen"]),
+      "lib/oasis/gen",
       default_name_space()
     }
   end
 
   def name_space(name_space) when is_bitstring(name_space) do
-    target_dir =
+    path =
       name_space
-      |> String.split(".")
-      |> Enum.filter(&(&1 != ""))
-      |> Enum.map(&Recase.to_snake(&1))
-      |> Enum.join("/")
-      |> String.downcase()
+      |> split_module_alias()
+      |> module_alias_to_path()
 
     {
-      Path.join(["lib", target_dir]),
+      Path.join(["lib", path]),
       Module.concat([name_space])
     }
   end
 
   defp default_name_space(), do: Oasis.Gen
 
-  def module_name(name) when is_bitstring(name) do
-    name |> Recase.to_pascal() |> module_to_file_name()
+  defp split_module_alias(str) do
+    str |> String.split(".") |> Enum.filter(&(&1 != ""))
   end
 
-  def module_name(%{operation_id: operation_id}) when operation_id != nil do
-    operation_id |> Recase.to_pascal() |> module_to_file_name()
+  defp module_alias_to_path(aliases) when is_list(aliases) do
+    aliases
+    |> Enum.map(&Recase.to_snake(&1))
+    |> Enum.join("/")
+    |> String.downcase()
   end
 
-  def module_name(%{http_verb: http_verb, url: url}) do
+
+  def module_alias(name) when is_bitstring(name) do
+    process_module_alias(name)
+  end
+
+  def module_alias(%{operation_id: operation_id}) when operation_id != nil do
+    process_module_alias(operation_id)
+  end
+
+  def module_alias(%{http_verb: http_verb, url: url}) do
     uri = URI.parse(url)
     url = uri.path |> String.replace(["/", ":", "."], "-")
-    Recase.to_pascal("#{http_verb}#{url}") |> module_to_file_name()
+    last_alias = "#{http_verb}#{url}"
+    module_alias_and_file_path(last_alias, [], [last_alias])
   end
 
-  defp module_to_file_name(module_name) do
+  defp process_module_alias(name) do
+    splited = split_module_alias(name)
+
+    {last_alias, prefix_aliases} = List.pop_at(splited, -1)
+
+    if last_alias == nil do
+      raise "input invalid module alias: `#{inspect(name)}`"
+    end
+
+    module_alias_and_file_path(last_alias, prefix_aliases, splited)
+  end
+
+  defp module_alias_and_file_path(last_alias, [], aliases) do
     {
-      module_name,
-      "#{Recase.to_snake(module_name)}.ex"
+      conact_module_alias(aliases),
+      "#{Recase.to_snake(last_alias)}.ex"
     }
+  end
+  defp module_alias_and_file_path(last_alias, prefix_aliases, aliases) do
+    path = module_alias_to_path(prefix_aliases)
+
+    {
+      conact_module_alias(aliases),
+      "#{path}/#{Recase.to_snake(last_alias)}.ex"
+    }
+  end
+
+  defp conact_module_alias(aliases) do
+    aliases
+    |> Enum.map(&Recase.to_pascal(&1))
+    |> Enum.join(".")
   end
 
   def copy_from(apps, source_dir, mapping) when is_list(mapping) do

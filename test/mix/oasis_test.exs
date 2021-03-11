@@ -26,54 +26,39 @@ defmodule Mix.OasisTest do
              name_space == My.APP
   end
 
-  test "module name" do
+  test "module alias" do
     name = "My.App.ModuleName"
-    {module_name, file_name} = Mix.Oasis.module_name(name)
+    assert Mix.Oasis.module_alias(name) == {"My.App.ModuleName", "my/app/module_name.ex"}
 
-    assert module_name == "MyAppModuleName" and
-             file_name == "my_app_module_name.ex"
+    name = "MyAppModuleName"
+    assert Mix.Oasis.module_alias(name) == {"MyAppModuleName", "my_app_module_name.ex"}
+
+    name = "MyAppModulename"
+    assert Mix.Oasis.module_alias(name) == {"MyAppModulename", "my_app_modulename.ex"}
+
+    name = "my123"
+    assert Mix.Oasis.module_alias(name) == {"My123", "my123.ex"}
 
     name = "My...App.ModuleName"
-    {module_name, file_name} = Mix.Oasis.module_name(name)
-
-    assert module_name == "MyAppModuleName" and
-             file_name == "my_app_module_name.ex"
+    assert Mix.Oasis.module_alias(name) == {"My.App.ModuleName", "my/app/module_name.ex"}
 
     name = "my/app"
-    {module_name, file_name} = Mix.Oasis.module_name(name)
-
-    assert module_name == "My/app" and
-             file_name == "my/app.ex"
-
-    name = "TestFlight"
-    {module_name, file_name} = Mix.Oasis.module_name(name)
-
-    assert module_name == "TestFlight" and
-             file_name == "test_flight.ex"
-
-    assert module_name == "TestFlight" and
-             file_name == "test_flight.ex"
+    assert Mix.Oasis.module_alias(name) == {"My/app", "my/app.ex"}
 
     router = %{operation_id: "GetUserInfo"}
-    {module_name, file_name} = Mix.Oasis.module_name(router)
+    assert Mix.Oasis.module_alias(router) == {"GetUserInfo", "get_user_info.ex"}
 
-    assert module_name == "GetUserInfo" and
-             file_name == "get_user_info.ex"
+    router = %{operation_id: "My.GetUserInfo"}
+    assert Mix.Oasis.module_alias(router) == {"My.GetUserInfo", "my/get_user_info.ex"}
 
-    router = %{http_verb: :get, url: "/user/:id"}
-    {module_name, file_name} = Mix.Oasis.module_name(router)
-
-    assert module_name == "GetUserId" and
-             file_name == "get_user_id.ex"
+    router = %{http_verb: "get", url: "/user/:id"}
+    assert Mix.Oasis.module_alias(router) == {"GetUserId", "get_user_id.ex"}
 
     # `operation_id` in high priority compares to `http_verb` with `url` if
     # both exists
 
     router = %{operation_id: "SayHi", http_verb: :post, url: "/hi"}
-    {module_name, file_name} = Mix.Oasis.module_name(router)
-
-    assert module_name == "SayHi" and
-             file_name == "say_hi.ex"
+    assert Mix.Oasis.module_alias(router) == {"SayHi", "say_hi.ex"}
   end
 
   test "Mix.Oasis.new/2 invalid spec" do
@@ -142,8 +127,8 @@ defmodule Mix.OasisTest do
 
     {_, file_path, _, router_module_name, _} = router_file
 
-    assert file_path == "lib/my/v1_app_router.ex"
-    assert router_module_name == My.V1AppRouter
+    assert file_path == "lib/my/v1/app_router.ex"
+    assert router_module_name == My.V1.AppRouter
   end
 
   test "Mix.Oasis.new/2 with x-oasis-name-space from Operation Object" do

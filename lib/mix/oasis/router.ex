@@ -75,7 +75,7 @@ defmodule Mix.Oasis.Router do
     {target_dir, name_space} = Mix.Oasis.name_space(name_space)
 
     module_name = Keyword.get(opts, :router) || "Router"
-    {module_name, file_name} = Mix.Oasis.module_name(module_name)
+    {module_name, file_name} = Mix.Oasis.module_alias(module_name)
 
     target = Path.join([target_dir, file_name])
 
@@ -299,8 +299,8 @@ defmodule Mix.Oasis.Router do
   defp template_plugs_in_pair(%__MODULE__{name_space: name_space} = router) do
     {target_dir, name_space} = Mix.Oasis.name_space(name_space)
 
-    {module_name, plug_file_name} = Mix.Oasis.module_name(router)
-    {pre_plug_module_name, pre_plug_file_name} = Mix.Oasis.module_name("Pre#{module_name}")
+    {module_name, plug_file_name} = Mix.Oasis.module_alias(router)
+    {pre_plug_module_name, pre_plug_file_name} = Mix.Oasis.module_alias("Pre#{module_name}")
 
     pre_plug_module = Module.concat([name_space, pre_plug_module_name])
     plug_module = Module.concat([name_space, module_name])
