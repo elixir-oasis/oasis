@@ -57,6 +57,7 @@ defmodule Oasis.Spec.PathTest do
 
       paths:
         /page:
+          description: "test page desc"
           parameters:
             - name: lang
               in: query
@@ -354,4 +355,24 @@ defmodule Oasis.Spec.PathTest do
       Path.build(root)
     end
   end
+
+  test "unsupport trace http verb" do
+    yaml_str = """
+      paths:
+        /hello:
+          trace:
+            parameters:
+              - name: username
+                in: query
+                schema:
+                  type: string
+    """
+
+    root = yaml_to_json_schema(yaml_str)
+
+    assert_raise Oasis.InvalidSpecError, ~r(Not Support `trace` http method from `/hello` path), fn ->
+      Path.build(root)
+    end
+  end
+
 end
