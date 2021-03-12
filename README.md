@@ -136,7 +136,7 @@ Generates Router and Plug modules from OAS
 The arguments of `oas.gen.plug` mix task:
 
 * `--file`, required, the completed path to the specification file in YAML or JSON format.
-* `--router`, optional, the generated router's module alias, by default it is `Router`, for example we set `--router Hello.MyRouter` with any name space definition, the final router module is `Oasis.Gen.Hello.MyRouter` in `/lib/oasis/gen/hello/my_router.ex` path.
+* `--router`, optional, the generated router's module alias, by default it is `Router`, for example we set `--router Hello.MyRouter` and there is no any name space definition, the final router module is `Oasis.Gen.Hello.MyRouter` in `/lib/oasis/gen/hello/my_router.ex` path.
 * `--name-space`, optional, the generated all modules' name space, by default it is `Oasis.Gen`, this argument will always override the defined name space from the input `--file` if exists "x-oasis-name-space" field(s).
 
 Refer the OAS, the `operationId` field of Operation Object is not required, but it should be unique among all operations described in the API if exists.
