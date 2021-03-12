@@ -53,7 +53,7 @@ defmodule Oasis.ValidatorTest do
     assert Validator.parse_and_validate!(param, "path", name, "10") == 10.0
 
     assert_raise Plug.BadRequestError,
-                 ~r/Fail to transfer the value "10.0xyz" of the path parameter "test_float"/,
+                 ~r/Failed to transfer the value "10.0xyz" of the path parameter "test_float"/,
                  fn ->
                    Validator.parse_and_validate!(param, "path", name, "10.0xyz")
                  end
@@ -744,7 +744,7 @@ defmodule Oasis.ValidatorTest do
     input = "invalid_json"
 
     assert_raise Plug.BadRequestError,
-                 ~r/Fail to transfer the value "invalid_json" of the query parameter "name" by schema/,
+                 ~r/Failed to transfer the value "invalid_json" of the query parameter "name" by schema/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, input)
                  end

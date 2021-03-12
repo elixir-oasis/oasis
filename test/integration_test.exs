@@ -62,7 +62,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Fail to transfer the value \"non-integer\" of the path parameter \"id\" by schema: %{\"type\" => \"integer\"}"
+               "Failed to transfer the value \"non-integer\" of the path parameter \"id\" by schema: %{\"type\" => \"integer\"}"
   end
 
   test "parse query parameter", %{url: url} do
@@ -109,7 +109,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Fail to transfer the value \"invalid_id\" of the path parameter \"id\" by schema: %{\"type\" => \"integer\"}"
+               "Failed to transfer the value \"invalid_id\" of the path parameter \"id\" by schema: %{\"type\" => \"integer\"}"
   end
 
   test "missing required query parameter", %{url: url} do
@@ -369,7 +369,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Fail to transfer the value %{\"fav_number\" => \"abc\", \"name\" => \"v1\"} of the body request by schema: %{\"properties\" => %{\"fav_number\" => %{\"maximum\" => 3, \"minimum\" => 1, \"type\" => \"integer\"}, \"name\" => %{\"type\" => \"string\"}}, \"required\" => [\"name\", \"fav_number\"], \"type\" => \"object\"}"
+               "Failed to transfer the value %{\"fav_number\" => \"abc\", \"name\" => \"v1\"} of the body request by schema: %{\"properties\" => %{\"fav_number\" => %{\"maximum\" => 3, \"minimum\" => 1, \"type\" => \"integer\"}, \"name\" => %{\"type\" => \"string\"}}, \"required\" => [\"name\", \"fav_number\"], \"type\" => \"object\"}"
 
     body = "name=v1&fav_number=0"
 
