@@ -39,12 +39,13 @@ defmodule Oasis.Spec.Path do
     paths = schema["paths"] || %{}
 
     paths =
-      Enum.reduce(paths, %{}, fn path, acc ->
-        {path_expr, _info} = path
-        path = map_path(path)
-        Map.put(acc, format_url(path_expr), path)
-      end)
+      Enum.reduce(paths, %{}, fn
+        {"/" <> _ = path_expr, _info} = path, acc ->
+          Map.put(acc, format_url(path_expr), map_path(path))
 
+        {field, value}, acc ->
+          Map.put(acc, field, value)
+      end)
     schema = Map.put(schema, "paths", paths)
 
     %{root | schema: schema}

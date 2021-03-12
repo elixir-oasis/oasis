@@ -111,12 +111,12 @@ defmodule Mix.OasisTest do
     [pre_plug_file, plug_file] = plug_files
 
     {_, file_path, _, router_module_name, _} = pre_plug_file
-    assert file_path == "lib/oasis/gen/pre_get_id.ex"
-    assert router_module_name == Oasis.Gen.PreGetId
+    assert file_path == "lib/global_name_space_from_paths_object/pre_get_id.ex"
+    assert router_module_name == GlobalNameSpaceFromPathsObject.PreGetId
 
     {_, file_path, _, router_module_name, _} = plug_file
-    assert file_path == "lib/oasis/gen/get_id.ex"
-    assert router_module_name == Oasis.Gen.GetId
+    assert file_path == "lib/global_name_space_from_paths_object/get_id.ex"
+    assert router_module_name == GlobalNameSpaceFromPathsObject.GetId
 
     [router_file | _plug_files] = Mix.Oasis.new(paths_spec, [name_space: "My", router: "V1.AppRouter"])
 
@@ -128,10 +128,10 @@ defmodule Mix.OasisTest do
 
   test "Mix.Oasis.new/2 with x-oasis-name-space from Operation Object" do
     # The `x-oasis-name-space` extension defined in Operation Object or Paths Object,
-    # they won't affect each other.
+    # the defined field from Paths Object will overwrite the defined from Operation Object if both are existed.
     #
     # when it's in Operation Object, it applies to its Plug's scope when generates code.
-    # when it's in Paths Object, it applies to the Router's scope when generates code.
+    # when it's in Paths Object, it applies to the Router's scope and all Plug's scope when generates code.
     operation = %{
       "parameters" => %{
         "query" => [
@@ -183,7 +183,20 @@ defmodule Mix.OasisTest do
     assert file_path == "lib/global/router.ex"
     assert router_module_name == Global.Router
 
-    assert plug_files2 == plug_files
+    Enum.map(plug_files2, fn
+      {_, file_path, "pre_plug.ex", Global.PreGetId, router} ->
+        assert file_path == "lib/global/pre_get_id.ex"
+        assert router.plug_module == Global.GetId
+      {_, file_path, "plug.ex", Global.GetId, router} ->
+        assert file_path == "lib/global/get_id.ex"
+        assert router.plug_module == Global.GetId
+      {_, file_path, "pre_plug.ex", Global.PreDeleteId, router} ->
+        assert file_path == "lib/global/pre_delete_id.ex"
+        assert router.plug_module == Global.DeleteId
+      {_, file_path, "plug.ex", Global.DeleteId, router} ->
+        assert file_path == "lib/global/delete_id.ex"
+        assert router.plug_module == Global.DeleteId
+    end)
   end
 
   test "Mix.Oasis.new/2 skip missing-schema request body" do

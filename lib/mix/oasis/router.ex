@@ -25,11 +25,21 @@ defmodule Mix.Oasis.Router do
   ]
 
   def generate_files_by_paths_spec(apps, paths_spec, opts) when is_map(paths_spec) do
+    opts = put_opts(paths_spec, opts)
+
     {plug_files, routers} = generate_plug_files(apps, paths_spec, opts)
 
-    router_file = generate_router_file(paths_spec, routers, opts)
+    router_file = generate_router_file(routers, opts)
 
     [router_file | plug_files]
+  end
+
+  defp put_opts(paths_spec, opts) do
+    # Set the global :name_space use the input option from command line if exists,
+    # or use the Paths Object's extension "x-oasis-name-space" field if exists.
+    name_space = opts[:name_space] || Map.get(paths_spec, "x-oasis-name-space")
+
+    Keyword.put(opts, :name_space, name_space)
   end
 
   defp generate_plug_files(apps, paths_spec, opts) do
@@ -70,9 +80,8 @@ defmodule Mix.Oasis.Router do
 
   defp iterate_paths_spec_by_url(_apps, _paths_spec, _url, acc, _opts), do: acc
 
-  defp generate_router_file(paths_spec, routers, opts) do
-    name_space = opts[:name_space] || Map.get(paths_spec, "x-oasis-name-space")
-    {name_space, dir} = Mix.Oasis.name_space(name_space)
+  defp generate_router_file(routers, opts) do
+    {name_space, dir} = Mix.Oasis.name_space(opts[:name_space])
 
     module_name = Keyword.get(opts, :router) || "Router"
     {module_name, file_name} = Mix.Oasis.module_alias(module_name)
