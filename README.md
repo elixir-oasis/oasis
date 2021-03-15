@@ -240,13 +240,13 @@ By default, the name space of the generated module is `Oasis.Gen` and its folder
 
 We can see all generated files are moved into the expected path, and all modules' name start with `Common.Api`.
 
-Summarize about the name space of generation code:
+Summarize about the name space of generated code:
 
   1. The optional `--name-space` argument to the `mix oas.gen.plug` command line is in the highest priority to set the name space;
 
-  2. We can use "x-oasis-name-space" extension field of the OAS's Paths Object as a global naming if we want to save and maintain it in the document;
+  2. We can use `"x-oasis-name-space"` extension field of the OAS's Paths Object as a global naming if we want to save and maintain it in the document, but this case may be overridden by #1.
 
-  3. We also can set "x-oasis-name-space" extension field in each Operation Object in the document, but this case may be overridden by #1 and #2 cases.
+  3. We also can set `"x-oasis-name-space"` extension field in each Operation Object in the document, but this case may be overridden by #1 and #2.
 
 #### HTTP request handler files in pairs
 
