@@ -79,7 +79,7 @@ defmodule Mix.OasisTest do
     end
   end
 
-  test "Mix.Oasis.new/2 with x-oasis-name-space from Paths Object" do
+  test "Mix.Oasis.new/2 with x-oasis-name-space and x-oasis-router from Paths Object" do
     operation = %{
       "parameters" => %{
         "query" => [
@@ -97,7 +97,8 @@ defmodule Mix.OasisTest do
         "/id" => %{
           "get" => operation
         },
-        "x-oasis-name-space" => "GlobalNameSpaceFromPathsObject"
+        "x-oasis-name-space" => "GlobalNameSpaceFromPathsObject",
+        "x-oasis-router" => "Hello.MyRouter"
       }
     }
 
@@ -105,8 +106,8 @@ defmodule Mix.OasisTest do
 
     {_, file_path, _, router_module_name, _} = router_file
 
-    assert file_path == "lib/global_name_space_from_paths_object/router.ex"
-    assert router_module_name == GlobalNameSpaceFromPathsObject.Router
+    assert file_path == "lib/global_name_space_from_paths_object/hello/my_router.ex"
+    assert router_module_name == GlobalNameSpaceFromPathsObject.Hello.MyRouter
 
     [pre_plug_file, plug_file] = plug_files
 

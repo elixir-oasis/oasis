@@ -39,7 +39,13 @@ defmodule Mix.Oasis.Router do
     # or use the Paths Object's extension "x-oasis-name-space" field if exists.
     name_space = opts[:name_space] || Map.get(paths_spec, "x-oasis-name-space")
 
-    Keyword.put(opts, :name_space, name_space)
+    # Set the :router use the input option from command line if exists,
+    # or use the Paths Object's extension "x-oasis-router" field if exists.
+    router = opts[:router] || Map.get(paths_spec, "x-oasis-router")
+
+    opts
+    |> Keyword.put(:name_space, name_space)
+    |> Keyword.put(:router, router)
   end
 
   defp generate_plug_files(apps, paths_spec, opts) do

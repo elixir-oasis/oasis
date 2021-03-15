@@ -400,4 +400,24 @@ defmodule Oasis.Spec.PathTest do
     assert paths["x-oasis-name-space"] == "Common"
     assert paths["/content"]["get"]["x-oasis-name-space"] == "Specv1"
   end
+
+  test "x-oasis-router in paths object" do
+    yaml_str = """
+      paths:
+        x-oasis-router: MyRouter
+        /hello:
+          get:
+            operationId: SayHello
+            parameters:
+              - name: username
+                in: query
+                schema:
+                  type: string
+    """
+
+    %{schema: schema} = yaml_to_json_schema(yaml_str) |> Path.build()
+    paths = schema["paths"]
+    assert paths["x-oasis-router"] == "MyRouter"
+  end
+
 end

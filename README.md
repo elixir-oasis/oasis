@@ -24,6 +24,28 @@ def deps do
 end
 ```
 
+## Implements to OAS
+
+`Oasis` does not cover the full OpenAPI specification, so far the implements contain:
+
+* [Components Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#componentsObject)
+* [Paths Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathsObject)
+* [Path Item Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathItemObject)
+* [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject)
+* [Parameter Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#parameterObject)
+* [Request Body Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#requestBodyObject)
+* [Media Type Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#mediaTypeObject)
+* [Header Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#headerObject)
+* [Reference Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#referenceObject)
+* [Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#schemaObject)
+
+## OAS Specification Extensions
+
+`Oasis` be with the following specification extensions to accommodate the use cases:
+
+* `"x-oasis-name-space"`, optional, use this field to define the generated Elixir module's name space in Operation Object or Paths Object, defaults to `Oasis.Gen`.
+* `"x-oasis-router"`, optional, use this field to define the generated Elixir router module's alias in Paths Object, defaults to `Router`.
+
 ## How to use
 
 ### Prepare YAML or JSON specification
@@ -206,7 +228,7 @@ By default, the name space of the generated module is `Oasis.Gen` and its folder
   * creating lib/common/api/get_pets.ex
   ```
 
-  We can see `pre_get_pets.ex` and `get_pets.ex` files are moved into the expected path, and their module names are `Common.Api.GetPets` and `Common.Api.PreGetPets`, other operations do not define `x-oasis-name-space` field, so they still use the default one `Oasis.Gen`.
+  We can see `pre_get_pets.ex` and `get_pets.ex` files are moved into the expected path, and their module names are `Common.Api.GetPets` and `Common.Api.PreGetPets`, other operations do not define any `"x-oasis-name-space"` field, so they still use the default one `Oasis.Gen`.
 
 3. Use `"x-oasis-name-space"` in the OAS's Paths Object, this use case as a global setting and can archive it in the document under the file version management, for example, add this newline `x-oasis-name-space: Common.Api` as below:
 
@@ -240,13 +262,13 @@ By default, the name space of the generated module is `Oasis.Gen` and its folder
 
 We can see all generated files are moved into the expected path, and all modules' name start with `Common.Api`.
 
-Summarize about the name space of generated code:
+Summarize about the name space of generated module:
 
   1. The optional `--name-space` argument to the `mix oas.gen.plug` command line is in the highest priority to set the name space;
 
   2. We can use `"x-oasis-name-space"` extension field of the OAS's Paths Object as a global naming if we want to save and maintain it in the document, but this case may be overridden by #1.
 
-  3. We also can set `"x-oasis-name-space"` extension field in each Operation Object in the document, but this case may be overridden by #1 and #2.
+  3. We also can set `"x-oasis-name-space"` extension field in each Operation Object in the document, but this case may be overridden by #1 or #2.
 
 #### HTTP request handler files in pairs
 
@@ -294,7 +316,8 @@ defmodule MyExistenceRouter do
 end
 ```
 
-Please note that the added line of `plug(Oasis.Gen.Router)` is before the line of `plug(:match)`
+Please note that the added line of `plug(Oasis.Gen.Router)` is before the line of `plug(:match)`.
+
 
 ## Todo
 
