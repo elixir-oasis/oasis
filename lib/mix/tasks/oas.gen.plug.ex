@@ -5,6 +5,10 @@ defmodule Mix.Tasks.Oas.Gen.Plug do
 
   @shortdoc "Generates Router and Plug modules from OpenAPI Specification"
   def run(args) do
+    if Mix.Project.umbrella?() do
+      Mix.raise "mix oas.gen.plug can only be run inside an application directory"
+    end
+
     Mix.shell().info("Generates Router and Plug modules from OAS")
 
     paths = Mix.Oasis.generator_paths()

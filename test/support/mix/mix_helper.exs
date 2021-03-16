@@ -48,4 +48,24 @@ defmodule Oasis.MixHelper do
         raise inspect({file, match})
     end
   end
+
+  def umbrella_mixfile_contents do
+    """
+    defmodule Umbrella.MixProject do
+      use Mix.Project
+
+      def project do
+        [
+          apps_path: "apps",
+          deps: deps()
+        ]
+      end
+
+      defp deps do
+        []
+      end
+    end
+    """
+  end
+
 end
