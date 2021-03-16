@@ -1,5 +1,7 @@
 # Oasis
 
+[![Coverage Status](https://coveralls.io/repos/github/elixir-oasis/oasis/badge.svg?branch=main)](https://coveralls.io/github/elixir-oasis/oasis?branch=main)
+
 ## Introduction
 
 Backgroud

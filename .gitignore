@@ -30,3 +30,4 @@ oasis-*.tar
 node_modules
 *.sublime-project
 *.sublime-workspace
+.coveralls.yml
