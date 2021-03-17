@@ -41,7 +41,7 @@ defmodule Oasis.MixProject do
       {:yaml_elixir, "~> 2.5"},
       {:plug, "~> 1.11"},
       {:jason, "~> 1.2"},
-      {:ex_json_schema, "~> 0.8.0-rc1"},
+      {:ex_json_schema, "~> 0.7"},
       {:recase, "~> 0.7", runtime: false},
       {:plug_cowboy, "~> 2.0", only: [:dev, :test]},
       {:finch, "~> 0.6", only: [:dev, :test]},
