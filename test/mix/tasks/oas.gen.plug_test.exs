@@ -12,26 +12,35 @@ defmodule Mix.Tasks.Oas.Gen.PlugTest do
 
   test "run in root of an umbrella project", config do
     in_tmp_project(config.test, fn ->
-      File.write! "mix.exs", umbrella_mixfile_contents()
-      File.mkdir! "apps"
+      File.write!("mix.exs", umbrella_mixfile_contents())
+      File.mkdir!("apps")
 
       Mix.Project.in_project(:my_umbrella_app, File.cwd!(), fn _module ->
-        assert_raise Mix.Error, ~s/mix oas.gen.plug can only be run inside an application directory/, fn ->
-          Gen.Plug.run(["--file", Path.join([__DIR__, "file/petstore-expanded.yaml"])])
-        end
+        assert_raise Mix.Error,
+                     ~s/mix oas.gen.plug can only be run inside an application directory/,
+                     fn ->
+                       Gen.Plug.run([
+                         "--file",
+                         Path.join([__DIR__, "file/petstore-expanded.yaml"])
+                       ])
+                     end
       end)
     end)
   end
 
   test "run in one of apps in an umbrella project", config do
     in_tmp_project(config.test, fn ->
-      File.write! "mix.exs", umbrella_mixfile_contents()
-      File.mkdir_p! "apps/other_app"
+      File.write!("mix.exs", umbrella_mixfile_contents())
+      File.mkdir_p!("apps/other_app")
       File.cd!("apps/other_app")
 
       Mix.Project.in_project(:my_umbrella_app2, File.cwd!(), fn _module ->
-
-        Gen.Plug.run(["--file", Path.join([__DIR__, "file/petstore-expanded.yaml"]), "--name-space", "Hello"])
+        Gen.Plug.run([
+          "--file",
+          Path.join([__DIR__, "file/petstore-expanded.yaml"]),
+          "--name-space",
+          "Hello"
+        ])
 
         assert_file("lib/hello/find_pet_by_id.ex")
         assert_file("lib/hello/find_pet_by_id.ex")

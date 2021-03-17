@@ -149,9 +149,9 @@ defmodule Oasis.Validator do
   defp raise_fail_to_parse(use_in, name, value, schema) do
     raise Plug.BadRequestError,
       message:
-        "Failed to transfer the value #{inspect(value)} of the #{use_in} parameter #{inspect(name)} by schema: #{
-          inspect(schema)
-        }"
+        "Failed to transfer the value #{inspect(value)} of the #{use_in} parameter #{
+          inspect(name)
+        } by schema: #{inspect(schema)}"
   end
 
   defp raise_fail_to_schema_validate("body", _, value, message, "#") do

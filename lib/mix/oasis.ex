@@ -95,6 +95,7 @@ defmodule Mix.Oasis do
       "#{Recase.to_snake(last_alias)}.ex"
     }
   end
+
   defp module_alias_and_file_path(last_alias, prefix_aliases, aliases) do
     path = module_alias_to_path(prefix_aliases)
 

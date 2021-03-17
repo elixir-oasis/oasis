@@ -15,6 +15,7 @@ defmodule Mix.OasisTest do
 
   test "module alias" do
     name = ".."
+
     assert_raise RuntimeError, ~r/input invalid module alias: `#{name}`/, fn ->
       Mix.Oasis.module_alias(name)
     end
@@ -119,7 +120,8 @@ defmodule Mix.OasisTest do
     assert file_path == "lib/global_name_space_from_paths_object/get_id.ex"
     assert router_module_name == GlobalNameSpaceFromPathsObject.GetId
 
-    [router_file | _plug_files] = Mix.Oasis.new(paths_spec, [name_space: "My", router: "V1.AppRouter"])
+    [router_file | _plug_files] =
+      Mix.Oasis.new(paths_spec, name_space: "My", router: "V1.AppRouter")
 
     {_, file_path, _, router_module_name, _} = router_file
 
@@ -149,8 +151,9 @@ defmodule Mix.OasisTest do
       "paths" => %{
         "/id" => %{
           "get" => Map.put(operation, "x-oasis-name-space", "GetNameSpaceFromOperationObject"),
-          "delete" => Map.put(operation, "x-oasis-name-space", "DeleteNameSpaceFromOperationObject"),
-        },
+          "delete" =>
+            Map.put(operation, "x-oasis-name-space", "DeleteNameSpaceFromOperationObject")
+        }
       }
     }
 
@@ -164,12 +167,15 @@ defmodule Mix.OasisTest do
       {_, file_path, "pre_plug.ex", GetNameSpaceFromOperationObject.PreGetId, router} ->
         assert file_path == "lib/get_name_space_from_operation_object/pre_get_id.ex"
         assert router.plug_module == GetNameSpaceFromOperationObject.GetId
+
       {_, file_path, "plug.ex", GetNameSpaceFromOperationObject.GetId, router} ->
         assert file_path == "lib/get_name_space_from_operation_object/get_id.ex"
         assert router.plug_module == GetNameSpaceFromOperationObject.GetId
+
       {_, file_path, "pre_plug.ex", DeleteNameSpaceFromOperationObject.PreDeleteId, router} ->
         assert file_path == "lib/delete_name_space_from_operation_object/pre_delete_id.ex"
         assert router.plug_module == DeleteNameSpaceFromOperationObject.DeleteId
+
       {_, file_path, "plug.ex", DeleteNameSpaceFromOperationObject.DeleteId, router} ->
         assert file_path == "lib/delete_name_space_from_operation_object/delete_id.ex"
         assert router.plug_module == DeleteNameSpaceFromOperationObject.DeleteId
@@ -188,12 +194,15 @@ defmodule Mix.OasisTest do
       {_, file_path, "pre_plug.ex", Global.PreGetId, router} ->
         assert file_path == "lib/global/pre_get_id.ex"
         assert router.plug_module == Global.GetId
+
       {_, file_path, "plug.ex", Global.GetId, router} ->
         assert file_path == "lib/global/get_id.ex"
         assert router.plug_module == Global.GetId
+
       {_, file_path, "pre_plug.ex", Global.PreDeleteId, router} ->
         assert file_path == "lib/global/pre_delete_id.ex"
         assert router.plug_module == Global.DeleteId
+
       {_, file_path, "plug.ex", Global.DeleteId, router} ->
         assert file_path == "lib/global/delete_id.ex"
         assert router.plug_module == Global.DeleteId
@@ -227,7 +236,7 @@ defmodule Mix.OasisTest do
 
     [_router | plug_files] = Mix.Oasis.new(paths_spec, [])
 
-    Enum.map(plug_files, fn(plug_file) ->
+    Enum.map(plug_files, fn plug_file ->
       {_, _, _, _, binding} = plug_file
       assert binding.body_schema == nil
     end)
@@ -261,7 +270,7 @@ defmodule Mix.OasisTest do
 
     {_, _, _, _, binding} = router_file
 
-    Enum.map(binding.routers, fn(router) ->
+    Enum.map(binding.routers, fn router ->
       assert router.query_schema == nil
     end)
   end
@@ -289,7 +298,8 @@ defmodule Mix.OasisTest do
       }
     }
 
-    [router_file | plug_files] = Mix.Oasis.new(paths_spec, [router: "my_router", name_space: "Hello"])
+    [router_file | plug_files] =
+      Mix.Oasis.new(paths_spec, router: "my_router", name_space: "Hello")
 
     {_, file_path, "router.ex", router_module_name, _} = router_file
 
@@ -532,7 +542,7 @@ defmodule Mix.OasisTest do
             "required" => true,
             "schema" => %{"type" => "string"}
           }
-        ],
+        ]
       }
     }
 
@@ -588,7 +598,6 @@ defmodule Mix.OasisTest do
         assert ExJsonSchema.Validator.valid?(schema, 1) == true
         assert ExJsonSchema.Validator.valid?(schema, "abc") == false
 
-
       {_, file_path, "plug.ex", Oasis.Gen.PutQueryPet, router} ->
         assert file_path == "lib/oasis/gen/put_query_pet.ex" and router.http_verb == "put"
         assert router.header_schema == nil and router.cookie_schema != nil
@@ -597,7 +606,6 @@ defmodule Mix.OasisTest do
         assert router.pre_plug_module == Oasis.Gen.PrePutQueryPet
 
       {_, file_path, "pre_plug.ex", Oasis.Gen.PreGetQueryPet, router} ->
-
         %{"token" => %{"schema" => token_schema}, "appid" => %{"schema" => appid_schema}} =
           router.header_schema
 

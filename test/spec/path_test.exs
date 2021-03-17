@@ -312,10 +312,12 @@ defmodule Oasis.Spec.PathTest do
     """
 
     root = yaml_to_json_schema(yaml_str)
-    
-    assert_raise Oasis.InvalidSpecError, ~r(The name of the parameter is missing in the path: `/content/{id}`), fn ->
-      Path.build(root)
-    end
+
+    assert_raise Oasis.InvalidSpecError,
+                 ~r(The name of the parameter is missing in the path: `/content/{id}`),
+                 fn ->
+                   Path.build(root)
+                 end
   end
 
   test "input invalid parameter name" do
@@ -333,9 +335,11 @@ defmodule Oasis.Spec.PathTest do
 
     root = yaml_to_json_schema(yaml_str)
 
-    assert_raise Oasis.InvalidSpecError, ~r(The name of the parameter expect to be a string, but got `%{"value" => "test"}` in the path: `/content/{id}`), fn ->
-      Path.build(root)
-    end
+    assert_raise Oasis.InvalidSpecError,
+                 ~r(The name of the parameter expect to be a string, but got `%{"value" => "test"}` in the path: `/content/{id}`),
+                 fn ->
+                   Path.build(root)
+                 end
   end
 
   test "missing parameter name" do
@@ -351,9 +355,11 @@ defmodule Oasis.Spec.PathTest do
 
     root = yaml_to_json_schema(yaml_str)
 
-    assert_raise Oasis.InvalidSpecError, ~r(The name of the parameter is missing in the path: `/content/{id}`), fn ->
-      Path.build(root)
-    end
+    assert_raise Oasis.InvalidSpecError,
+                 ~r(The name of the parameter is missing in the path: `/content/{id}`),
+                 fn ->
+                   Path.build(root)
+                 end
   end
 
   test "unsupport trace http verb" do
@@ -370,9 +376,11 @@ defmodule Oasis.Spec.PathTest do
 
     root = yaml_to_json_schema(yaml_str)
 
-    assert_raise Oasis.InvalidSpecError, ~r(Not Support `trace` http method from `/hello` path), fn ->
-      Path.build(root)
-    end
+    assert_raise Oasis.InvalidSpecError,
+                 ~r(Not Support `trace` http method from `/hello` path),
+                 fn ->
+                   Path.build(root)
+                 end
   end
 
   test "x-oasis-name-space in paths and operation" do
@@ -419,5 +427,4 @@ defmodule Oasis.Spec.PathTest do
     paths = schema["paths"]
     assert paths["x-oasis-router"] == "MyRouter"
   end
-
 end

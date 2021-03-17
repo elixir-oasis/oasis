@@ -20,7 +20,7 @@ defmodule Mix.Tasks.Oas.Gen.Plug do
 
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix oas.gen.plug can only be run inside an application directory"
+      Mix.raise("mix oas.gen.plug can only be run inside an application directory")
     end
 
     Mix.shell().info("Generates Router and Plug modules from OAS")

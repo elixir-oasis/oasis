@@ -46,6 +46,7 @@ defmodule Oasis.Spec.Path do
         {field, value}, acc ->
           Map.put(acc, field, value)
       end)
+
     schema = Map.put(schema, "paths", paths)
 
     %{root | schema: schema}

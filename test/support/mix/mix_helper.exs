@@ -67,5 +67,4 @@ defmodule Oasis.MixHelper do
     end
     """
   end
-
 end

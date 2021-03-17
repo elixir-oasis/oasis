@@ -155,6 +155,7 @@ defmodule Mix.Oasis.Router do
       {acc, operation}
     else
       body_schema = put_required_if_exists(request_body, %{"content" => content})
+
       {
         Map.put(acc, :body_schema, body_schema),
         operation
@@ -164,9 +165,11 @@ defmodule Mix.Oasis.Router do
 
   defp step2_merge_request_body({acc, operation}), do: {acc, operation}
 
-  defp put_required_if_exists(%{"required" => required}, map) when is_boolean(required) and is_map(map) do
+  defp put_required_if_exists(%{"required" => required}, map)
+       when is_boolean(required) and is_map(map) do
     Map.put(map, "required", required)
   end
+
   defp put_required_if_exists(_, map), do: map
 
   defp group_schemas_by_location(location, parameters)
@@ -179,7 +182,8 @@ defmodule Mix.Oasis.Router do
   defp group_schemas_by_location(_location, _parameters), do: nil
 
   defp map_parameter(%{"name" => name, "schema" => schema} = parameter, acc) do
-    parameter = put_required_if_exists(parameter, %{"schema" => %ExJsonSchema.Schema.Root{schema: schema}})
+    parameter =
+      put_required_if_exists(parameter, %{"schema" => %ExJsonSchema.Schema.Root{schema: schema}})
 
     Map.merge(acc, %{name => parameter})
   end
@@ -327,8 +331,7 @@ defmodule Mix.Oasis.Router do
 
     {
       [
-        {:eex, Path.join([dir, pre_plug_file_name]), "pre_plug.ex", pre_plug_module,
-         router},
+        {:eex, Path.join([dir, pre_plug_file_name]), "pre_plug.ex", pre_plug_module, router},
         {:new_eex, Path.join([dir, plug_file_name]), "plug.ex", plug_module, router}
       ],
       router
