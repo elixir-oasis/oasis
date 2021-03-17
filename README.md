@@ -4,13 +4,13 @@
 
 ## Introduction
 
-Backgroud
+Background
 
 > The [OpenAPI Specification](https://www.openapis.org/) (OAS) defines a standard, programming language-agnostic interface description for REST APIs, which allows both humans and computers to discover and understand the capabilities of a service without requiring access to source code, additional documentation, or inspection of network traffic. When properly defined via OpenAPI, a consumer can understand and interact with the remote service with a minimal amount of implementation logic. Similar to what interface descriptions have done for lower-level programming, the OpenAPI Specification removes guesswork in calling a service.
 
 Oasis is:
 
-Base on `Plug`'s implements, according to the OpenAPI Specification to generate server's router and the all well defined HTTP request handler(s), since the OAS defines a detailed collection of data types by [JSON Schema Specification](https://json-schema.org/), Oasis leverages this and focuses on the types convertion and validation to the parameters of the HTTP request.
+Base on `Plug`'s implements, according to the OpenAPI Specification to generate server's router and the all well defined HTTP request handler(s), since the OAS defines a detailed collection of data types by [JSON Schema Specification](https://json-schema.org/), Oasis leverages this and focuses on the types conversion and validation to the parameters of the HTTP request.
 
 * Maintain a standard REST APIs document(in YAML or JSON) via OpenAPI is in a high priority
 * Generate the maintainable router and HTTP request handlers code by the defined document
@@ -326,12 +326,12 @@ Please note that the added line of `plug(Oasis.Gen.Router)` is before the line o
 
 ## Todo
 
-1. The Specification conatins XML object is not supported so far.
+1. The Specification contains XML object is not supported so far.
 2. May add mix task to generate `Phoenix`'s style code.
 3. Make document more clear.
 4. There are still some details maybe not implement(or bug) from the OAS, please create an issue or a PR for tracking, thanks in advanced :)
 
 ## Reference
 
-1. The offical OpenAPI Specification v3: [Github](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md) | [Official Web Site](http://spec.openapis.org/oas/v3.1.0)
+1. The official OpenAPI Specification v3: [Github](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md) | [Official Web Site](http://spec.openapis.org/oas/v3.1.0)
 2. [JSON Schema Reference](https://json-schema.org/understanding-json-schema/reference/)
