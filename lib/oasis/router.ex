@@ -1,4 +1,30 @@
 defmodule Oasis.Router do
+  @moduledoc ~S"""
+  Base on `Plug.Router` to add a pre-parser to convert and validate the path param(s) in the
+  final generated HTTP verb match functions.
+
+  The generated router module uses `Oasis.Router` to instead of `Plug.Router`, in fact, they don't make a
+  huge difference, except that specify parameters which will then be available and types coverted
+  in the function body:
+
+      get("/hello/:id",
+        private: %{
+          path_schema: %{
+            "id" => %{
+              "schema" => %ExJsonSchema.Schema.Root{
+                schema: %{"type" => "integer"}
+              }
+            }
+          }
+        }) do
+        # Notice that the `:id` variable is an integer
+        send_resp(conn, 200, "hello #{id}")
+      end
+
+  The `:id` parameter will also be available and coverted as an integer in the function body as
+  `conn.params["id"]` and `conn.path_params["id"]`.
+  """
+
   @doc false
   defmacro __using__(_opts) do
     quote location: :keep do

@@ -1,4 +1,6 @@
 defmodule Oasis do
+  @moduledoc false
+
   defmodule InvalidSpecError do
     defexception message: "use some invalid specification to generate modules"
 

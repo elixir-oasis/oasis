@@ -1,9 +1,23 @@
 defmodule Mix.Tasks.Oas.Gen.Plug do
+  @shortdoc "Generates Router and Plug modules from OpenAPI Specification"
+
+  @moduledoc """
+  Generates router and plug handlers for a proper OpenAPI Specification in YAML or JSON file.
+
+      mix oas.gen.plug --file path/to/openapi.yaml
+      mix oas.gen.plug --file path/to/openapi.yml
+      mix oas.gen.plug --file path/to/openapi.json
+
+  The arguments of `oas.gen.plug` mix task:
+
+  * `--file`, required, the completed path to the specification file in YAML or JSON format.
+  * `--router`, optional, the generated router's module alias, by default it is `Router` (the full module name is `Oasis.Gen.Router` by default), for example we set `--router Hello.MyRouter` meanwhile there is no other special name space defined, the final router module is `Oasis.Gen.Hello.MyRouter` in `/lib/oasis/gen/hello/my_router.ex` path.
+  * `--name-space`, optional, the generated all modules' name space, by default it is `Oasis.Gen`, this argument will always override the name space from the input `--file` if any `"x-oasis-name-space"` field(s) defined.
+  """
   use Mix.Task
 
   @switches [file: :string, router: :string, name_space: :string, body_reader: :string]
 
-  @shortdoc "Generates Router and Plug modules from OpenAPI Specification"
   def run(args) do
     if Mix.Project.umbrella?() do
       Mix.raise "mix oas.gen.plug can only be run inside an application directory"

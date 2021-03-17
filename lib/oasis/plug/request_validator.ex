@@ -1,4 +1,30 @@
 defmodule Oasis.Plug.RequestValidator do
+  @moduledoc ~S"""
+  A plug to convert types and validate the HTTP request parameters by the schemas of
+  the OpenAPI definition.
+
+  The schema options can be found in the generated `pre-` plug handler file, the full list:
+
+    * `:query_schema`
+    * `:header_schema`
+    * `:cookie_schema`
+    * `:body_schema`
+
+  All of these options are fully map and generated from the corresponding definition of the OpenAPI Specification.
+
+  When the query parameters are verified by the validation of `:query_schema`, the coverted types of query parameters
+  are reserved in `:query_params` and `:params` field of the `Plug.Conn`.
+
+  When the header parameters are verified by the validation of `:header_schema`, the converted types of header parameters
+  are reserved in `:req_headers` field of the `Plug.Conn`.
+
+  When the cookie parameters are verified by the validation of `:cookie_schema`, the coverted types of cookie parameters
+  are reserved in `:req_cookies` field of the `Plug.Conn`.
+
+  When the request body is verified by the validation of `:body_schema`, the coverted types of request body are reserved
+  in `:body_params` and `:params` field of the `Plug.Conn`.
+  """
+
   import Plug.Conn
 
   @behaviour Plug

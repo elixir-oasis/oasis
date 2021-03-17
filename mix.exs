@@ -10,6 +10,7 @@ defmodule Oasis.MixProject do
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      docs: docs(),
       description: description(),
       package: package(),
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -31,7 +32,7 @@ defmodule Oasis.MixProject do
   end
 
   defp description do
-    "Oasis (WIP)"
+    "The server implementation of OpenAPI Specification v3 within Plug"
   end
 
   # Run "mix help deps" to learn about dependencies.
@@ -51,11 +52,32 @@ defmodule Oasis.MixProject do
 
   defp package do
     [
-      files: ["lib", "mix.exs", "README.md", "LICENSE.md"],
+      files: ["lib", "mix.exs", "README.md", "LICENSE.md", "priv/templates"],
       licenses: ["MIT"],
       links: %{
         "GitHub" => @source_url
       }
+    ]
+  end
+
+  defp docs() do
+    [
+      main: "readme",
+      source_url: @source_url,
+      formatter_opts: [gfm: true],
+      extras: [
+        "README.md",
+        "CHANGELOG.md"
+      ],
+      groups_for_modules: groups_for_modules()
+    ]
+  end
+
+  defp groups_for_modules() do
+    [
+      Plugs: [
+        Oasis.Plug.RequestValidator
+      ]
     ]
   end
 
