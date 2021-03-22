@@ -95,7 +95,7 @@ defmodule Mix.Tasks.Oas.Gen.PlugTest do
 
       assert_file("lib/oasis/gen/add_pet.ex", [
         ~s|defmodule Oasis.Gen.AddPet do|,
-        ~s|import Plug.Conn|,
+        ~s|use Oasis.Controller|,
         ~s|def call(conn, _opts) do|,
         ~s|def handle_errors(|
       ])

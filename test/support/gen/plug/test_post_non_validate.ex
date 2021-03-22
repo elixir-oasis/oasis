@@ -1,5 +1,5 @@
 defmodule Oasis.Gen.Plug.TestPostNonValidate do
-  use Plug.Builder
+  use Oasis.Controller
 
   plug(Plug.Parsers,
     parsers: [:urlencoded],
@@ -8,7 +8,6 @@ defmodule Oasis.Gen.Plug.TestPostNonValidate do
 
   def call(conn, opts) do
     conn = super(conn, opts)
-    resp_body = Jason.encode!(%{"body_params" => conn.body_params})
-    send_resp(conn, 200, resp_body)
+    json(conn, %{"body_params" => conn.body_params})
   end
 end

@@ -1,7 +1,5 @@
 defmodule Oasis.Gen.Plug.TestCookie do
-  import Plug.Conn
-
-  @behaviour Plug
+  use Oasis.Controller
 
   def init(opts), do: opts
 
@@ -11,10 +9,9 @@ defmodule Oasis.Gen.Plug.TestCookie do
     conn = fetch_cookies(conn, signed: ~w(testcookie1 testcookie2))
 
     conn
-    |> put_resp_content_type("application/json")
     |> put_resp_cookie("testcookie1", %{name: "testname"}, sign: true)
     |> put_resp_cookie("testcookie2", 1001, sign: true)
-    |> send_resp(200, Jason.encode!(%{"req_cookies" => conn.req_cookies}))
+    |> json(%{"req_cookies" => conn.req_cookies})
   end
 
   def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do
