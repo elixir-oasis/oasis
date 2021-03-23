@@ -1,8 +1,23 @@
 defmodule Oasis.Controller do
   @moduledoc ~S"""
-  Some common functionality for easily use.
+  Base on `Plug.Builder`, this module can be `use`-d into a module in order to build a plug pipeline:
 
-  The realization of this module comes from `Phoenix.Controller`.
+      defmodule MyApp.HelloController do
+        use Oasis.Controller
+
+        plug(Plug.Parsers,
+          parsers: [:urlencoded],
+          pass: ["*/*"]
+        )
+
+        def call(conn, opts) do
+          conn = super(conn, opts)
+          json(conn, %{"body_params" => conn.body_params})
+        end
+      end
+
+  And provide some common functionality for easily use, this realization comes from
+  [Phoenix.Controller](https://hexdocs.pm/phoenix/Phoenix.Controller.html)
   """
   import Plug.Conn
 
