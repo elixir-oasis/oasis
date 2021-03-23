@@ -1,5 +1,5 @@
 defmodule Oasis.Gen.Plug.PreTestDelete do
-  use Plug.Builder
+  use Oasis.Controller
   use Plug.ErrorHandler
 
   plug(Plug.Parsers,

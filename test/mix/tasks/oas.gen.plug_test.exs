@@ -87,7 +87,7 @@ defmodule Mix.Tasks.Oas.Gen.PlugTest do
 
       assert_file("lib/oasis/gen/pre_add_pet.ex", fn file ->
         assert file =~ ~s|defmodule Oasis.Gen.PreAddPet do|
-        assert file =~ ~s|use Plug.Builder|
+        assert file =~ ~s|use Oasis.Controller|
         assert file =~ ~s|plug(\n    Plug.Parsers,|
         assert file =~ ~s|"application/json" => %ExJsonSchema.Schema.Root{|
         assert file =~ ~s/conn |> super(opts) |> Oasis.Gen.AddPet.call(opts) |> halt()/

@@ -1,7 +1,7 @@
 defmodule <%= inspect context.module_name %> do
   # NOTICE: Please DO NOT write any business code in this module, since it will always be overwrote when
   # run the corresponding mix task command to the OpenAPI Specification.
-  use Plug.Builder
+  use Oasis.Controller
   use Plug.ErrorHandler
   
   <%= context.plug_parsers %>

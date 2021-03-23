@@ -1,5 +1,5 @@
 defmodule Oasis.Gen.Plug.PreTestHeader do
-  use Plug.Builder
+  use Oasis.Controller
   use Plug.ErrorHandler
 
   # Notice:
