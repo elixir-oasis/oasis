@@ -144,7 +144,8 @@ defmodule Mix.Oasis.Router do
         schema = Map.get(media, "schema")
 
         if schema != nil do
-          Map.put(acc, content_type, %ExJsonSchema.Schema.Root{schema: schema})
+          media = Map.put(media, "schema", %ExJsonSchema.Schema.Root{schema: schema})
+          Map.put(acc, content_type, media)
         else
           acc
         end
