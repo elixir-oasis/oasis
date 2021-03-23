@@ -1,14 +1,10 @@
 defmodule Oasis.Gen.Plug.TestHeader do
-  import Plug.Conn
-
-  @behaviour Plug
+  use Oasis.Controller
 
   def init(opts), do: opts
 
   def call(conn, _opts) do
-    conn
-    |> put_resp_content_type("application/json")
-    |> send_resp(200, Jason.encode!(Map.new(conn.req_headers)))
+    json(conn, Map.new(conn.req_headers))
   end
 
   def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do

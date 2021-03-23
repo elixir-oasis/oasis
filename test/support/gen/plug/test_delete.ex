@@ -1,20 +1,16 @@
 defmodule Oasis.Gen.Plug.TestDelete do
-  import Plug.Conn
-
-  @behaviour Plug
+  use Oasis.Controller
 
   def init(opts), do: opts
 
   def call(conn, _opts) do
-    conn
-    |> put_resp_content_type("application/json")
-    |> send_resp(
-      200,
-      Jason.encode!(%{
+    json(
+      conn,
+      %{
         "conn_params" => conn.params,
         "query_params" => conn.query_params,
         "body_params" => conn.body_params
-      })
+      }
     )
   end
 

@@ -1,5 +1,5 @@
 defmodule Oasis.Gen.Plug.PreTestQuery do
-  use Plug.Builder
+  use Oasis.Controller
   use Plug.ErrorHandler
 
   plug(Oasis.Plug.RequestValidator,
