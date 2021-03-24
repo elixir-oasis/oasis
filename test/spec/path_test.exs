@@ -427,4 +427,42 @@ defmodule Oasis.Spec.PathTest do
     paths = schema["paths"]
     assert paths["x-oasis-router"] == "MyRouter"
   end
+
+  test "components requestBodies" do
+    yaml_str = """
+      paths:
+        /refresh:
+          post:
+            requestBody:
+              $ref: '#/components/requestBodies/RefreshTokenForm'
+
+      components:
+        schemas:
+          uuid:
+            type: string
+          RefreshTokenForm:
+            type: object
+            properties:
+              refresh_token:
+                $ref: '#/components/schemas/uuid'
+            required:
+              - refresh_token
+
+        requestBodies:
+          RefreshTokenForm:
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/RefreshTokenForm'
+    """
+    %{schema: schema} = yaml_to_json_schema(yaml_str) |> Utils.expand_ref() |> Path.build()
+    components = schema["components"]
+    content_schema = get_in(components, ["requestBodies", "RefreshTokenForm", "content", "application/json", "schema"])
+    assert content_schema["type"] == "object" and content_schema["required"] == ["refresh_token"]
+
+    paths = schema["paths"]
+    content_schema = get_in(paths, ["/refresh", "post", "requestBody", "content", "application/json", "schema"])
+    assert content_schema["type"] == "object" and content_schema["required"] == ["refresh_token"]
+  end
+
 end

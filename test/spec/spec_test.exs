@@ -47,4 +47,19 @@ defmodule Oasis.Spec.SpecTest do
     {:error, %Oasis.InvalidSpecError{message: message}} = Oasis.Spec.read("hello.txt")
     assert message =~ ~s(Expect a yml/yaml or json format file, but got: `.txt`)
   end
+
+  test "parse post requestBodies" do
+    file_path = Path.join([@dir, "basic.yaml"])
+    %ExJsonSchema.Schema.Root{schema: schema} = Oasis.Spec.read(file_path)
+
+    request_body_of_refresh_token = schema["paths"]["/refresh_token"]["post"]["requestBody"]
+    assert request_body_of_refresh_token["required"] == true
+
+    schema = request_body_of_refresh_token["content"]["application/json"]["schema"]
+    schema = ExJsonSchema.Schema.resolve(schema)
+
+    assert ExJsonSchema.Validator.validate(schema, %{"refresh_token" => "123"}) == :ok
+
+    assert {:error, _} = ExJsonSchema.Validator.validate(schema, %{})
+  end
 end

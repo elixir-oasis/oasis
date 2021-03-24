@@ -818,4 +818,27 @@ defmodule Oasis.ValidatorTest do
     input = Jason.encode(%{"a" => 1, "b" => 2})
     assert Validator.parse_and_validate!(param, "query", name, input) == input
   end
+
+  test "parse empty map" do
+    type = %{
+      "content" => %{
+        "application/json" => %{
+          "schema" => %ExJsonSchema.Schema.Root{
+            schema: %{
+              "properties" => %{"refresh_token" => %{"type" => "string"}},
+              "required" => ["refresh_token"],
+              "type" => "object"
+            }
+          }
+        }
+      },
+      "required" => true
+    }
+    assert_raise Plug.BadRequestError,
+                 ~r/Required property refresh_token was not present/,
+                 fn ->
+                   Validator.parse_and_validate!(type, "body", "requestBody", %{})
+                 end
+  end
+
 end

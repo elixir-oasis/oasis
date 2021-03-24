@@ -26,7 +26,7 @@
                     {
                         "name": "id",
                         "in": "path",
-                        "requried": true,
+                        "required": true,
                         "schema": {
                             "type": "integer",
                             "format": "int64"
@@ -50,6 +50,13 @@
                     "url": "http://api.example.com/docs/user-operations/"
                 }
             }
+        },
+        "/refresh_token": {
+            "post": {
+                "requestBody": {
+                    "$ref": "#/components/requestBodies/RefreshTokenForm"
+                }
+            }
         }
     },
     "components": {
@@ -66,6 +73,30 @@
                     }
                 },
                 "required": ["id", "name"]
+            },
+            "uuid": {
+                "type": "string"
+            },
+            "RefreshTokenForm": {
+                "type": "object",
+                "properties": {
+                    "refresh_token": {
+                        "$ref": "#/components/schemas/uuid"
+                    }
+                },
+                "required": ["refresh_token"]
+            }
+        },
+        "requestBodies": {
+            "RefreshTokenForm": {
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/RefreshTokenForm"
+                        }
+                    }
+                },
+                "required": true
             }
         }
     }
