@@ -6,7 +6,7 @@ defmodule Oasis.MixProject do
   def project do
     [
       app: :oasis,
-      version: "0.2.0",
+      version: "0.2.1",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -32,7 +32,7 @@ defmodule Oasis.MixProject do
   end
 
   defp description do
-    "The Elixir server implementation of OpenAPI Specification v3 within Plug"
+    "An Elixir server implementation of OpenAPI Specification v3 within Plug"
   end
 
   # Run "mix help deps" to learn about dependencies.
