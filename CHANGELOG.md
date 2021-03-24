@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2.1 (2021-03-24)
+* Fix unexpected body_schema in generated `pre_*` module
+
 ## v0.2.0 (2021-03-23)
 * Use `Oasis.Controller`
 
