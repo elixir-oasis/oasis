@@ -30,6 +30,12 @@ defmodule Oasis.Controller do
   end
 
   @doc """
+  Returns the router module as an atom, raises if unavailable.
+  """
+  @spec router_module(Plug.Conn.t) :: atom()
+  def router_module(conn), do: conn.private.oasis_router
+
+  @doc """
   Sends text response.
 
   ## Examples

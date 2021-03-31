@@ -54,9 +54,16 @@ defmodule Oasis.Router do
 
       Module.register_attribute(__MODULE__, :oas_path_schemas, accumulate: true)
 
+      def call(conn, opts) do
+        conn = put_private(conn, :oasis_router, __MODULE__)
+        super(conn, opts)
+      end
+
       def match(conn, _opts) do
         parse_and_then_do_match(conn, conn.method, Plug.Router.Utils.decode_path_info!(conn))
       end
+
+      defoverridable [call: 2, match: 2]
     end
   end
 
