@@ -24,7 +24,7 @@ defmodule Oasis.Token do
       key_length: pos_integer(),
       key_digest: atom(),
       signed_at: non_neg_integer(),
-      max_age: non_neg_integer()
+      max_age: integer()
     }
 
   end
