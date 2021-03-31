@@ -37,6 +37,9 @@ defmodule Oasis.IntegrationTest do
     assert Oasis.Gen.Plug.TestDelete.init(:ok) == :ok
 
     assert Oasis.Plug.RequestValidator.init(:ok) == :ok
+
+    assert Oasis.Gen.Plug.TestBearerAuth.init(:ok) == :ok
+    assert Oasis.Gen.Plug.TestSignBearerAuth.init(:ok) == :ok
   end
 
   test "parse path parameter in router do body", %{url: url} do
@@ -523,5 +526,95 @@ defmodule Oasis.IntegrationTest do
 
     # parse query parameters
     assert %{"id" => 1, "relation_ids" => ["1", "2", "3"]} == body["query_params"]
+  end
+
+
+  test "missing bearer auth in header", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+
+    assert {:ok, response} = Finch.build(:get, "#{url}/bearer_auth") |> Finch.request(TestFinch)
+    assert response.status == 400
+    {_, authenticate} = List.keyfind(response.headers, "www-authenticate", 0)
+    assert authenticate =~ ~s|Bearer realm=|
+    assert authenticate =~ ~s|error=\"invalid_request\"|
+    assert authenticate =~ ~s|error_description=\"missing a token in authorization header\"|
+  end
+
+  test "verify bearer auth", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+
+    headers = [{"content-type", "application/x-www-form-urlencoded"}]
+    body = "username=a&password=123"
+
+    {:ok, response} = Finch.build(:post, "#{url}/sign_bearer_auth", headers, body) |> Finch.request(TestFinch)
+
+    assert response.status == 200
+    token = Jason.decode!(response.body)["token"]
+
+    headers = [{"authorization", "Bearer " <> token}]
+    {:ok, response} = Finch.build(:get, "#{url}/bearer_auth", headers) |> Finch.request(TestFinch)
+
+    assert response.status == 200
+    id = Jason.decode!(response.body)["id"]
+    assert id == "abcdef"
+
+    # be with an invalid query parameter
+    {:ok, response} = Finch.build(:get, "#{url}/bearer_auth?max_age=hello", headers) |> Finch.request(TestFinch)
+
+    assert response.status == 400
+  end
+
+  test "invalid bearer auth", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+
+    headers = [{"authorization", "Bearer faketoken"}]
+    {:ok, response} = Finch.build(:get, "#{url}/bearer_auth", headers) |> Finch.request(TestFinch)
+
+    assert response.status == 401
+    assert Jason.decode!(response.body)["status"] == "invalid token"
+
+    {_, authenticate} = List.keyfind(response.headers, "www-authenticate", 0)
+    assert authenticate =~ ~s|Bearer realm=|
+    assert authenticate =~ ~s|error=\"invalid_token\"|
+    assert authenticate =~ ~s|error_description=\"the provided token is invalid\"|
+
+    headers = [{"content-type", "application/x-www-form-urlencoded"}]
+    body = "username=a&password=wrong"
+
+    {:ok, response} = Finch.build(:post, "#{url}/sign_bearer_auth", headers, body) |> Finch.request(TestFinch)
+
+    assert response.status == 401
+    assert response.body == "Unauthorized"
+
+    headers = [{"content-type", "application/x-www-form-urlencoded"}]
+    body = "password=unknown"
+
+    {:ok, response} = Finch.build(:post, "#{url}/sign_bearer_auth", headers, body) |> Finch.request(TestFinch)
+
+    assert response.status == 400
+    assert response.body =~ ~s/Required property username was not present/
+  end
+
+  test "expire bearer auth", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+
+    headers = [{"content-type", "application/x-www-form-urlencoded"}]
+    body = "username=a&password=123&max_age=0"
+
+    {:ok, response} = Finch.build(:post, "#{url}/sign_bearer_auth", headers, body) |> Finch.request(TestFinch)
+
+    assert response.status == 200
+    token = Jason.decode!(response.body)["token"]
+
+    headers = [{"authorization", "Bearer " <> token}]
+    {:ok, response} = Finch.build(:get, "#{url}/bearer_auth?max_age=-1", headers) |> Finch.request(TestFinch)
+
+    assert response.status == 401
+    assert Jason.decode!(response.body)["status"] == "invalid token"
+
+    {_, authenticate} = List.keyfind(response.headers, "www-authenticate", 0)
+    assert authenticate =~ ~s|Bearer realm=|
+    assert authenticate =~ ~s|error=\"invalid_token\"|
+    assert authenticate =~ ~s|error_description=\"the provided token is expired\"|
   end
 end

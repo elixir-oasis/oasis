@@ -17,6 +17,22 @@ defmodule Oasis do
     """
   end
 
+  defmodule InvalidRequest do
+    defexception message: "the request is missing a required parameter due to client error", plug_status: 400
+
+    @moduledoc """
+    Error raised when missing a required parameter due to client error
+    """
+  end
+
+  defmodule InvalidTokenRequest do
+    defexception message: "the provided token is expired, revoked, malformed, or invalid for other reasons", plug_status: 401
+
+    @moduledoc """
+    Error raised when the provided token is expired, revoked, malformed, or invalid
+    """
+  end
+
   defmodule CacheRawBodyReader do
     def read_body(conn, opts) do
       {:ok, body, conn} = Plug.Conn.read_body(conn, opts)
@@ -24,4 +40,5 @@ defmodule Oasis do
       {:ok, body, conn}
     end
   end
+
 end
