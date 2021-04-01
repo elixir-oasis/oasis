@@ -17,7 +17,7 @@ defmodule Oasis.Gen.Plug.PreTestBearerAuth do
 
   plug :bearer_auth,
     security: Oasis.Gen.BearerAuth,
-    storage_key: :id
+    key_to_assigns: :id
 
   def call(conn, opts) do
     conn |> super(conn) |> Oasis.Gen.Plug.TestBearerAuth.call(opts) |> halt()

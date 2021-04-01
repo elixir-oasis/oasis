@@ -89,11 +89,11 @@ defmodule Oasis.Plug.BearerAuthTest do
       refute conn.status
       refute conn.halted
 
-      # and we can custom it by `:storage_key`
+      # and we can custom it by `:key_to_assigns`
       conn =
         conn(:get, "/")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> bearer_auth(security: BearerAuth, storage_key: :id)
+        |> bearer_auth(security: BearerAuth, key_to_assigns: :id)
 
       assert conn.assigns.id == id and Map.has_key?(conn.assigns, :verified) == false
     end
@@ -129,7 +129,7 @@ defmodule Oasis.Plug.BearerAuthTest do
       conn =
         conn(:get, "/")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> bearer_auth(security: BearerAuthCustomVerify, storage_key: :id)
+        |> bearer_auth(security: BearerAuthCustomVerify, key_to_assigns: :id)
 
       assert conn.assigns.id == id
 
@@ -142,7 +142,7 @@ defmodule Oasis.Plug.BearerAuthTest do
       assert_raise Oasis.InvalidTokenRequest, ~r/the provided token is invalid/, fn ->
         conn(:get, "/")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> bearer_auth(security: BearerAuthCustomVerify, storage_key: :id)
+        |> bearer_auth(security: BearerAuthCustomVerify, key_to_assigns: :id)
       end
     end
 
