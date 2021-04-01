@@ -12,12 +12,12 @@ defmodule Oasis.Gen.BearerAuth do
     # for testing proposal to dynamically change `max_age` by request
     max_age = Map.get(conn.params, "max_age")
 
-    default = [salt: "abc", secret_key_base: @secret_key_base]
+    default = [salt: "abc"]
 
     default = if max_age != nil, do: default ++ [{:max_age, max_age}], else: default
 
     opts = Keyword.merge(default, opts)
-    struct(%Crypto{}, opts)
+    struct(%Crypto{secret_key_base: @secret_key_base}, opts)
   end
 
 end

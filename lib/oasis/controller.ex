@@ -17,7 +17,7 @@ defmodule Oasis.Controller do
       end
 
   And provide some common functionality for easily use, this realization comes from
-  [Phoenix.Controller](https://hexdocs.pm/phoenix/Phoenix.Controller.html)
+  [Phoenix.Controller](https://hexdocs.pm/phoenix/Phoenix.Controller.html).
   """
   import Plug.Conn
 

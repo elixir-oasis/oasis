@@ -29,7 +29,7 @@ defmodule Oasis.Plug.BearerAuthTest do
     end
   end
 
-  defmodule BearerAuthCustomVerify do
+  defmodule BearerAuthWithVerify do
     @behaviour Oasis.Token
 
     alias Oasis.Token.Crypto
@@ -73,9 +73,6 @@ defmodule Oasis.Plug.BearerAuthTest do
       id = 123
       crypto = BearerAuth.crypto_config(%Conn{}, [])
 
-      # default `:max_age` is 7200 seconds
-      assert crypto.max_age == 7200
-
       token = sign(crypto, id)
 
       conn =
@@ -83,8 +80,9 @@ defmodule Oasis.Plug.BearerAuthTest do
         |> put_req_header("authorization", "Bearer #{token}")
         |> bearer_auth(security: BearerAuth)
 
-      # the protected data is stored in :verified key of assigns
-      assert conn.assigns.verified == id
+      # Since not defined `:key_to_assigns` option, there will not
+      # store the verified data into `conn.assigns`
+      assert conn.assigns == %{}
 
       refute conn.status
       refute conn.halted
@@ -122,14 +120,14 @@ defmodule Oasis.Plug.BearerAuthTest do
 
     test "custom function verify/3" do
       id = 1
-      crypto = BearerAuthCustomVerify.crypto_config(%Conn{}, [])
+      crypto = BearerAuthWithVerify.crypto_config(%Conn{}, [])
 
       token = sign(crypto, id)
 
       conn =
         conn(:get, "/")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> bearer_auth(security: BearerAuthCustomVerify, key_to_assigns: :id)
+        |> bearer_auth(security: BearerAuthWithVerify, key_to_assigns: :id)
 
       assert conn.assigns.id == id
 
@@ -142,7 +140,7 @@ defmodule Oasis.Plug.BearerAuthTest do
       assert_raise Oasis.InvalidTokenRequest, ~r/the provided token is invalid/, fn ->
         conn(:get, "/")
         |> put_req_header("authorization", "Bearer #{token}")
-        |> bearer_auth(security: BearerAuthCustomVerify, key_to_assigns: :id)
+        |> bearer_auth(security: BearerAuthWithVerify, key_to_assigns: :id)
       end
     end
 

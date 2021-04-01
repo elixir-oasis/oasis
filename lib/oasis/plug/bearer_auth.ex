@@ -8,8 +8,12 @@ defmodule Oasis.Plug.BearerAuth do
     with {:ok, token} <- parse_bearer_auth(conn),
          {conn, security, crypto} <- load_crypto(conn, options),
          {:ok, data} <- verify(conn, security, crypto, token, options) do
-      key = Keyword.get(options, :key_to_assigns, :verified)
-      assign(conn, key, data)
+      key = Keyword.get(options, :key_to_assigns)
+      if key != nil do
+        assign(conn, key, data)
+      else
+        conn
+      end
     else
       error ->
         raise_invalid_auth(error)
