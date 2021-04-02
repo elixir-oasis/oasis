@@ -42,7 +42,7 @@ defmodule Oasis.TokenTest do
     end
   end
 
-  test "verify/2 with valid crypto" do
+  test "verify/2 with valid token" do
     crypto = %Crypto{secret_key_base: random_string(20), salt: "abcdef"}
     data = 123
     token = sign(crypto, data)
@@ -61,4 +61,23 @@ defmodule Oasis.TokenTest do
     assert verify(crypto, "unknowntoken") == {:error, :invalid}
   end
 
+  test "encrypt/2" do
+    crypto = %Crypto{secret_key_base: random_string(20), secret: "abcdef"}
+    assert is_bitstring(encrypt(crypto, %{"username" => "hello"})) == true
+  end
+
+  test "decrypt/2 with valid token" do
+    crypto = %Crypto{secret_key_base: random_string(20), secret: "abcdef"}
+    data = %{"nickname" => "hello"}
+    token = encrypt(crypto, data)
+    assert decrypt(crypto, token) == {:ok, data}
+  end
+
+  test "decrypt/2 with invalid token" do
+    crypto = %Crypto{secret_key_base: random_string(20), secret: "abcdef"}
+    data = %{"nickname" => "abc"}
+    token = encrypt(crypto, data)
+    assert decrypt(crypto, "#{token}.123") == {:error, :invalid}
+    assert decrypt(crypto, "unknowntoken") == {:error, :invalid}
+  end
 end
