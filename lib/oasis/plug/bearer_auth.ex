@@ -1,9 +1,82 @@
 defmodule Oasis.Plug.BearerAuth do
   @moduledoc ~S"""
-  TODO
+  Functionality for providing Bearer HTTP authentication.
+
+  It is recommended to only use this module in production if SSL is enabled and enforced.
+  See `Plug.SSL` for more information.
+
+  ## Example
+
+  As any other Plug, we can use the `bearer_auth/2` plug:
+
+      # lib/pre_handler.ex
+      import Oasis.Plug.BearerAuth
+
+      plug :bearer_auth,
+        security: BearerAuth
+        key_to_assigns: :user_id
+
+      # lib/bearer_auth.ex
+      defmodule BearerAuth do
+        @behaviour Oasis.Token
+
+        @impl true
+        def crypto_config(conn, options) do
+          # return a `Oasis.Token.Crypto` struct in your preferred way
+          %Oasis.Token.Crypto{
+            secret_key_base: "...",
+            salt: "...",
+            max_age: 7200
+          }
+        end
+      end
+
+  In general, when we define the [bearer security scheme](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
+  of the OpenAPI Specification in our API design document, then run `mix oas.gen.plug` task,
+  there will generate the above similar code to the related module file as long as it does not exist,
+  the generation does not override it once the file existed, we need to manually edit this file to make a configuration.
+
+  If we need a customization to verify the bearer token, we can define a callback function `c:Oasis.Token.verify/3`
+  to this scenario.
+
+      # lib/bearer_auth.ex
+      defmodule BearerAuth do
+        @behaviour Oasis.Token
+
+        @impl true
+        def crypto_config(conn, options) do
+          %Oasis.Token.Crypto{
+            ...
+          }
+        end
+
+        @impl true
+        def verify(conn, token, options) do
+          # write your rules to verify the token,
+          # and return the expected results in:
+          #   {:ok, data}, verified
+          #   {:error, :expired}, expired token
+          #   {:error, :invalid}, invalid token
+        end
+      end
+
   """
   import Plug.Conn
 
+
+  @doc """
+  Higher level usage of Baerer HTTP authentication.
+
+  See the module docs for examples.
+
+  ## Options
+
+    * `:security`, required, a module be with `Oasis.Token` behaviour.
+    * `:key_to_assigns`, optional, after the verification of the token, the original data
+      will be stored into the `conn.assigns` once this option defined, for example, if set
+      it as `:user_id`, we can access the verified data via `conn.assigns.user_id` in the
+      next plug pipeline.
+  """
   def bearer_auth(conn, options \\ []) do
     with {:ok, token} <- parse_bearer_auth(conn),
          {conn, security, crypto} <- load_crypto(conn, options),
@@ -20,6 +93,11 @@ defmodule Oasis.Plug.BearerAuth do
     end
   end
 
+  @doc """
+  Parses the request token from Bearer HTTP authentication.
+
+  It returns either `{:ok, token}` or `{:error, "invalid_request"}`.
+  """
   def parse_bearer_auth(conn) do
     with ["Bearer " <> token] <- get_req_header(conn, "authorization") do
       {:ok, token}
