@@ -40,7 +40,7 @@ defmodule Oasis.Token do
     the generated module will use this struct to define the required crypto-related
     key information.
 
-    Please note that the value of the `:secret_key_base` field is required to be at least 20 length string.
+    Please note that the value of the `:secret_key_base` field is required to be a string at least 20 length.
     """
 
     @enforce_keys [:secret_key_base]
