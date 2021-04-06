@@ -552,4 +552,42 @@ defmodule Oasis.Spec.PathTest do
     assert Oasis.Spec.Security.build(operation, security_schemes) == nil
   end
 
+  test "multiple security schemes" do
+    yaml_str = """
+      paths:
+        /user:
+          get:
+            parameters:
+              - name: id
+                in: query
+                schema:
+                  type: string
+      components:
+        securitySchemes:
+          apiKeyAuth:
+            type: apiKey
+            name: access_key
+            in: header
+          bearerAuth:
+            type: http
+            scheme: bearer
+            x-oasis-key-to-assigns: verified
+          basicAuth:
+            type: http
+            scheme: basic
+
+      security:
+        - bearerAuth: []
+        - basicAuth: []
+        - apiKeyAuth: []
+    """
+
+    %{schema: schema} = yaml_to_json_schema(yaml_str) |> Path.build()
+
+    security_schemes = Oasis.Spec.Security.security_schemes(schema)
+
+    assert Oasis.Spec.Security.build(schema, security_schemes) ==
+      [{"bearerAuth", %{"scheme" => "bearer", "type" => "http", "x-oasis-key-to-assigns" => "verified"}}]
+  end
+
 end
