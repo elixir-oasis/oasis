@@ -2,9 +2,8 @@ defmodule Oasis.Gen.Plug.PreTestBearerAuth do
   use Oasis.Controller
   use Plug.ErrorHandler
 
-  import Oasis.Plug.BearerAuth
-
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     query_schema: %{
       "max_age" => %{
         "schema" => %ExJsonSchema.Schema.Root{
@@ -15,9 +14,11 @@ defmodule Oasis.Gen.Plug.PreTestBearerAuth do
     }
   )
 
-  plug :bearer_auth,
+  plug(
+    Oasis.Plug.BearerAuth,
     security: Oasis.Gen.BearerAuth,
     key_to_assigns: :id
+  )
 
   def call(conn, opts) do
     conn |> super(conn) |> Oasis.Gen.Plug.TestBearerAuth.call(opts) |> halt()

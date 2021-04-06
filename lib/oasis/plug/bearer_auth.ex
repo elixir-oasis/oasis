@@ -63,6 +63,13 @@ defmodule Oasis.Plug.BearerAuth do
   """
   import Plug.Conn
 
+  @behaviour Plug
+
+  def init(options), do: options
+
+  def call(conn, options) do
+    bearer_auth(conn, options)
+  end
 
   @doc """
   Higher level usage of Baerer HTTP authentication.

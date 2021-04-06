@@ -37,6 +37,7 @@ defmodule Oasis.IntegrationTest do
     assert Oasis.Gen.Plug.TestDelete.init(:ok) == :ok
 
     assert Oasis.Plug.RequestValidator.init(:ok) == :ok
+    assert Oasis.Plug.BearerAuth.init(:ok) == :ok
 
     assert Oasis.Gen.Plug.TestBearerAuth.init(:ok) == :ok
     assert Oasis.Gen.Plug.TestSignBearerAuth.init(:ok) == :ok

@@ -25,12 +25,12 @@ defmodule Mix.Oasis do
     end
   end
 
-  def new(%{"paths" => paths} = _content, opts) do
-    Mix.Oasis.Router.generate_files_by_paths_spec(generator_paths(), paths, opts)
+  def new(%{"paths" => paths} = spec, opts) when is_map(paths) do
+    Mix.Oasis.Router.generate_files_by_paths_spec(generator_paths(), spec, opts)
   end
 
-  def new(content, _opts) do
-    raise "could not find any paths defined in #{inspect(content)}"
+  def new(spec, _opts) do
+    raise "could not find any paths defined in #{inspect(spec)}"
   end
 
   def name_space(nil) do

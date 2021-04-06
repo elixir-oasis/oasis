@@ -8,6 +8,8 @@ defmodule <%= inspect context.module_name %> do
 
   <%= context.request_validator %>
 
+  <%= if context.security != nil do %><%= Enum.join(context.security, "\n") %><% end %>
+
   def call(conn, opts) do
     conn |> super(opts) |> <%= inspect context.plug_module %>.call(opts) |> halt()
   end
