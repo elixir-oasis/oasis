@@ -32,9 +32,45 @@ defmodule Oasis.Plug.BearerAuth do
       end
 
   In general, when we define the [bearer security scheme](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
-  of the OpenAPI Specification in our API design document, then run `mix oas.gen.plug` task,
-  there will generate the above similar code to the related module file as long as it does not exist,
-  the generation does not override it once the file existed, we need to manually edit this file to make a configuration.
+  of the OpenAPI Specification in our API design document, for example:
+
+  Here, apply the security globally to all operations:
+
+      openapi: 3.1.0
+
+      components:
+        securitySchemes:
+          bearerAuth: # arbitrary name for the security scheme
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+
+      security:
+        - bearerAuth: []
+
+  Here, apply the security to a operation:
+
+      openapi: 3.1.0
+
+      components:
+        securitySchemes:
+          bearerAuth: # arbitrary name for the security scheme
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+
+      paths:
+        /something:
+          get:
+            security:
+              - bearerAuth: []
+
+  The above arbitrary name for the security scheme `"bearerAuth"` will be transfer into a generated module (see the following "BearerAuth" module)
+  to provide the required crypto-related configuration, and use it in the `:security` option of `bearer_auth/2`.
+
+  After we define bearer authentication into the spec, then run `mix oas.gen.plug` task with this spec file, there will generate the above similar code to the
+  related module file as long as it does not exist, it also follows the name space definition of the module, and the generation does not override it once the file existed,
+  we need to manually edit this file to make a crypto-related configuration.
 
   If we need a customization to verify the bearer token, we can define a callback function `c:Oasis.Token.verify/3`
   to this scenario.
@@ -59,7 +95,6 @@ defmodule Oasis.Plug.BearerAuth do
           #   {:error, :invalid}, invalid token
         end
       end
-
   """
   import Plug.Conn
 
