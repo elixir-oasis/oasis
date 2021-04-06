@@ -118,14 +118,14 @@ defmodule Mix.Oasis.Router do
 
   defp build_operation(operation, opts) do
     operation
-    |> step1_merge_parameters()
-    |> step2_merge_request_body()
-    |> step3_merge_security(opts)
-    |> step4_merge_others(opts)
+    |> merge_parameters_to_operation()
+    |> merge_request_body_to_operation()
+    |> merge_security_to_operation(opts)
+    |> merge_others_to_operation(opts)
   end
 
-  defp step1_merge_parameters(%{"parameters" => parameters} = operation) do
-    parameter_schemas =
+  defp merge_parameters_to_operation(%{"parameters" => parameters} = operation) do
+    router =
       @check_parameter_fields
       |> Enum.reduce(%{}, fn location, acc ->
         parameters_to_location = Map.get(parameters, location)
@@ -135,12 +135,12 @@ defmodule Mix.Oasis.Router do
         to_schema_opt(params_to_schema, location, acc)
       end)
 
-    {parameter_schemas, operation}
+    {router, operation}
   end
 
-  defp step1_merge_parameters(operation), do: {%{}, operation}
+  defp merge_parameters_to_operation(operation), do: {%{}, operation}
 
-  defp step2_merge_request_body(
+  defp merge_request_body_to_operation(
          {acc, %{"requestBody" => %{"content" => content} = request_body} = operation}
        )
        when is_map(content) do
@@ -169,7 +169,7 @@ defmodule Mix.Oasis.Router do
     end
   end
 
-  defp step2_merge_request_body({acc, operation}), do: {acc, operation}
+  defp merge_request_body_to_operation({acc, operation}), do: {acc, operation}
 
   defp put_required_if_exists(%{"required" => required}, map)
        when is_boolean(required) and is_map(map) do
@@ -218,7 +218,7 @@ defmodule Mix.Oasis.Router do
     Map.put(acc, :path_schema, params)
   end
 
-  defp step3_merge_security({acc, operation}, opts) do
+  defp merge_security_to_operation({acc, operation}, opts) do
     security =
       case opts[:global_security] do
         {nil, security_schemes} ->
@@ -233,7 +233,7 @@ defmodule Mix.Oasis.Router do
     }
   end
 
-  defp step4_merge_others({acc, operation}, opts) do
+  defp merge_others_to_operation({acc, operation}, opts) do
     # Use the input `name_space` option from command line if existed
     name_space = opts[:name_space] || Map.get(operation, "x-oasis-name-space")
 
