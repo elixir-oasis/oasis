@@ -41,23 +41,25 @@ defmodule Oasis.Plug.BearerAuth do
       components:
         securitySchemes:
           bearerAuth: # arbitrary name for the security scheme
-          type: http
-          scheme: bearer
-          bearerFormat: JWT
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
 
       security:
         - bearerAuth: []
 
-  Here, apply the security to a operation:
+  Here, apply the security to a operation, and define an optional specification extension `"x-oasis-key-to-assigns"` field
+  to the `:key_to_assigns` option of `bearer_auth/2`:
 
       openapi: 3.1.0
 
       components:
         securitySchemes:
           bearerAuth: # arbitrary name for the security scheme
-          type: http
-          scheme: bearer
-          bearerFormat: JWT
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            x-oasis-key-to-assigns: user_id
 
       paths:
         /something:
@@ -65,14 +67,15 @@ defmodule Oasis.Plug.BearerAuth do
             security:
               - bearerAuth: []
 
-  The above arbitrary name for the security scheme `"bearerAuth"` will be transfer into a generated module (see the following "BearerAuth" module)
+  The above arbitrary name for the security scheme `"bearerAuth"` will be transferred into a generated module (see the mentioned "BearerAuth" module)
   to provide the required crypto-related configuration, and use it in the `:security` option of `bearer_auth/2`.
 
-  After we define bearer authentication into the spec, then run `mix oas.gen.plug` task with this spec file, there will generate the above similar code to the
-  related module file as long as it does not exist, it also follows the name space definition of the module, and the generation does not override it once the file existed,
-  we need to manually edit this file to make a crypto-related configuration.
+  After we define bearer authentication into the spec, then run `mix oas.gen.plug` task with this spec file (via `--file` argument), there will
+  generate the above similar code to the related module file as long as it does not exist, it also follows the name space definition
+  of the module, and the generation does not override it once the file existed, we need to further edit this file to provide a crypto-related
+  configuration in your preferred way.
 
-  If we need a customization to verify the bearer token, we can define a callback function `c:Oasis.Token.verify/3`
+  If we need a customization to verify the bearer token, we can implement a callback function `c:Oasis.Token.verify/3`
   to this scenario.
 
       # lib/bearer_auth.ex

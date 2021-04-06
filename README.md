@@ -45,7 +45,7 @@ Oasis does not cover the full OpenAPI specification, so far the implements conta
 * [Reference Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#referenceObject)
 * [Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#schemaObject)
 * [Security Scheme Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
-  * Bearer Authentication, see `Oasis.Plug.BearerAuth`
+  * Bearer Authentication, please see `Oasis.Plug.BearerAuth` for details.
 
 ## OAS Specification Extensions
 
@@ -53,7 +53,7 @@ Oasis be with the following specification extensions to accommodate the use case
 
 * `"x-oasis-name-space"`, optional, use this field to define the generated Elixir module's name space in [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject) or [Paths Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathsObject), defaults to `Oasis.Gen`.
 * `"x-oasis-router"`, optional, use this field to define the generated Elixir router module's alias in [Paths Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathsObject), defaults to `Router`.
-* `"x-oasis-key-to-assigns"`, optional, after the verification of the token, the original data will be stored into this provided field (as an atom) of the `conn.assigns` for the next access, if not defined it, there won't do any process for the verified original data.
+* `"x-oasis-key-to-assigns"`, optional, after the verification of the token, the original data will be stored into this provided field (as an atom) of the `conn.assigns` for the next accessing, if not defined it, there won't do any process for the verified original data, please see `Oasis.Plug.BearerAuth` for details.
 
 ## How to use
 
