@@ -49,7 +49,7 @@ Oasis does not cover the full OpenAPI specification, so far the implements conta
 
 ## OAS Specification Extensions
 
-Oasis be with the following specification extensions to accommodate the use cases:
+Oasis be with the following [specification extensions](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#specificationExtensions) to accommodate the use cases:
 
 * `"x-oasis-name-space"`, optional, use this field to define the generated Elixir module's name space in [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject) or [Paths Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathsObject), defaults to `Oasis.Gen`.
 * `"x-oasis-router"`, optional, use this field to define the generated Elixir router module's alias in [Paths Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathsObject), defaults to `Router`.
