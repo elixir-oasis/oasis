@@ -1,7 +1,7 @@
 defmodule <%= inspect context.module_name %> do
-  # NOTICE: This module is generated from the corresponding mix task command with the OpenAPI Specification file
-  # in the first time running, and then it WON'T be modified in the future generation command(s)
-  # once this file exists, please write the crypto-related configuration to the bearer token in this module.
+  # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file
+  # in the first time, and then it WILL NOT be modified in the future generation command(s) once this file exists,
+  # please write the crypto-related configuration to the bearer token in this module.
   @behaviour Oasis.Token
 
   @impl true

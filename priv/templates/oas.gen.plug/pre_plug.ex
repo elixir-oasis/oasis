@@ -1,6 +1,6 @@
 defmodule <%= inspect context.module_name %> do
   # NOTICE: Please DO NOT write any business code in this module, since it will always be overridden when
-  # run the corresponding mix task command with the OpenAPI Specification file.
+  # run `mix oas.gen.plug` task command with the OpenAPI Specification file.
   use Oasis.Controller
   use Plug.ErrorHandler
   
