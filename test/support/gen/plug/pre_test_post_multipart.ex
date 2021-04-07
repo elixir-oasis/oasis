@@ -2,12 +2,14 @@ defmodule Oasis.Gen.Plug.PreTestPostMultipart do
   use Oasis.Controller
   use Plug.ErrorHandler
 
-  plug(Plug.Parsers,
+  plug(
+    Plug.Parsers,
     parsers: [:multipart],
     pass: ["*/*"]
   )
 
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     body_schema: %{
       "required" => true,
       "content" => %{

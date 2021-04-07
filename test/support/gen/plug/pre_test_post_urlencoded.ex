@@ -2,14 +2,16 @@ defmodule Oasis.Gen.Plug.PreTestPostUrlencoded do
   use Oasis.Controller
   use Plug.ErrorHandler
 
-  plug(Plug.Parsers,
+  plug(
+    Plug.Parsers,
     parsers: [:urlencoded],
     pass: ["*/*"],
     # may support an option to off/on this.
     body_reader: {Oasis.CacheRawBodyReader, :read_body, []}
   )
 
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     body_schema: %{
       "required" => true,
       "content" => %{

@@ -2,7 +2,8 @@ defmodule Oasis.Gen.Plug.PreTestCookie do
   use Oasis.Controller
   use Plug.ErrorHandler
 
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     cookie_schema: %{
       "items" => %{
         "required" => true,

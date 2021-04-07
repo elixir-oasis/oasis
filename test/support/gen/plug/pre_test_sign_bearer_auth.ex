@@ -2,12 +2,14 @@ defmodule Oasis.Gen.Plug.PreTestSignBearerAuth do
   use Oasis.Controller
   use Plug.ErrorHandler
 
-  plug(Plug.Parsers,
+  plug(
+    Plug.Parsers,
     parsers: [:urlencoded],
     pass: ["*/*"]
   )
 
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     body_schema: %{
       "required" => true,
       "content" => %{

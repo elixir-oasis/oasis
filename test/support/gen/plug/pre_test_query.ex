@@ -2,7 +2,8 @@ defmodule Oasis.Gen.Plug.PreTestQuery do
   use Oasis.Controller
   use Plug.ErrorHandler
 
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     query_schema: %{
       "profile" => %{
         "content" => %{

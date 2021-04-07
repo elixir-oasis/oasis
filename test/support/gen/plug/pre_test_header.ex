@@ -5,7 +5,8 @@ defmodule Oasis.Gen.Plug.PreTestHeader do
   # Notice:
   # all header name are downcased when generate `pre-*` handler module
 
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     header_schema: %{
       "items" => %{
         "required" => true,

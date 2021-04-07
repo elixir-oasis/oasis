@@ -2,12 +2,14 @@ defmodule Oasis.Gen.Plug.PreTestDelete do
   use Oasis.Controller
   use Plug.ErrorHandler
 
-  plug(Plug.Parsers,
+  plug(
+    Plug.Parsers,
     parsers: [:urlencoded],
     pass: ["*/*"]
   )
 
-  plug(Oasis.Plug.RequestValidator,
+  plug(
+    Oasis.Plug.RequestValidator,
     query_schema: %{
       "relation_ids" => %{
         "schema" => %ExJsonSchema.Schema.Root{
