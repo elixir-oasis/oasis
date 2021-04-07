@@ -658,7 +658,7 @@ defmodule Mix.OasisTest do
               ]
             },
             "operationId" => "hello",
-            "name_space" => "Wont.Use"
+            "x-oasis-name-space" => "Wont.Use"
           }
         }
       }
@@ -728,7 +728,7 @@ defmodule Mix.OasisTest do
               ]
             },
             "operationId" => "hello",
-            "name_space" => "Wont.Use",
+            "x-oasis-name-space" => "Wont.Use",
             "security" => [
               %{"myBearerAuth" => []}
             ]
@@ -890,7 +890,7 @@ defmodule Mix.OasisTest do
               ]
             },
             "operationId" => "hello",
-            "name_space" => "Wont.Use",
+            "x-oasis-name-space" => "Wont.Use",
             "security" => [
               %{"my_bearer_auth" => []}
             ]
@@ -923,9 +923,9 @@ defmodule Mix.OasisTest do
 
     {say_hello_files, say_bye_files} = Enum.split(files, 3)
 
-    [_, _, bear_auth_file] = say_hello_files
+    [_, _, bearer_auth_file] = say_hello_files
 
-    {_, path, "bearer_token.ex", module, binding} = bear_auth_file
+    {_, path, "bearer_token.ex", module, binding} = bearer_auth_file
     assert path == "lib/security/open_api/my_bearer_auth.ex"
     assert module == Security.OpenApi.MyBearerAuth
 
@@ -941,5 +941,133 @@ defmodule Mix.OasisTest do
     assert path == "lib/security/open_api/pre_delete_say_bye.ex"
     assert module == Security.OpenApi.PreDeleteSayBye
     assert binding.security == nil
+  end
+
+  test "new/2 with x-oasis-name-space field of security scheme object" do
+    paths_spec = %{
+      "paths" => %{
+        "/url1" => %{
+          "get" => %{
+            "x-oasis-name-space" => "URL1",
+            "security" => [
+              %{"bearer_auth" => []}
+            ]
+          }
+        },
+        "/url2" => %{
+          "post" => %{
+            "x-oasis-name-space" => "URL2",
+            "security" => [
+              %{"bearer_auth" => []}
+            ]
+          }
+        }
+      },
+      "components" => %{
+        "securitySchemes" => %{
+          "bearer_auth" => %{
+            "scheme" => "bearer",
+            "type" => "http",
+            "x-oasis-name-space" => "MyToken"
+          }
+        }
+      }
+    }
+
+    [_router | files] = Mix.Oasis.new(paths_spec, [])
+
+    {plugs_url2, plugs_url1} = Enum.split(files, 3)
+
+    [pre_plug, _, bearer_file] = plugs_url2
+
+    {_, path, "pre_plug.ex", module, binding} = pre_plug
+    assert path == "lib/url2/pre_post_url2.ex"
+    assert module == Url2.PrePostUrl2
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: MyToken.BearerAuth/
+
+    {_, path, "bearer_token.ex", module, binding_from_bearer} = bearer_file
+    assert path == "lib/my_token/bearer_auth.ex"
+    assert module == MyToken.BearerAuth
+    assert binding_from_bearer == binding
+
+    [pre_plug, _, bearer_file] = plugs_url1
+
+    {_, path, "pre_plug.ex", module, binding} = pre_plug
+    assert path == "lib/url1/pre_get_url1.ex"
+    assert module == Url1.PreGetUrl1
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: MyToken.BearerAuth/
+
+    {_, path, "bearer_token.ex", module, binding_from_bearer} = bearer_file
+    assert path == "lib/my_token/bearer_auth.ex"
+    assert module == MyToken.BearerAuth
+    assert binding_from_bearer == binding
+  end
+
+  test "new/2 with x-oasis-name-space field of security scheme object and :name_space opt" do
+    paths_spec = %{
+      "paths" => %{
+        "/url1" => %{
+          "get" => %{
+            "x-oasis-name-space" => "URL1",
+            "security" => [
+              %{"bearer_auth" => []}
+            ]
+          }
+        },
+        "/url2" => %{
+          "post" => %{
+            "x-oasis-name-space" => "URL2",
+            "security" => [
+              %{"bearer_auth" => []}
+            ]
+          }
+        }
+      },
+      "components" => %{
+        "securitySchemes" => %{
+          "bearer_auth" => %{
+            "scheme" => "bearer",
+            "type" => "http",
+            "x-oasis-name-space" => "MyToken"
+          }
+        }
+      }
+    }
+
+    [_router | files] = Mix.Oasis.new(paths_spec, name_space: "Security.OpenApi")
+
+    {plugs_url2, plugs_url1} = Enum.split(files, 3)
+
+    [pre_plug, _, bearer_file] = plugs_url2
+
+    {_, path, "pre_plug.ex", module, binding} = pre_plug
+    assert path == "lib/security/open_api/pre_post_url2.ex"
+    assert module == Security.OpenApi.PrePostUrl2
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: Security.OpenApi.BearerAuth/
+
+    {_, path, "bearer_token.ex", module, binding_from_bearer} = bearer_file
+    assert path == "lib/security/open_api/bearer_auth.ex"
+    assert module == Security.OpenApi.BearerAuth
+    assert binding_from_bearer == binding
+
+    [pre_plug, _, bearer_file] = plugs_url1
+
+    {_, path, "pre_plug.ex", module, binding} = pre_plug
+    assert path == "lib/security/open_api/pre_get_url1.ex"
+    assert module == Security.OpenApi.PreGetUrl1
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: Security.OpenApi.BearerAuth/
+
+    {_, path, "bearer_token.ex", module, binding_from_bearer} = bearer_file
+    assert path == "lib/security/open_api/bearer_auth.ex"
+    assert module == Security.OpenApi.BearerAuth
+    assert binding_from_bearer == binding
   end
 end

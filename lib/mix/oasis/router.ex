@@ -25,6 +25,10 @@ defmodule Mix.Oasis.Router do
     "path"
   ]
 
+  @spec_ext_name_space "x-oasis-name-space"
+  @spec_ext_router "x-oasis-router"
+  @spec_ext_key_to_assigns "x-oasis-key-to-assigns"
+
   def generate_files_by_paths_spec(apps, %{"paths" => paths_spec} = spec, opts)
     when is_map(paths_spec) do
 
@@ -40,11 +44,11 @@ defmodule Mix.Oasis.Router do
   defp put_opts(%{"paths" => paths_spec} = spec, opts) do
     # Set the global :name_space use the input option from command line if exists,
     # or use the Paths Object's extension "x-oasis-name-space" field if exists.
-    name_space = opts[:name_space] || Map.get(paths_spec, "x-oasis-name-space")
+    name_space = opts[:name_space] || Map.get(paths_spec, @spec_ext_name_space)
 
     # Set the :router use the input option from command line if exists,
     # or use the Paths Object's extension "x-oasis-router" field if exists.
-    router = opts[:router] || Map.get(paths_spec, "x-oasis-router")
+    router = opts[:router] || Map.get(paths_spec, @spec_ext_router)
 
     opts
     |> Keyword.put(:name_space, name_space)
@@ -113,7 +117,7 @@ defmodule Mix.Oasis.Router do
         build_operation(operation, opts)
       )
 
-    build_files_to_generate(apps, router)
+    build_files_to_generate(apps, router, opts)
   end
 
   defp build_operation(operation, opts) do
@@ -235,21 +239,21 @@ defmodule Mix.Oasis.Router do
 
   defp merge_others_to_operation({acc, operation}, opts) do
     # Use the input `name_space` option from command line if existed
-    name_space = opts[:name_space] || Map.get(operation, "x-oasis-name-space")
+    name_space = opts[:name_space] || Map.get(operation, @spec_ext_name_space)
 
     acc
     |> Map.put(:operation_id, Map.get(operation, "operationId"))
     |> Map.put(:name_space, name_space)
   end
 
-  defp build_files_to_generate(apps, router) do
+  defp build_files_to_generate(apps, router, opts) do
     {files, router} =
       apps
       |> may_inject_request_validator(router)
       |> may_inject_plug_parsers()
       |> template_plugs_in_pair()
 
-    {security_files, router} = may_inject_plug_security(router, apps)
+    {security_files, router} = may_inject_plug_security(apps, router, opts)
 
     files =
       files
@@ -351,13 +355,13 @@ defmodule Mix.Oasis.Router do
     Map.put(router, :request_validator, content)
   end
 
-  defp may_inject_plug_security(%{security: nil} = router, _apps) do
+  defp may_inject_plug_security(_apps, %{security: nil} = router, _opts) do
     {[], router}
   end
-  defp may_inject_plug_security(%{security: security} = router, apps) when is_list(security) do
+  defp may_inject_plug_security(apps, %{security: security} = router, opts) when is_list(security) do
     {security, files} =
       Enum.reduce(security, [], fn {security_name, security_scheme}, acc ->
-        security_scheme = map_security_scheme(apps, security_name, security_scheme, router)
+        security_scheme = map_security_scheme(apps, security_name, security_scheme, router, opts)
         acc ++ [security_scheme]
       end)
       |> Enum.unzip()
@@ -367,13 +371,16 @@ defmodule Mix.Oasis.Router do
     {files, router}
   end
 
-  defp map_security_scheme(apps, security_name, %{"scheme" => "bearer"} = security_scheme, %{name_space: name_space}) do
+  defp map_security_scheme(apps, security_name, %{"scheme" => "bearer"} = security_scheme, %{name_space: name_space}, opts) do
+    # priority use `x-oasis-name-space` field in security scheme object compare to operation's level
+    # but still use the input argument option from the `oas.gen.plug` command line in highest priority if possible.
+    name_space = opts[:name_space] || Map.get(security_scheme, @spec_ext_name_space, name_space)
     {name_space, dir} = Mix.Oasis.name_space(name_space)
 
     {module_name, file_name} = Mix.Oasis.module_alias(security_name)
     security_module = Module.concat([name_space, module_name])
 
-    key_to_assigns = Map.get(security_scheme, "x-oasis-key-to-assigns")
+    key_to_assigns = Map.get(security_scheme, @spec_ext_key_to_assigns)
 
     content =
       Mix.Oasis.eval_from(apps, "priv/templates/oas.gen.plug/plug/bearer_auth.exs",

@@ -13,11 +13,11 @@ defmodule Oasis.Plug.BearerAuth do
       import Oasis.Plug.BearerAuth
 
       plug :bearer_auth,
-        security: BearerAuth
+        security: Oasis.Gen.BearerAuth
         key_to_assigns: :user_id
 
-      # lib/bearer_auth.ex
-      defmodule BearerAuth do
+      # lib/oasis/gen/bearer_auth.ex
+      defmodule Oasis.Gen.BearerAuth do
         @behaviour Oasis.Token
 
         @impl true
@@ -37,12 +37,12 @@ defmodule Oasis.Plug.BearerAuth do
 
       plug(
         Oasis.Plug.BearerAuth,
-        security: BearerAuth,
+        security: Oasis.Gen.BearerAuth,
         key_to_assigns: :user_id
       )
 
-      # lib/bearer_auth.ex
-      defmodule BearerAuth do
+      # lib/oasis/gen/bearer_auth.ex
+      defmodule Oasis.Gen.BearerAuth do
         @behaviour Oasis.Token
 
         @impl true
@@ -88,8 +88,24 @@ defmodule Oasis.Plug.BearerAuth do
             security:
               - bearerAuth: []
 
-  The above arbitrary name for the security scheme `"bearerAuth"` will be transferred into a generated module (see the mentioned "BearerAuth" module)
-  to provide the required crypto-related configuration, and use it in the `:security` option of `bearer_auth/2`.
+  The above arbitrary name for the security scheme `"bearerAuth"` will be transferred into a generated module (see the mentioned "Oasis.Gen.BearerAuth"
+  module) to provide the required crypto-related configuration, and use it as the value to the `:security` option of `bearer_auth/2`.
+
+  By default, the generated "BearerAuth" module will inherit the module name space in order from the paths object, the operation object if they defined
+  the `"x-oasis-name-space"` field, or defaults to `Oasis.Gen` if there are no any specification defined, as an optional, we can add an `"x-oasis-name-space"`
+  field as a specification extension of the security scheme object to override the module name space, meanwhile, the optional `--name-space` argument to the
+  `mix oas.gen.plug` command line is in the highest priority to set the name space of the generated module.
+
+      components:
+        securitySchemes:
+          bearerAuth: # arbitrary name for the security scheme
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            x-oasis-key-to-assigns: user_id
+            x-oasis-name-space: MyToken
+
+  In the above example, the final generated module name of `"bearerAuth"` is `MyToken.BearerAuth` when there is no `--name-space` argument input to generate.
 
   After we define bearer authentication into the spec, then run `mix oas.gen.plug` task with this spec file (via `--file` argument), there will
   generate the above similar code to the related module file as long as it does not exist, it also follows the name space definition
