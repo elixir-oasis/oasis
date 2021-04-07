@@ -5,7 +5,7 @@ defmodule <%= inspect context.module_name %> do
   @behaviour Oasis.Token
 
   @impl true
-  def crypto_config(conn, opts) do
+  def crypto_config(_conn, _opts) do
     # %Oasis.Token.Crypto{
     #   secret_key_base: ""
     # }
