@@ -121,13 +121,13 @@ defmodule Mix.Tasks.Oas.Gen.PlugTest do
       assert_file("lib/oasis/gen/bearer_auth1.ex", fn file ->
         assert file =~ ~s|defmodule Oasis.Gen.BearerAuth1 do|
         assert file =~ ~s|@behaviour Oasis.Token|
-        assert file =~ ~s|def crypto_config(conn, opts) do|
+        assert file =~ ~s|def crypto_config(_conn, _opts) do|
       end)
 
       assert_file("lib/oasis/gen/bearer_auth2.ex", fn file ->
         assert file =~ ~s|defmodule Oasis.Gen.BearerAuth2 do|
         assert file =~ ~s|@behaviour Oasis.Token|
-        assert file =~ ~s|def crypto_config(conn, opts) do|
+        assert file =~ ~s|def crypto_config(_conn, _opts) do|
       end)
 
       assert_file("lib/oasis/gen/pre_find_pets.ex", fn file ->
