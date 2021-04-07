@@ -21,7 +21,7 @@ defmodule Oasis.Plug.BearerAuth do
         @behaviour Oasis.Token
 
         @impl true
-        def crypto_config(conn, options) do
+        def crypto_config(_conn, _options) do
           # return a `Oasis.Token.Crypto` struct in your preferred way
           %Oasis.Token.Crypto{
             secret_key_base: "...",
@@ -30,6 +30,27 @@ defmodule Oasis.Plug.BearerAuth do
           }
         end
       end
+
+  Or directly to Oasis.Plug.BearerAuth:
+
+      # lib/pre_handler.ex
+
+      plug(
+        Oasis.Plug.BearerAuth,
+        security: BearerAuth,
+        key_to_assigns: :user_id
+      )
+
+      # lib/bearer_auth.ex
+      defmodule BearerAuth do
+        @behaviour Oasis.Token
+
+        @impl true
+        def crypto_config(_conn, _options) do
+          # ...
+        end
+      end
+
 
   In general, when we define the [bearer security scheme](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
   of the OpenAPI Specification in our API design document, for example:
