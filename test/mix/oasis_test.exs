@@ -712,4 +712,234 @@ defmodule Mix.OasisTest do
     assert binding.pre_plug_module == Try.Test.OpenApi2.PreHello
     assert binding.plug_module == Try.Test.OpenApi2.Hello
   end
+
+  test "new/2 with bearer token" do
+    paths_spec = %{
+      "paths" => %{
+        "/say_hello" => %{
+          "get" => %{
+            "parameters" => %{
+              "query" => [
+                %{
+                  "name" => "username",
+                  "required" => true,
+                  "schema" => %{"type" => "string"}
+                }
+              ]
+            },
+            "operationId" => "hello",
+            "name_space" => "Wont.Use",
+            "security" => [
+              %{"myBearerAuth" => []}
+            ]
+          }
+        }
+      },
+      "components" => %{
+        "securitySchemes" => %{
+          "myBearerAuth" => %{
+            "scheme" => "bearer",
+            "type" => "http"
+          }
+        }
+      }
+    }
+
+    [_router, _pre_say_hello, _say_hello, bearer_auth_file] = Mix.Oasis.new(paths_spec, name_space: "Security.MyOpenAPI")
+
+    {_, path, template, module, binding} = bearer_auth_file
+
+    assert path == "lib/security/my_open_api/my_bearer_auth.ex"
+    assert template == "bearer_token.ex"
+    assert module == Security.MyOpenApi.MyBearerAuth
+    assert is_list(binding.security)
+
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: #{inspect(module)}/
+    assert (content =~ ~s/key_to_assigns:/) == false
+  end
+
+  test "new/2 with bearer token and key to assigns" do
+    paths_spec = %{
+      "paths" => %{
+        "/say_hello" => %{
+          "get" => %{
+            "parameters" => %{
+              "query" => [
+                %{
+                  "name" => "username",
+                  "required" => true,
+                  "schema" => %{"type" => "string"}
+                }
+              ]
+            },
+            "operationId" => "hello",
+            "security" => [
+              %{"HelloBearerAuth" => []}
+            ]
+          }
+        }
+      },
+      "components" => %{
+        "securitySchemes" => %{
+          "HelloBearerAuth" => %{
+            "scheme" => "bearer",
+            "type" => "http",
+            "x-oasis-key-to-assigns" => "id"
+          }
+        }
+      }
+    }
+
+    [_router, _pre_say_hello, _say_hello, bearer_auth_file] = Mix.Oasis.new(paths_spec, [])
+
+    {_, path, template, module, binding} = bearer_auth_file
+
+    assert path == "lib/oasis/gen/hello_bearer_auth.ex"
+    assert template == "bearer_token.ex"
+    assert module == Oasis.Gen.HelloBearerAuth
+    assert is_list(binding.security)
+
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: Oasis.Gen.HelloBearerAuth/
+    assert content =~ ~s/key_to_assigns: :id/
+  end
+
+  test "new/2 with global bearer token" do
+    paths_spec = %{
+      "paths" => %{
+        "/say_hello" => %{
+          "get" => %{
+            "parameters" => %{
+              "query" => [
+                %{
+                  "name" => "username",
+                  "required" => true,
+                  "schema" => %{"type" => "string"}
+                }
+              ]
+            },
+            "operationId" => "hello",
+            "security" => [
+              %{"HelloBearerAuth" => []}
+            ]
+          }
+        },
+        "/save" => %{
+          "post" => %{
+            "content" => %{
+              "application/json" => %{}
+            }
+          }
+        }
+      },
+      "components" => %{
+        "securitySchemes" => %{
+          "HelloBearerAuth" => %{
+            "scheme" => "bearer",
+            "type" => "http",
+            "x-oasis-key-to-assigns" => "id"
+          },
+          "GlobalBearerAuth" => %{
+            "scheme" => "bearer",
+            "type" => "http",
+            "x-oasis-key-to-assigns" => "user"
+          }
+        }
+      },
+      "security" => [
+        %{"GlobalBearerAuth" => []}
+      ]
+    }
+
+    [_router | plugs_pairs] = Mix.Oasis.new(paths_spec, [])
+
+    plugs_pairs
+    |> Enum.chunk_every(3)
+    |> Enum.map(fn(files) ->
+
+      [_pre_plug, _plug, bearer_auth_file] = files
+
+      {_, path, template, module, binding} = bearer_auth_file
+
+      assert path == "lib/oasis/gen/global_bearer_auth.ex"
+      assert template == "bearer_token.ex"
+      assert module == Oasis.Gen.GlobalBearerAuth
+
+      [content] = binding.security
+      assert content =~ ~s/Oasis.Plug.BearerAuth/
+      assert content =~ ~s/key_to_assigns: :user/
+      assert content =~ ~s/security: Oasis.Gen.GlobalBearerAuth/
+    end)
+  end
+
+  test "new/2 with not supported security scheme" do
+    paths_spec = %{
+      "paths" => %{
+        "/say_hello" => %{
+          "get" => %{
+            "parameters" => %{
+              "query" => [
+                %{
+                  "name" => "username",
+                  "required" => true,
+                  "schema" => %{"type" => "string"}
+                }
+              ]
+            },
+            "operationId" => "hello",
+            "name_space" => "Wont.Use",
+            "security" => [
+              %{"my_bearer_auth" => []}
+            ]
+          }
+        },
+        "/say_bye" => %{
+          "delete" => %{
+            "security" => [
+              %{"my_key_auth" => []}
+            ]
+          }
+        }
+      },
+      "components" => %{
+        "securitySchemes" => %{
+          "my_bearer_auth" => %{
+            "scheme" => "bearer",
+            "type" => "http"
+          },
+          "my_key_auth" => %{
+            "type" => "apiKey",
+            "name" => "api_key",
+            "in" => "header"
+          }
+        }
+      }
+    }
+
+    [_router | files] = Mix.Oasis.new(paths_spec, name_space: "Security.OpenApi")
+
+    {say_hello_files, say_bye_files} = Enum.split(files, 3)
+
+    [_, _, bear_auth_file] = say_hello_files
+
+    {_, path, "bearer_token.ex", module, binding} = bear_auth_file
+    assert path == "lib/security/open_api/my_bearer_auth.ex"
+    assert module == Security.OpenApi.MyBearerAuth
+
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: Security.OpenApi.MyBearerAuth/
+
+    # since not supported `apiKey` type security scheme
+    # we will ignore it so far
+    [pre_plug, _plug] = say_bye_files
+
+    {_, path, "pre_plug.ex", module, binding} = pre_plug
+    assert path == "lib/security/open_api/pre_delete_say_bye.ex"
+    assert module == Security.OpenApi.PreDeleteSayBye
+    assert binding.security == nil
+  end
 end

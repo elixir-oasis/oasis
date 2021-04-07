@@ -112,4 +112,39 @@ defmodule Mix.Tasks.Oas.Gen.PlugTest do
       assert_file("lib/oasis/gen/find_pets.ex")
     end)
   end
+
+  test "generates with bearer token", config do
+    in_tmp_project(config.test, fn ->
+      file_path = Path.join([__DIR__, "file/petstore-expanded-with-bearer-auth.yaml"])
+      Gen.Plug.run(["--file", file_path])
+
+      assert_file("lib/oasis/gen/bearer_auth1.ex", fn file ->
+        assert file =~ ~s|defmodule Oasis.Gen.BearerAuth1 do|
+        assert file =~ ~s|@behaviour Oasis.Token|
+        assert file =~ ~s|def crypto_config(conn, opts) do|
+      end)
+
+      assert_file("lib/oasis/gen/bearer_auth2.ex", fn file ->
+        assert file =~ ~s|defmodule Oasis.Gen.BearerAuth2 do|
+        assert file =~ ~s|@behaviour Oasis.Token|
+        assert file =~ ~s|def crypto_config(conn, opts) do|
+      end)
+
+      assert_file("lib/oasis/gen/pre_find_pets.ex", fn file ->
+        assert file =~ ~s|plug(\n    Oasis.Plug.BearerAuth,\n    security: Oasis.Gen.BearerAuth1|
+      end)
+
+      assert_file("lib/oasis/gen/pre_add_pet.ex", fn file ->
+        assert file =~ ~s|plug(\n    Oasis.Plug.BearerAuth,\n    security: Oasis.Gen.BearerAuth1|
+      end)
+
+      assert_file("lib/oasis/gen/pre_delete_pet.ex", fn file ->
+        assert file =~ ~s|plug(\n    Oasis.Plug.BearerAuth,\n    security: Oasis.Gen.BearerAuth2|
+      end)
+
+      assert_file("lib/oasis/gen/pre_find_pet_by_id.ex", fn file ->
+        assert file =~ ~s|plug(\n    Oasis.Plug.BearerAuth,\n    security: Oasis.Gen.BearerAuth2|
+      end)
+    end)
+  end
 end

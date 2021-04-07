@@ -14,7 +14,8 @@ defmodule Mix.Oasis.Router do
     :pre_plug_module,
     :plug_module,
     :request_validator,
-    :plug_parsers
+    :plug_parsers,
+    :security
   ]
 
   @check_parameter_fields [
@@ -24,8 +25,10 @@ defmodule Mix.Oasis.Router do
     "path"
   ]
 
-  def generate_files_by_paths_spec(apps, paths_spec, opts) when is_map(paths_spec) do
-    opts = put_opts(paths_spec, opts)
+  def generate_files_by_paths_spec(apps, %{"paths" => paths_spec} = spec, opts)
+    when is_map(paths_spec) do
+
+    opts = put_opts(spec, opts)
 
     {plug_files, routers} = generate_plug_files(apps, paths_spec, opts)
 
@@ -34,7 +37,7 @@ defmodule Mix.Oasis.Router do
     [router_file | plug_files]
   end
 
-  defp put_opts(paths_spec, opts) do
+  defp put_opts(%{"paths" => paths_spec} = spec, opts) do
     # Set the global :name_space use the input option from command line if exists,
     # or use the Paths Object's extension "x-oasis-name-space" field if exists.
     name_space = opts[:name_space] || Map.get(paths_spec, "x-oasis-name-space")
@@ -46,6 +49,7 @@ defmodule Mix.Oasis.Router do
     opts
     |> Keyword.put(:name_space, name_space)
     |> Keyword.put(:router, router)
+    |> Keyword.put(:global_security, global_security(spec))
   end
 
   defp generate_plug_files(apps, paths_spec, opts) do
@@ -114,13 +118,14 @@ defmodule Mix.Oasis.Router do
 
   defp build_operation(operation, opts) do
     operation
-    |> step1_merge_parameters()
-    |> step2_merge_request_body()
-    |> step3_merge_others(opts)
+    |> merge_parameters_to_operation()
+    |> merge_request_body_to_operation()
+    |> merge_security_to_operation(opts)
+    |> merge_others_to_operation(opts)
   end
 
-  defp step1_merge_parameters(%{"parameters" => parameters} = operation) do
-    parameter_schemas =
+  defp merge_parameters_to_operation(%{"parameters" => parameters} = operation) do
+    router =
       @check_parameter_fields
       |> Enum.reduce(%{}, fn location, acc ->
         parameters_to_location = Map.get(parameters, location)
@@ -130,12 +135,12 @@ defmodule Mix.Oasis.Router do
         to_schema_opt(params_to_schema, location, acc)
       end)
 
-    {parameter_schemas, operation}
+    {router, operation}
   end
 
-  defp step1_merge_parameters(operation), do: {%{}, operation}
+  defp merge_parameters_to_operation(operation), do: {%{}, operation}
 
-  defp step2_merge_request_body(
+  defp merge_request_body_to_operation(
          {acc, %{"requestBody" => %{"content" => content} = request_body} = operation}
        )
        when is_map(content) do
@@ -164,7 +169,7 @@ defmodule Mix.Oasis.Router do
     end
   end
 
-  defp step2_merge_request_body({acc, operation}), do: {acc, operation}
+  defp merge_request_body_to_operation({acc, operation}), do: {acc, operation}
 
   defp put_required_if_exists(%{"required" => required}, map)
        when is_boolean(required) and is_map(map) do
@@ -213,7 +218,22 @@ defmodule Mix.Oasis.Router do
     Map.put(acc, :path_schema, params)
   end
 
-  defp step3_merge_others({acc, operation}, opts) do
+  defp merge_security_to_operation({acc, operation}, opts) do
+    security =
+      case opts[:global_security] do
+        {nil, security_schemes} ->
+          Oasis.Spec.Security.build(operation, security_schemes)
+        {global_security, _} ->
+          global_security
+      end
+
+    {
+      Map.put(acc, :security, security),
+      operation
+    }
+  end
+
+  defp merge_others_to_operation({acc, operation}, opts) do
     # Use the input `name_space` option from command line if existed
     name_space = opts[:name_space] || Map.get(operation, "x-oasis-name-space")
 
@@ -223,10 +243,25 @@ defmodule Mix.Oasis.Router do
   end
 
   defp build_files_to_generate(apps, router) do
-    apps
-    |> may_inject_request_validator(router)
-    |> may_inject_plug_parsers()
-    |> template_plugs_in_pair()
+    {files, router} =
+      apps
+      |> may_inject_request_validator(router)
+      |> may_inject_plug_parsers()
+      |> template_plugs_in_pair()
+
+    {security_files, router} = may_inject_plug_security(router, apps)
+
+    files =
+      files
+      |> Kernel.++(security_files)
+      |> Enum.map(fn(file) ->
+        Tuple.append(file, router)
+      end)
+
+    {
+      files,
+      router
+    }
   end
 
   defp may_inject_plug_parsers(
@@ -309,16 +344,51 @@ defmodule Mix.Oasis.Router do
 
   defp inject_request_validator(apps, router) do
     content =
-      Mix.Oasis.eval_from(apps, "priv/templates/oas.gen.plug/request_validator.exs",
+      Mix.Oasis.eval_from(apps, "priv/templates/oas.gen.plug/plug/request_validator.exs",
         router: router
       )
 
     Map.put(router, :request_validator, content)
   end
 
-  defp template_plugs_in_pair(%__MODULE__{name_space: name_space} = router) do
+  defp may_inject_plug_security(%{security: nil} = router, _apps) do
+    {[], router}
+  end
+  defp may_inject_plug_security(%{security: security} = router, apps) when is_list(security) do
+    {security, files} =
+      Enum.reduce(security, [], fn {security_name, security_scheme}, acc ->
+        security_scheme = map_security_scheme(apps, security_name, security_scheme, router)
+        acc ++ [security_scheme]
+      end)
+      |> Enum.unzip()
+
+    router = Map.put(router, :security, security)
+
+    {files, router}
+  end
+
+  defp map_security_scheme(apps, security_name, %{"scheme" => "bearer"} = security_scheme, %{name_space: name_space}) do
     {name_space, dir} = Mix.Oasis.name_space(name_space)
 
+    {module_name, file_name} = Mix.Oasis.module_alias(security_name)
+    security_module = Module.concat([name_space, module_name])
+
+    key_to_assigns = Map.get(security_scheme, "x-oasis-key-to-assigns")
+
+    content =
+      Mix.Oasis.eval_from(apps, "priv/templates/oas.gen.plug/plug/bearer_auth.exs",
+        security: security_module,
+        key_to_assigns: key_to_assigns
+      )
+
+    {
+      content,
+      {:new_eex, Path.join(dir, file_name), "bearer_token.ex", security_module}
+    }
+  end
+
+  defp template_plugs_in_pair(%{name_space: name_space} = router) do
+    {name_space, dir} = Mix.Oasis.name_space(name_space)
     {module_name, plug_file_name} = Mix.Oasis.module_alias(router)
     {pre_plug_module_name, pre_plug_file_name} = Mix.Oasis.module_alias("Pre#{module_name}")
 
@@ -332,10 +402,19 @@ defmodule Mix.Oasis.Router do
 
     {
       [
-        {:eex, Path.join([dir, pre_plug_file_name]), "pre_plug.ex", pre_plug_module, router},
-        {:new_eex, Path.join([dir, plug_file_name]), "plug.ex", plug_module, router}
+        {:eex, Path.join([dir, pre_plug_file_name]), "pre_plug.ex", pre_plug_module},
+        {:new_eex, Path.join([dir, plug_file_name]), "plug.ex", plug_module}
       ],
       router
+    }
+  end
+
+  defp global_security(spec) do
+    security_schemes = Oasis.Spec.Security.security_schemes(spec)
+
+    {
+      Oasis.Spec.Security.build(spec, security_schemes),
+      security_schemes
     }
   end
 end

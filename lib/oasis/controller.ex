@@ -17,7 +17,7 @@ defmodule Oasis.Controller do
       end
 
   And provide some common functionality for easily use, this realization comes from
-  [Phoenix.Controller](https://hexdocs.pm/phoenix/Phoenix.Controller.html)
+  [Phoenix.Controller](https://hexdocs.pm/phoenix/Phoenix.Controller.html).
   """
   import Plug.Conn
 
@@ -28,6 +28,12 @@ defmodule Oasis.Controller do
       use Plug.Builder
     end
   end
+
+  @doc """
+  Returns the router module as an atom, raises if unavailable.
+  """
+  @spec router_module(Plug.Conn.t) :: atom()
+  def router_module(conn), do: conn.private.oasis_router
 
   @doc """
   Sends text response.

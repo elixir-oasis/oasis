@@ -2,8 +2,9 @@ defmodule Oasis.ControllerTest do
   use ExUnit.Case, async: true
   use Plug.Test
 
-  import Oasis.Controller
   alias Plug.Conn
+
+  import Oasis.Controller
 
   defp get_resp_content_type(conn) do
     [header]  = get_resp_header(conn, "content-type")
@@ -70,6 +71,11 @@ defmodule Oasis.ControllerTest do
       assert Conn.get_resp_header(conn, "content-type") ==
                ["application/vnd.api+json; charset=utf-8"]
     end
+  end
+
+  test "router_module/1" do
+    conn = put_private(%Conn{}, :oasis_router, Hello)
+    assert router_module(conn) == Hello
   end
 
 end

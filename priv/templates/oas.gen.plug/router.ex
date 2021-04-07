@@ -1,5 +1,5 @@
 defmodule <%= inspect context.module_name %> do
-  # NOTICE: This module is generated from the corresponding mix task command to the OpenAPI Specification.
+  # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file.
   use Oasis.Router
 
   plug(:match)

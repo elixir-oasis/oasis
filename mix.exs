@@ -40,6 +40,7 @@ defmodule Oasis.MixProject do
     [
       {:yaml_elixir, "~> 2.5"},
       {:plug, "~> 1.11"},
+      {:plug_crypto, "~> 1.2"},
       {:jason, "~> 1.2"},
       {:ex_json_schema, "~> 0.7"},
       {:recase, "~> 0.7", runtime: false},
@@ -76,6 +77,7 @@ defmodule Oasis.MixProject do
   defp groups_for_modules() do
     [
       Plugs: [
+        Oasis.Plug.BearerAuth,
         Oasis.Plug.RequestValidator
       ]
     ]
