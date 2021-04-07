@@ -327,12 +327,11 @@ end
 
 Please note that the added line of `plug(Oasis.Gen.Router)` is before the line of `plug(:match)`.
 
-## Todo
+## TODO
 
 1. The Specification contains XML object is not supported so far.
-2. May add mix task to generate `Phoenix`'s style code.
-3. Make document more clear.
-4. There are still some details maybe not implement(or bug) from the OAS, please create an issue or a PR for tracking, thanks in advanced :)
+2. Make document more clear.
+3. There are still some details maybe not implement(or bug) from the OAS, please create an issue or a PR for tracking, thanks in advanced :)
 
 ## Reference
 
