@@ -92,7 +92,7 @@ defmodule Oasis.HTTPServer.PlugRouter do
   )
 
   def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do
-    message = Map.get(reason, :message, "Something went wrong")
+    message = Map.get(reason, :message) || "Something went wrong"
     send_resp(conn, conn.status, message)
   end
 end

@@ -83,6 +83,7 @@ defmodule Oasis.RouterTest do
       } do
       resp(conn, 200, Jason.encode!(%{user_id: user_id, group_id: group_id}))
     end
+
   end
 
   use ExUnit.Case, async: true
@@ -141,6 +142,22 @@ defmodule Oasis.RouterTest do
     assert conn.path_params["user_id"] == 1
     assert conn.path_params["group_id"] == "abcdef"
     assert Jason.decode!(conn.resp_body) == %{"user_id" => 1, "group_id" => "abcdef"}
+  end
+
+  test "handler_errors/2 in generated plug module" do
+    conn = conn(:get, "/test_header")
+    assert_raise Plug.Conn.WrapperError, ~s/** (Plug.BadRequestError) Required the header parameter "items" is missing/, fn ->
+      call(Oasis.HTTPServer.PlugRouter, conn)
+    end
+
+    conn = put_req_header(conn, "items", "[1,2,3]")
+    conn = call(Oasis.HTTPServer.PlugRouter, conn)
+    assert conn.req_headers == [{"items", [1, 2, 3]}]
+
+    conn = conn(:get, "/test_header?raise=true") |> put_req_header("items", "[0]")
+    assert_raise Plug.Conn.WrapperError, "** (RuntimeError) oops", fn ->
+      call(Oasis.HTTPServer.PlugRouter, conn)
+    end
   end
 
   defp call(mod, conn) do
