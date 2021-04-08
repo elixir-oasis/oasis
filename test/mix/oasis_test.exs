@@ -130,11 +130,10 @@ defmodule Mix.OasisTest do
   end
 
   test "Mix.Oasis.new/2 with x-oasis-name-space from Operation Object" do
-    # The `x-oasis-name-space` extension defined in Operation Object or Paths Object,
-    # the defined field from Paths Object will overwrite the defined from Operation Object if both are existed.
-    #
-    # when it's in Operation Object, it applies to its Plug's scope when generates code.
-    # when it's in Paths Object, it applies to the Router's scope and all Plug's scope when generates code.
+    # When define the `x-oasis-name-space` more inline, it will have a higher priority to override the defined from
+    # outside, it means the `x-oasis-name-space` of operation object will override the same field from paths object,
+    # the `x-oasis-name-space` of security scheme object will override the same field from operation object,
+    # but always use the input `--name-space` argument from the command line.
     operation = %{
       "parameters" => %{
         "query" => [
@@ -181,31 +180,53 @@ defmodule Mix.OasisTest do
         assert router.plug_module == DeleteNameSpaceFromOperationObject.DeleteId
     end)
 
-    paths_spec = put_in(paths_spec, ["paths", "x-oasis-name-space"], "Global")
+    paths_spec2 = put_in(paths_spec, ["paths", "x-oasis-name-space"], "Global")
 
-    [router_file | plug_files2] = Mix.Oasis.new(paths_spec, [])
+    [router_file | plug_files] = Mix.Oasis.new(paths_spec2, [])
 
     {_, file_path, _, router_module_name, _} = router_file
 
     assert file_path == "lib/global/router.ex"
     assert router_module_name == Global.Router
 
-    Enum.map(plug_files2, fn
-      {_, file_path, "pre_plug.ex", Global.PreGetId, router} ->
-        assert file_path == "lib/global/pre_get_id.ex"
-        assert router.plug_module == Global.GetId
+    Enum.map(plug_files, fn
+      {_, file_path, "pre_plug.ex", GetNameSpaceFromOperationObject.PreGetId, router} ->
+        assert file_path == "lib/get_name_space_from_operation_object/pre_get_id.ex"
+        assert router.plug_module == GetNameSpaceFromOperationObject.GetId
 
-      {_, file_path, "plug.ex", Global.GetId, router} ->
-        assert file_path == "lib/global/get_id.ex"
-        assert router.plug_module == Global.GetId
+      {_, file_path, "plug.ex", GetNameSpaceFromOperationObject.GetId, router} ->
+        assert file_path == "lib/get_name_space_from_operation_object/get_id.ex"
+        assert router.plug_module == GetNameSpaceFromOperationObject.GetId
 
-      {_, file_path, "pre_plug.ex", Global.PreDeleteId, router} ->
-        assert file_path == "lib/global/pre_delete_id.ex"
-        assert router.plug_module == Global.DeleteId
+      {_, file_path, "pre_plug.ex", DeleteNameSpaceFromOperationObject.PreDeleteId, router} ->
+        assert file_path == "lib/delete_name_space_from_operation_object/pre_delete_id.ex"
+        assert router.plug_module == DeleteNameSpaceFromOperationObject.DeleteId
 
-      {_, file_path, "plug.ex", Global.DeleteId, router} ->
-        assert file_path == "lib/global/delete_id.ex"
-        assert router.plug_module == Global.DeleteId
+      {_, file_path, "plug.ex", DeleteNameSpaceFromOperationObject.DeleteId, router} ->
+        assert file_path == "lib/delete_name_space_from_operation_object/delete_id.ex"
+        assert router.plug_module == DeleteNameSpaceFromOperationObject.DeleteId
+    end)
+
+    [router_file | plug_files] = Mix.Oasis.new(paths_spec2, [name_space: "From.Command"])
+
+    {_, file_path, _, router_module_name, _} = router_file
+
+    assert file_path == "lib/from/command/router.ex"
+    assert router_module_name == From.Command.Router
+
+    Enum.map(plug_files, fn
+      {_, file_path, "pre_plug.ex", From.Command.PreGetId, router} ->
+        assert file_path == "lib/from/command/pre_get_id.ex"
+        assert router.plug_module == From.Command.GetId
+      {_, file_path, "plug.ex", From.Command.GetId, router} ->
+        assert file_path == "lib/from/command/get_id.ex"
+        assert router.plug_module == From.Command.GetId
+      {_, file_path, "pre_plug.ex", From.Command.PreDeleteId, router} ->
+        assert file_path == "lib/from/command/pre_delete_id.ex"
+        assert router.plug_module == From.Command.DeleteId
+      {_, file_path, "plug.ex", From.Command.DeleteId, router} ->
+        assert file_path == "lib/from/command/delete_id.ex"
+        assert router.plug_module == From.Command.DeleteId
     end)
   end
 

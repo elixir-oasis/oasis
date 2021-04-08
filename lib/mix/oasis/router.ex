@@ -34,33 +34,30 @@ defmodule Mix.Oasis.Router do
 
     opts = put_opts(spec, opts)
 
-    {plug_files, routers} = generate_plug_files(apps, paths_spec, opts)
+    {name_space_from_paths, paths_spec} = Map.pop(paths_spec, @spec_ext_name_space)
 
-    router_file = generate_router_file(routers, opts)
+    {plug_files, routers} = generate_plug_files(apps, paths_spec, name_space_from_paths, opts)
+
+    router_file = generate_router_file(routers, name_space_from_paths, opts)
 
     [router_file | plug_files]
   end
 
   defp put_opts(%{"paths" => paths_spec} = spec, opts) do
-    # Set the global :name_space use the input option from command line if exists,
-    # or use the Paths Object's extension "x-oasis-name-space" field if exists.
-    name_space = opts[:name_space] || Map.get(paths_spec, @spec_ext_name_space)
-
     # Set the :router use the input option from command line if exists,
     # or use the Paths Object's extension "x-oasis-router" field if exists.
     router = opts[:router] || Map.get(paths_spec, @spec_ext_router)
 
     opts
-    |> Keyword.put(:name_space, name_space)
     |> Keyword.put(:router, router)
     |> Keyword.put(:global_security, global_security(spec))
   end
 
-  defp generate_plug_files(apps, paths_spec, opts) do
+  defp generate_plug_files(apps, paths_spec, name_space_from_paths, opts) do
     paths_spec
     |> Map.keys()
     |> Enum.reduce({[], []}, fn url, acc ->
-      iterate_paths_spec_by_url(apps, paths_spec, url, acc, opts)
+      iterate_paths_spec_by_url(apps, paths_spec, url, acc, name_space_from_paths, opts)
     end)
   end
 
@@ -69,6 +66,7 @@ defmodule Mix.Oasis.Router do
          paths_spec,
          "/" <> _ = url,
          {plug_files_acc, routers_acc},
+         name_space,
          opts
        ) do
     # `paths_spec` may contain extended object starts with `x-oasis-`,
@@ -78,6 +76,9 @@ defmodule Mix.Oasis.Router do
       |> Map.get(url, %{})
       |> Map.take(Oasis.Spec.Path.supported_http_verbs())
       |> Enum.reduce({[], []}, fn {http_verb, operation}, {plug_files_to_url, routers_to_url} ->
+
+        operation = Map.put_new(operation, @spec_ext_name_space, name_space)
+
         {plug_files, router} = new(apps, url, http_verb, operation, opts)
 
         {
@@ -92,10 +93,11 @@ defmodule Mix.Oasis.Router do
     }
   end
 
-  defp iterate_paths_spec_by_url(_apps, _paths_spec, _url, acc, _opts), do: acc
+  defp iterate_paths_spec_by_url(_apps, _paths_spec, _url, acc, _name_space, _opts), do: acc
 
-  defp generate_router_file(routers, opts) do
-    {name_space, dir} = Mix.Oasis.name_space(opts[:name_space])
+  defp generate_router_file(routers, name_space, opts) do
+    name_space = opts[:name_space] || name_space
+    {name_space, dir} = Mix.Oasis.name_space(name_space)
 
     module_name = Keyword.get(opts, :router) || "Router"
     {module_name, file_name} = Mix.Oasis.module_alias(module_name)
@@ -239,7 +241,8 @@ defmodule Mix.Oasis.Router do
 
   defp merge_others_to_operation({acc, operation}, opts) do
     # Use the input `name_space` option from command line if existed
-    name_space = opts[:name_space] || Map.get(operation, @spec_ext_name_space)
+    name_space_from_spec = Map.get(operation, @spec_ext_name_space)
+    name_space = opts[:name_space] || name_space_from_spec
 
     acc
     |> Map.put(:operation_id, Map.get(operation, "operationId"))
@@ -373,8 +376,10 @@ defmodule Mix.Oasis.Router do
 
   defp map_security_scheme(apps, security_name, %{"scheme" => "bearer"} = security_scheme, %{name_space: name_space}, opts) do
     # priority use `x-oasis-name-space` field in security scheme object compare to operation's level
-    # but still use the input argument option from the `oas.gen.plug` command line in highest priority if possible.
-    name_space = opts[:name_space] || Map.get(security_scheme, @spec_ext_name_space, name_space)
+    # but still use the input argument option from the `oas.gen.plug` command line in the highest priority if possible.
+    name_space_from_spec = Map.get(security_scheme, @spec_ext_name_space, name_space)
+    name_space = opts[:name_space] || name_space_from_spec
+
     {name_space, dir} = Mix.Oasis.name_space(name_space)
 
     {module_name, file_name} = Mix.Oasis.module_alias(security_name)
@@ -424,4 +429,5 @@ defmodule Mix.Oasis.Router do
       security_schemes
     }
   end
+
 end
