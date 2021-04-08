@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1 (2021-04-08)
+* Fix incorrectly handle errors in generated plug module
+* Simplify `handle_errors/2` process in generated `pre_*` module
+
 ## v0.3.0 (2021-04-08)
 * Add `conn.private.oasis_router`
 * Add a specification extensions guide
