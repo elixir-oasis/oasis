@@ -2,7 +2,7 @@
 
 ## v0.3.0 (2021-04-07)
 * Add `conn.private.oasis_router`
-* Add a specification extension guide
+* Add a specification extensions guide
 * Support Security Scheme Object with Bearer Authentication
 * Fix the order to override `x-oasis-name-space` field
 
