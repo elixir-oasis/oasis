@@ -1,5 +1,5 @@
 defmodule Oasis.Token do
-  @moduledoc ~S"""
+  @moduledoc """
   A simple wrapper of `Plug.Crypto` to provide a way to generate and verify bearer token for use
   in the [bearer security scheme](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
   of the OpenAPI Specification.
@@ -20,7 +20,7 @@ defmodule Oasis.Token do
   scheme of the OpenAPI Specification.
 
   * `c:crypto_config/2`, provides a way to define the crypto-related key information for the high level useage,
-    it required to return a `#{inspect(__MODULE__)}.Crypto` struct.
+    it required to return an `#{inspect(__MODULE__)}.Crypto` struct.
   * `c:verify/3`, an optional function to provide a way to custom the verification of the token, you may
     want to use encrypt/decrypt to the token, or other more rules to verify it.
   """
