@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0 (2021-04-07)
+* Add `conn.private.oasis_router`
+* Add a specification extension guide
+* Support Security Scheme Object with Bearer Authentication
+* Fix the order to override `x-oasis-name-space` field
+
 ## v0.2.1 (2021-03-24)
 * Fix unexpected `:body_schema` in generated `pre_*` module
 
