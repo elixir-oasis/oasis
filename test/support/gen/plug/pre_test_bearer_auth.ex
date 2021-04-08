@@ -24,7 +24,6 @@ defmodule Oasis.Gen.Plug.PreTestBearerAuth do
     conn |> super(conn) |> Oasis.Gen.Plug.TestBearerAuth.call(opts) |> halt()
   end
 
-  def handle_errors(conn, error) do
-    Oasis.Gen.Plug.TestBearerAuth.handle_errors(conn, error)
-  end
+  defdelegate handle_errors(conn, error), to: Oasis.Gen.Plug.TestBearerAuth
+
 end

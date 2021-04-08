@@ -41,7 +41,6 @@ defmodule Oasis.Gen.Plug.PreTestQuery do
     conn |> super(opts) |> Oasis.Gen.Plug.TestQuery.call(opts) |> halt()
   end
 
-  def handle_errors(conn, error) do
-    Oasis.Gen.Plug.TestQuery.handle_errors(conn, error)
-  end
+  defdelegate handle_errors(conn, error), to: Oasis.Gen.Plug.TestQuery
+
 end

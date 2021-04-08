@@ -33,7 +33,6 @@ defmodule Oasis.Gen.Plug.PreTestDelete do
     conn |> super(opts) |> Oasis.Gen.Plug.TestDelete.call(opts) |> halt()
   end
 
-  def handle_errors(conn, error) do
-    Oasis.Gen.Plug.TestDelete.handle_errors(conn, error)
-  end
+  defdelegate handle_errors(conn, error), to: Oasis.Gen.Plug.TestDelete
+
 end

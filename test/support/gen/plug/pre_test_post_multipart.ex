@@ -55,7 +55,6 @@ defmodule Oasis.Gen.Plug.PreTestPostMultipart do
     conn |> super(opts) |> Oasis.Gen.Plug.TestPost.call(opts) |> halt()
   end
 
-  def handle_errors(conn, error) do
-    Oasis.Gen.Plug.TestPost.handle_errors(conn, error)
-  end
+  defdelegate handle_errors(conn, error), to: Oasis.Gen.Plug.TestPost
+
 end

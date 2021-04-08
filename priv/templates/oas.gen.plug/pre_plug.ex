@@ -14,8 +14,6 @@ defmodule <%= inspect context.module_name %> do
     conn |> super(opts) |> <%= inspect context.plug_module %>.call(opts) |> halt()
   end
 
-  def handle_errors(conn, error) do
-    <%= inspect context.plug_module %>.handle_errors(conn, error)
-  end
+  defdelegate handle_errors(conn, error), to: <%= inspect context.plug_module %>
 
 end
