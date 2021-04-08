@@ -68,9 +68,11 @@ defmodule Oasis.MixProject do
       formatter_opts: [gfm: true],
       extras: [
         "README.md",
-        "CHANGELOG.md"
+        "CHANGELOG.md",
+        "guides/specification_ext.md"
       ],
-      groups_for_modules: groups_for_modules()
+      groups_for_modules: groups_for_modules(),
+      groups_for_extras: groups_for_extras()
     ]
   end
 
@@ -83,6 +85,13 @@ defmodule Oasis.MixProject do
     ]
   end
 
+  defp groups_for_extras() do
+    [
+      Guides: ~r/guides\/[^\/]+\.md/
+    ]
+  end
+
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
 end
