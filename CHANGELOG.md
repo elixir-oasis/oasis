@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.3.0 (2021-04-07)
+## v0.3.0 (2021-04-08)
 * Add `conn.private.oasis_router`
 * Add a specification extensions guide
 * Support Security Scheme Object with Bearer Authentication
