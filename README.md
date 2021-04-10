@@ -269,9 +269,7 @@ Summarize about the name space of generated module:
 
   1. The optional `--name-space` argument to the `mix oas.gen.plug` command line is in the highest priority to set the name space;
 
-  2. We can use `"x-oasis-name-space"` extension field of the OAS's [Paths Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathsObject) as a global naming if we want to save and maintain it in the document, but this case may be overridden by #1.
-
-  3. We also can set `"x-oasis-name-space"` extension field in each [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject) in the document, but this case may be overridden by #1 or #2.
+  2. We also can define `"x-oasis-name-space"` extension field in the specification document to make this archivable, please see [here](specification_ext.html#module-name-space) for details.
 
 #### HTTP request handler files in pairs
 
