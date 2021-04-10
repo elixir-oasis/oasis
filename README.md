@@ -47,7 +47,7 @@ Oasis does not cover the full OpenAPI specification, so far the implements conta
 * [Security Scheme Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
   * Bearer Authentication, please see `Oasis.Plug.BearerAuth` for details.
 
-We also have some OpenAPI Specification Extensions defined for use, please see [our Specification Extensions Guide](specification_ext.html).
+We also have some OpenAPI Specification Extensions defined for use, please see [our Specification Extensions Guide](https://hexdocs.pm/oasis/specification_ext.html).
 
 ## How to use
 
@@ -269,7 +269,7 @@ Summarize about the name space of generated module:
 
   1. The optional `--name-space` argument to the `mix oas.gen.plug` command line is in the highest priority to set the name space;
 
-  2. We also can define `"x-oasis-name-space"` extension field in the specification document to make this archivable, please see [here](specification_ext.html#module-name-space) for details.
+  2. We also can define `"x-oasis-name-space"` extension field in the specification document to make this archivable, please see [here](https://hexdocs.pm/oasis/specification_ext.html#module-name-space) for details.
 
 #### HTTP request handler files in pairs
 
