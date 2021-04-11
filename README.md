@@ -10,11 +10,11 @@ Background
 
 Oasis is:
 
-Base on `Plug`'s implements, according to the OpenAPI Specification to generate server's router and the all well defined HTTP request handler(s), since the OAS defines a detailed collection of data types by [JSON Schema Specification](https://json-schema.org/), Oasis leverages this and focuses on the types conversion and validation to the parameters of the HTTP request.
+Base on `Plug`'s implements, according to the OpenAPI Specification to generate server's router and the all well defined HTTP request handlers, since the OAS defines a detailed collection of data types by [JSON Schema Specification](https://json-schema.org/), Oasis leverages this and focuses on the types conversion and validation to the parameters of the HTTP request.
 
-* Maintain a standard REST APIs document(in YAML or JSON) via OpenAPI is in a high priority
+* Maintain an OpenAPI Specification document(in YAML or JSON) is the first priority
 * Generate the maintainable router and HTTP request handlers code by the defined document
-* In general, we do not need to manually write OpenAPI definitions in Elixir
+* In general, we do not need to manually write the OpenAPI definitions in Elixir
 * Simplify the REST APIs to convert types and validate the parameters of the HTTP request
 * More reference and communication to your REST APIs
 
@@ -25,7 +25,7 @@ Add `oasis` as a dependency to your mix.exs
 ```elixir
 def deps do
   [
-    {:oasis, "~> 0.1"}
+    {:oasis, "~> 0.3"}
   ]
 end
 ```

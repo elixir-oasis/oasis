@@ -14,7 +14,7 @@ Oasis be with the following [specification extensions](https://github.com/OAI/Op
 #### In Paths Object
 
 Here, define this field in [Paths Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#pathsObject)
-as a global name space to the all generated modules when when no other special definitions, in the below example
+as a global name space to the all generated modules meanwhile no other special definitions, in the below example
 there will use "Hello.Petstore" to the module naming prefix alias of the all generated modules.
 
 ```YAML
@@ -33,7 +33,7 @@ paths:
 #### In Operation Object
 
 Here, define this field in [Operation Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#operationObject),
-it only affect to a operation related generated modules when no other special definitions, in the below example
+it only affect to a operation related generated modules meanwhile no other special definitions, in the below example
 there will use "Petstore.Api" to the module naming prefix alias of the generated related modules to handler request of "/pets" in HTTP GET verb, other generated modules
 will use `Oasis.Gen` as the default.
 
@@ -54,7 +54,7 @@ paths:
 #### In Security Scheme Object
 
 Here, define this field in [Security Scheme Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject),
-it only affect to the generated bearer token module when no other special definitions, in the below example
+it only affect to the generated bearer token module meanwhile no other special definitions, in the below example
 there will use "Petstore.MyToken" to the "helloBearerAuth" module (its full module name is "Petstore.MyToken.HelloBearerAuth").
 
 ```YAML
