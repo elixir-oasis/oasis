@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.4.0 (2021-04-14)
+* Improve errors handle and add a guide about it
+
 ## v0.3.1 (2021-04-08)
 * Fix incorrectly handle errors in generated plug module
 * Simplify `handle_errors/2` process in generated `pre_*` module
