@@ -69,6 +69,7 @@ defmodule Oasis.MixProject do
       extras: [
         "README.md",
         "CHANGELOG.md",
+        "guides/handle_errors.md",
         "guides/specification_ext.md"
       ],
       groups_for_modules: groups_for_modules(),
