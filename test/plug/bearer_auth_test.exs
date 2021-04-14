@@ -97,7 +97,7 @@ defmodule Oasis.Plug.BearerAuthTest do
     end
 
     test "raise invalid token error" do
-      assert_raise Oasis.InvalidTokenRequest, ~r/the provided token is invalid/, fn ->
+      assert_raise Oasis.BadRequestError, ~r/the bearer token is invalid/, fn ->
         conn(:get, "/")
         |> put_req_header("authorization", "Bearer faketoken")
         |> bearer_auth(security: BearerAuth)
@@ -111,7 +111,7 @@ defmodule Oasis.Plug.BearerAuthTest do
 
       token = sign(crypto, id)
 
-      assert_raise Oasis.InvalidTokenRequest, ~r/the provided token is expired/, fn -> 
+      assert_raise Oasis.BadRequestError, ~r/the bearer token is expired/, fn -> 
         conn(:get, "/expired")
         |> put_req_header("authorization", "Bearer #{token}")
         |> bearer_auth(security: BearerAuth)
@@ -137,7 +137,7 @@ defmodule Oasis.Plug.BearerAuthTest do
       id = 2
       token = sign(crypto, id)
 
-      assert_raise Oasis.InvalidTokenRequest, ~r/the provided token is invalid/, fn ->
+      assert_raise Oasis.BadRequestError, ~r/the bearer token is invalid/, fn ->
         conn(:get, "/")
         |> put_req_header("authorization", "Bearer #{token}")
         |> bearer_auth(security: BearerAuthWithVerify, key_to_assigns: :id)

@@ -13,8 +13,8 @@ defmodule Oasis.ValidatorTest do
 
     name = "test_name"
 
-    assert_raise Plug.BadRequestError,
-                 ~r/Expected the value to be >= 10 for the query parameter "test_name"/,
+    assert_raise Oasis.BadRequestError,
+                 ~r/Expected the value to be >= 10/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, "1")
                  end
@@ -22,14 +22,14 @@ defmodule Oasis.ValidatorTest do
     assert Validator.parse_and_validate!(param, "query", name, "10") == 10
     assert Validator.parse_and_validate!(param, "query", name, "20") == 20
 
-    assert_raise Plug.BadRequestError,
-                 ~r/Expected the value to be <= 20 for the query parameter "test_name"/,
+    assert_raise Oasis.BadRequestError,
+                 ~r/Expected the value to be <= 20/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, "21")
                  end
 
-    assert_raise Plug.BadRequestError,
-                 ~r/Required the query parameter "test_name" is missing/,
+    assert_raise Oasis.BadRequestError,
+                 ~r/Missing required parameter/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, nil)
                  end
@@ -52,8 +52,8 @@ defmodule Oasis.ValidatorTest do
     name = "test_float"
     assert Validator.parse_and_validate!(param, "path", name, "10") == 10.0
 
-    assert_raise Plug.BadRequestError,
-                 ~r/Failed to transfer the value "10.0xyz" of the path parameter "test_float"/,
+    assert_raise Oasis.BadRequestError,
+                 ~r/Failed to convert parameter/,
                  fn ->
                    Validator.parse_and_validate!(param, "path", name, "10.0xyz")
                  end
@@ -71,7 +71,7 @@ defmodule Oasis.ValidatorTest do
 
     name = "test_str"
 
-    assert_raise Plug.BadRequestError,
+    assert_raise Oasis.BadRequestError,
                  ~r/Expected value to have a minimum length of 3 but was 1/,
                  fn ->
                    Validator.parse_and_validate!(param, "header", name, "a")
@@ -95,13 +95,13 @@ defmodule Oasis.ValidatorTest do
     name = "test_str"
     assert Validator.parse_and_validate!(param, "header", name, "555-1212") == "555-1212"
 
-    assert_raise Plug.BadRequestError,
+    assert_raise Oasis.BadRequestError,
                  ~r/Expected value to have a maximum length of 12 but was 13/,
                  fn ->
                    Validator.parse_and_validate!(param, "header", name, "(888)555-1212")
                  end
 
-    assert_raise Plug.BadRequestError, ~r/Does not match pattern/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Does not match pattern/, fn ->
       Validator.parse_and_validate!(param, "header", name, "(800)FLOWERS")
     end
 
@@ -118,11 +118,11 @@ defmodule Oasis.ValidatorTest do
     assert Validator.parse_and_validate!(param, "header", name, "test@test.com") ==
              "test@test.com"
 
-    assert_raise Plug.BadRequestError, ~r/Expected to be a valid email/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Expected to be a valid email/, fn ->
       Validator.parse_and_validate!(param, "header", name, "test")
     end
 
-    assert_raise Plug.BadRequestError, ~r/Expected to be a valid email/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Expected to be a valid email/, fn ->
       Validator.parse_and_validate!(param, "header", name, "test@test")
     end
   end
@@ -141,7 +141,7 @@ defmodule Oasis.ValidatorTest do
     name = "test_enum"
     Validator.parse_and_validate!(param, "path", name, "A")
 
-    assert_raise Plug.BadRequestError, ~r/Value is not allowed in enum/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Value is not allowed in enum/, fn ->
       Validator.parse_and_validate!(param, "path", name, "D")
     end
   end
@@ -161,11 +161,11 @@ defmodule Oasis.ValidatorTest do
     assert Validator.parse_and_validate!(param, "header", name, "true") == true
     assert Validator.parse_and_validate!(param, "header", name, "false") == false
 
-    assert_raise Plug.BadRequestError, ~r/Expected Boolean but got String/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Expected Boolean but got String/, fn ->
       Validator.parse_and_validate!(param, "header", name, "True")
     end
 
-    assert_raise Plug.BadRequestError, ~r/Expected Boolean but got Integer/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Expected Boolean but got Integer/, fn ->
       Validator.parse_and_validate!(param, "path", name, 0)
     end
   end
@@ -183,7 +183,7 @@ defmodule Oasis.ValidatorTest do
     name = "test_null"
     assert Validator.parse_and_validate!(param, "cookie", name, nil) == nil
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected Null but got String/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected Null but got String/, fn ->
       Validator.parse_and_validate!(param, "cookie", name, "1")
     end
   end
@@ -250,7 +250,7 @@ defmodule Oasis.ValidatorTest do
     data = ["a", "b", "c", "Sussex", "Drive"]
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected Integer but got String/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected Integer but got String/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
 
@@ -292,7 +292,7 @@ defmodule Oasis.ValidatorTest do
     data = [1600, "Pennsylvania", "Avenue", "NW", 1000]
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
 
@@ -311,7 +311,7 @@ defmodule Oasis.ValidatorTest do
     data = []
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Expected a minimum of 2 items but got 0/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Expected a minimum of 2 items but got 0/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
 
@@ -326,7 +326,7 @@ defmodule Oasis.ValidatorTest do
     data = [1, 2, 3, 4, 5]
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Expected a maximum of 3 items but got 5/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Expected a maximum of 3 items but got 5/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
 
@@ -351,7 +351,7 @@ defmodule Oasis.ValidatorTest do
     data = [1, 2, 3, 2, 4]
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Expected items to be unique but they were not/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Expected items to be unique but they were not/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
   end
@@ -396,7 +396,7 @@ defmodule Oasis.ValidatorTest do
     data = %{"number" => "100", "street_name" => "abc", "street_type" => 1}
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected Number but got String/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected Number but got String/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
   end
@@ -424,7 +424,7 @@ defmodule Oasis.ValidatorTest do
     data = %{"number" => 1, "street_type" => "Street"}
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Required property street_name was not present/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Required property street_name was not present/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
 
@@ -480,7 +480,7 @@ defmodule Oasis.ValidatorTest do
 
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError,
+    assert_raise Oasis.BadRequestError,
                  ~r/Property credit_card depends on property billing_address to be present but it was not/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, input)
@@ -493,7 +493,7 @@ defmodule Oasis.ValidatorTest do
 
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError,
+    assert_raise Oasis.BadRequestError,
                  ~r/Property billing_address depends on property credit_card to be present but it was not/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, input)
@@ -530,14 +530,14 @@ defmodule Oasis.ValidatorTest do
     data = %{"S_0" => 0}
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
 
     data = %{"I_1" => "1"}
     input = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected Integer but got String/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected Integer but got String/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
 
@@ -574,21 +574,21 @@ defmodule Oasis.ValidatorTest do
     data = %{"S_25" => 0, "builtin" => 1, "otherfield" => "string"}
     value = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
       Validator.parse_and_validate!(param, "query", name, value) == data
     end
 
     data = %{"I_25" => 0, "builtin" => 1, "otherfield" => 1}
     value = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
       Validator.parse_and_validate!(param, "query", name, value)
     end
 
     data = %{"otherfield" => 1}
     value = Jason.encode!(data)
 
-    assert_raise Plug.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Type mismatch. Expected String but got Integer/, fn ->
       Validator.parse_and_validate!(param, "query", name, value)
     end
   end
@@ -619,7 +619,7 @@ defmodule Oasis.ValidatorTest do
 
     data = %{"lat" => 43.21}
 
-    assert_raise Plug.BadRequestError, ~r/Required property long was not present/, fn ->
+    assert_raise Oasis.BadRequestError, ~r/Required property long was not present./, fn ->
       Validator.parse_and_validate!(param, "header", name, Jason.encode!(data))
     end
   end
@@ -743,8 +743,8 @@ defmodule Oasis.ValidatorTest do
     name = "name"
     input = "invalid_json"
 
-    assert_raise Plug.BadRequestError,
-                 ~r/Failed to transfer the value "invalid_json" of the query parameter "name" by schema/,
+    assert_raise Oasis.BadRequestError,
+                 ~r/Failed to convert parameter/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, input)
                  end
@@ -797,8 +797,8 @@ defmodule Oasis.ValidatorTest do
 
     input = %{"key" => "value"}
 
-    assert_raise Plug.BadRequestError,
-                 ~r/Required properties name, fav_number were not present. for the body request/,
+    assert_raise Oasis.BadRequestError,
+                 ~r/Required properties name, fav_number were not present./,
                  fn ->
                    Validator.parse_and_validate!(param, "body", "body_request", input)
                  end
@@ -834,7 +834,7 @@ defmodule Oasis.ValidatorTest do
       },
       "required" => true
     }
-    assert_raise Plug.BadRequestError,
+    assert_raise Oasis.BadRequestError,
                  ~r/Required property refresh_token was not present/,
                  fn ->
                    Validator.parse_and_validate!(type, "body", "requestBody", %{})

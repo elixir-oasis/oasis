@@ -17,20 +17,40 @@ defmodule Oasis do
     """
   end
 
-  defmodule InvalidRequest do
-    defexception message: "the request is missing a required parameter due to client error", plug_status: 400
-
+  defmodule BadRequestError do
     @moduledoc """
-    Error raised when missing a required parameter due to client error
+    Error raised when some reason could not process the request due to client error
     """
-  end
+    defexception message: "invalid request", use_in: nil, param_name: nil, error: nil, plug_status: 400
 
-  defmodule InvalidTokenRequest do
-    defexception message: "the provided token is expired, revoked, malformed, or invalid for other reasons", plug_status: 401
+    defmodule Invalid do
+      @moduledoc """
+      This error is used to indicate could not parse a parameter into the type due to client error
+      """
+      defstruct [:value]
+    end
 
-    @moduledoc """
-    Error raised when the provided token is expired, revoked, malformed, or invalid
-    """
+    defmodule Required do
+      @moduledoc """
+      This error is used to indicate there missing a required parameter due to client error
+      """
+      defstruct([])
+    end
+
+    defmodule JsonSchemaValidationFailed do
+      @moduledoc """
+      This error is used to indicate could not pass the validation of the defined json schema
+      """
+      defstruct [:error, :path]
+    end
+
+    defmodule InvalidToken do
+      @moduledoc """
+      This error is used to indicate the provided token is expired, revoked, malformed, or invalid
+      """
+      defstruct([])
+    end
+
   end
 
   defmodule CacheRawBodyReader do

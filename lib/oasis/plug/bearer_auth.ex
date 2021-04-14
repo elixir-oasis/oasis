@@ -137,6 +137,7 @@ defmodule Oasis.Plug.BearerAuth do
       end
   """
   import Plug.Conn
+  alias Oasis.BadRequestError
 
   @behaviour Plug
 
@@ -267,16 +268,27 @@ defmodule Oasis.Plug.BearerAuth do
   end
 
   defp raise_invalid_auth({:error, "invalid_request"}) do
-    raise Oasis.InvalidRequest,
-      message: "missing a token in authorization header"
+    raise BadRequestError,
+      error: %BadRequestError.Required{},
+      message: "the bearer token is missing in the authorization header",
+      use_in: "header",
+      param_name: "authorization"
   end
   defp raise_invalid_auth({:error, "expired_token"}) do
-    raise Oasis.InvalidTokenRequest,
-      message: "the provided token is expired"
+    raise BadRequestError,
+      error: %BadRequestError.InvalidToken{},
+      message: "the bearer token is expired",
+      use_in: "header",
+      param_name: "authorization",
+      plug_status: 401
   end
   defp raise_invalid_auth({:error, "invalid_token"}) do
-    raise Oasis.InvalidTokenRequest,
-      message: "the provided token is invalid"
+    raise BadRequestError,
+      error: %BadRequestError.InvalidToken{},
+      message: "the bearer token is invalid",
+      use_in: "header",
+      param_name: "authorization",
+      plug_status: 401
   end
 
 end

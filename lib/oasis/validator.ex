@@ -1,6 +1,8 @@
 defmodule Oasis.Validator do
   @moduledoc false
 
+  alias Oasis.BadRequestError
+
   @spec parse_and_validate!(
           param :: map() | nil,
           use_in :: String.t(),
@@ -31,9 +33,12 @@ defmodule Oasis.Validator do
     Map.put(definition, "required", required)
   end
 
-  defp check_required!(%{"required" => true}, use_in, name, nil) do
-    raise Plug.BadRequestError,
-      message: "Required the #{use_in} parameter #{inspect(name)} is missing"
+  defp check_required!(%{"required" => true}, use_in, param_name, nil) do
+    raise BadRequestError,
+      error: %BadRequestError.Required{},
+      use_in: use_in,
+      param_name: param_name,
+      message: "Missing required parameter"
   end
 
   defp check_required!(definition, use_in, name, value) do
@@ -56,20 +61,29 @@ defmodule Oasis.Validator do
     |> process_media_type(media_type, use_in, name, value)
   end
 
-  defp do_parse_and_validate!(%{schema: schema} = json_schema_root, use_in, name, value) do
+  defp do_parse_and_validate!(%{schema: schema} = json_schema_root, use_in, param_name, value) do
     try do
       Oasis.Parser.parse(schema, value)
     rescue
       ArgumentError ->
-        raise_fail_to_parse(use_in, name, value, schema)
+        raise BadRequestError,
+          error: %BadRequestError.Invalid{value: value},
+          use_in: use_in,
+          param_name: param_name,
+          message: "Failed to convert parameter"
+
     else
       value ->
-        case ExJsonSchema.Validator.validate(json_schema_root, value) do
+        case ExJsonSchema.Validator.validate(json_schema_root, value, error_formatter: false) do
           :ok ->
             value
 
-          {:error, [{message, path} | _]} ->
-            raise_fail_to_schema_validate(use_in, name, value, message, path)
+          {:error, [%ExJsonSchema.Validator.Error{error: error, path: path} | _]} ->
+            raise BadRequestError,
+              error: %BadRequestError.JsonSchemaValidationFailed{error: error, path: path},
+              use_in: use_in,
+              param_name: param_name,
+              message: to_string(error)
         end
     end
   end
@@ -138,43 +152,4 @@ defmodule Oasis.Validator do
     value
   end
 
-  defp raise_fail_to_parse("body", _, value, schema) do
-    raise Plug.BadRequestError,
-      message:
-        "Failed to transfer the value #{inspect(value)} of the body request by schema: #{
-          inspect(schema)
-        }"
-  end
-
-  defp raise_fail_to_parse(use_in, name, value, schema) do
-    raise Plug.BadRequestError,
-      message:
-        "Failed to transfer the value #{inspect(value)} of the #{use_in} parameter #{
-          inspect(name)
-        } by schema: #{inspect(schema)}"
-  end
-
-  defp raise_fail_to_schema_validate("body", _, value, message, "#") do
-    raise Plug.BadRequestError,
-      message: "#{message} for the body request, but got #{inspect(value)}"
-  end
-
-  defp raise_fail_to_schema_validate(use_in, name, value, message, "#") do
-    raise Plug.BadRequestError,
-      message:
-        "#{message} for the #{use_in} parameter #{inspect(name)}, but got #{inspect(value)}"
-  end
-
-  defp raise_fail_to_schema_validate("body", _, value, message, path) do
-    raise Plug.BadRequestError,
-      message: "#{message} for the body request in #{inspect(path)}, but got #{inspect(value)}"
-  end
-
-  defp raise_fail_to_schema_validate(use_in, name, value, message, path) do
-    raise Plug.BadRequestError,
-      message:
-        "#{message} for the #{use_in} parameter #{inspect(name)} in #{inspect(path)}, but got #{
-          inspect(value)
-        }"
-  end
 end

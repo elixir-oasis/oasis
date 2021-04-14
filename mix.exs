@@ -81,6 +81,12 @@ defmodule Oasis.MixProject do
       Plugs: [
         Oasis.Plug.BearerAuth,
         Oasis.Plug.RequestValidator
+      ],
+      Errors: [
+        Oasis.BadRequestError.Invalid,
+        Oasis.BadRequestError.Required,
+        Oasis.BadRequestError.JsonSchemaValidationFailed,
+        Oasis.BadRequestError.InvalidToken
       ]
     ]
   end

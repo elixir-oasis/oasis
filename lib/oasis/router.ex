@@ -113,7 +113,7 @@ defmodule Oasis.Router do
               try do
                 Oasis.Validator.parse_and_validate!(definition, "path", key, value)
               rescue
-                reason in Plug.BadRequestError ->
+                reason in Oasis.BadRequestError ->
                   plug_to = unquote(plug_to)
                   module = if plug_to == nil, do: __MODULE__, else: plug_to
 

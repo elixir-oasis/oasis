@@ -66,7 +66,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Failed to transfer the value \"non-integer\" of the path parameter \"id\" by schema: %{\"type\" => \"integer\"}"
+               "Failed to convert parameter"
   end
 
   test "parse query parameter", %{url: url} do
@@ -113,7 +113,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Failed to transfer the value \"invalid_id\" of the path parameter \"id\" by schema: %{\"type\" => \"integer\"}"
+               "Failed to convert parameter"
   end
 
   test "missing required query parameter", %{url: url} do
@@ -125,8 +125,7 @@ defmodule Oasis.IntegrationTest do
              Finch.build(:get, "#{url}/test_query/#{id}") |> Finch.request(TestFinch)
 
     assert response.status == 400 and
-             response.body ==
-               "Required the query parameter \"lang\" is missing"
+             response.body == "Missing required parameter"
   end
 
   test "parse integer query param in [10, 20]", %{url: url} do
@@ -141,7 +140,7 @@ defmodule Oasis.IntegrationTest do
              |> Finch.request(TestFinch)
 
     assert response.body ==
-             "Expected the value to be >= 10 for the query parameter \"lang\", but got #{lang}"
+             "Find query parameter `lang` with error: Expected the value to be >= 10"
 
     lang = 21
     query_string = URI.encode_query(lang: lang)
@@ -151,7 +150,7 @@ defmodule Oasis.IntegrationTest do
              |> Finch.request(TestFinch)
 
     assert response.body ==
-             "Expected the value to be <= 20 for the query parameter \"lang\", but got #{lang}"
+             "Find query parameter `lang` with error: Expected the value to be <= 20"
   end
 
   test "parse boolean query parameter", %{url: url} do
@@ -183,7 +182,7 @@ defmodule Oasis.IntegrationTest do
              |> Finch.request(TestFinch)
 
     assert response.body ==
-             "Type mismatch. Expected Boolean but got String. for the query parameter \"all\", but got \"0\""
+             "Find query parameter `all` with error: Type mismatch. Expected Boolean but got String."
   end
 
   test "parse json in query parameter", %{url: url} do
@@ -222,7 +221,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Type mismatch. Expected Integer but got String. for the query parameter \"profile\" in \"#/tag\", but got %{\"name\" => \"testname\", \"tag\" => \"invalid\"}"
+               "Find query parameter `profile` with error: Type mismatch. Expected Integer but got String."
   end
 
   test "parse array header parameter", %{url: url} do
@@ -254,7 +253,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Type mismatch. Expected Integer but got String. for the header parameter \"items\" in \"#/0\", but got [\"a\", \"b\", \"c\"]"
+               "Find header parameter `items` with error: Type mismatch. Expected Integer but got String."
   end
 
   test "missing required header parameter", %{url: url} do
@@ -264,7 +263,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Required the header parameter \"items\" is missing"
+               "Missing required parameter"
 
     headers = [{"name", "testname"}]
 
@@ -273,7 +272,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Required the header parameter \"items\" is missing"
+               "Missing required parameter"
   end
 
   test "missing required cookie parameter", %{url: url} do
@@ -286,7 +285,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Required the cookie parameter \"items\" is missing"
+               "Missing required parameter"
   end
 
   test "parse array cookie parameter", %{url: url} do
@@ -372,8 +371,7 @@ defmodule Oasis.IntegrationTest do
              |> Finch.request(TestFinch)
 
     assert response.status == 400 and
-             response.body ==
-               "Failed to transfer the value %{\"fav_number\" => \"abc\", \"name\" => \"v1\"} of the body request by schema: %{\"properties\" => %{\"fav_number\" => %{\"maximum\" => 3, \"minimum\" => 1, \"type\" => \"integer\"}, \"name\" => %{\"type\" => \"string\"}}, \"required\" => [\"name\", \"fav_number\"], \"type\" => \"object\"}"
+             response.body == "Failed to convert parameter"
 
     body = "name=v1&fav_number=0"
 
@@ -382,8 +380,7 @@ defmodule Oasis.IntegrationTest do
              |> Finch.request(TestFinch)
 
     assert response.status == 400 and
-             response.body ==
-               "Expected the value to be >= 1 for the body request in \"#/fav_number\", but got %{\"fav_number\" => 0, \"name\" => \"v1\"}"
+             response.body == "Find body parameter `body_request` with error: Expected the value to be >= 1"
   end
 
   test "post multipart/formdata", %{url: url} do
@@ -430,7 +427,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Expected the value to be <= 10 for the body request in \"#/id\", but got %{\"id\" => 20, \"username\" => \"hello\"}"
+               "Find body parameter `body_request` with error: Expected the value to be <= 10"
   end
 
   test "post multipart/mixed", %{url: url} do
@@ -487,7 +484,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Required property addresses was not present. for the body request, but got %{\"id\" => \"testid\"}"
+               "Find body parameter `body_request` with error: Required property addresses was not present."
   end
 
   test "delete request with body schema validation", %{url: url} do
@@ -499,7 +496,7 @@ defmodule Oasis.IntegrationTest do
     assert {:ok, response} =
              Finch.build(:delete, "#{url}/test_delete", headers, body) |> Finch.request(TestFinch)
 
-    assert response.body == "Required the query parameter \"id\" is missing"
+    assert response.body == "Missing required parameter"
 
     query_string = URI.encode_query(id: 1, relation_ids: Jason.encode!([1, 2, 3]))
 
@@ -508,7 +505,7 @@ defmodule Oasis.IntegrationTest do
              |> Finch.request(TestFinch)
 
     assert response.body ==
-             "Type mismatch. Expected String but got Integer. for the query parameter \"relation_ids\" in \"#/0\", but got [1, 2, 3]"
+             "Find query parameter `relation_ids` with error: Type mismatch. Expected String but got Integer."
 
     query_string = URI.encode_query(id: 1, relation_ids: Jason.encode!(["1", "2", "3"]))
 
@@ -538,7 +535,7 @@ defmodule Oasis.IntegrationTest do
     {_, authenticate} = List.keyfind(response.headers, "www-authenticate", 0)
     assert authenticate =~ ~s|Bearer realm=|
     assert authenticate =~ ~s|error=\"invalid_request\"|
-    assert authenticate =~ ~s|error_description=\"missing a token in authorization header\"|
+    assert authenticate =~ ~s|error_description=\"the bearer token is missing in the authorization header\"|
   end
 
   test "verify bearer auth", %{url: url} do
@@ -577,7 +574,7 @@ defmodule Oasis.IntegrationTest do
     {_, authenticate} = List.keyfind(response.headers, "www-authenticate", 0)
     assert authenticate =~ ~s|Bearer realm=|
     assert authenticate =~ ~s|error=\"invalid_token\"|
-    assert authenticate =~ ~s|error_description=\"the provided token is invalid\"|
+    assert authenticate =~ ~s|error_description=\"the bearer token is invalid\"|
 
     headers = [{"content-type", "application/x-www-form-urlencoded"}]
     body = "username=a&password=wrong"
@@ -616,6 +613,6 @@ defmodule Oasis.IntegrationTest do
     {_, authenticate} = List.keyfind(response.headers, "www-authenticate", 0)
     assert authenticate =~ ~s|Bearer realm=|
     assert authenticate =~ ~s|error=\"invalid_token\"|
-    assert authenticate =~ ~s|error_description=\"the provided token is expired\"|
+    assert authenticate =~ ~s|error_description=\"the bearer token is expired\"|
   end
 end
