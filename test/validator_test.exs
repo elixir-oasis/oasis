@@ -29,7 +29,7 @@ defmodule Oasis.ValidatorTest do
                  end
 
     assert_raise Oasis.BadRequestError,
-                 ~r/Missing required parameter/,
+                 ~r/Missing a required parameter/,
                  fn ->
                    Validator.parse_and_validate!(param, "query", name, nil)
                  end

@@ -146,7 +146,7 @@ defmodule Oasis.RouterTest do
 
   test "handler_errors/2 in generated plug module" do
     conn = conn(:get, "/test_header")
-    assert_raise Plug.Conn.WrapperError, ~s/** (Oasis.BadRequestError) Missing required parameter/, fn ->
+    assert_raise Plug.Conn.WrapperError, ~s/** (Oasis.BadRequestError) Missing a required parameter/, fn ->
       call(Oasis.HTTPServer.PlugRouter, conn)
     end
 

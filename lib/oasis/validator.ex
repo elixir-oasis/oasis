@@ -38,7 +38,7 @@ defmodule Oasis.Validator do
       error: %BadRequestError.Required{},
       use_in: use_in,
       param_name: param_name,
-      message: "Missing required parameter"
+      message: "Missing a required parameter"
   end
 
   defp check_required!(definition, use_in, name, value) do
@@ -83,7 +83,7 @@ defmodule Oasis.Validator do
               error: %BadRequestError.JsonSchemaValidationFailed{error: error, path: path},
               use_in: use_in,
               param_name: param_name,
-              message: to_string(error)
+              message: "Failed to validate JSON schema with an error: #{to_string(error)}"
         end
     end
   end

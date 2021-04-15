@@ -125,7 +125,7 @@ defmodule Oasis.IntegrationTest do
              Finch.build(:get, "#{url}/test_query/#{id}") |> Finch.request(TestFinch)
 
     assert response.status == 400 and
-             response.body == "Missing required parameter"
+             response.body == "Missing a required parameter"
   end
 
   test "parse integer query param in [10, 20]", %{url: url} do
@@ -263,7 +263,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Missing required parameter"
+               "Missing a required parameter"
 
     headers = [{"name", "testname"}]
 
@@ -272,7 +272,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Missing required parameter"
+               "Missing a required parameter"
   end
 
   test "missing required cookie parameter", %{url: url} do
@@ -285,7 +285,7 @@ defmodule Oasis.IntegrationTest do
 
     assert response.status == 400 and
              response.body ==
-               "Missing required parameter"
+               "Missing a required parameter"
   end
 
   test "parse array cookie parameter", %{url: url} do
@@ -496,7 +496,7 @@ defmodule Oasis.IntegrationTest do
     assert {:ok, response} =
              Finch.build(:delete, "#{url}/test_delete", headers, body) |> Finch.request(TestFinch)
 
-    assert response.body == "Missing required parameter"
+    assert response.body == "Missing a required parameter"
 
     query_string = URI.encode_query(id: 1, relation_ids: Jason.encode!([1, 2, 3]))
 
