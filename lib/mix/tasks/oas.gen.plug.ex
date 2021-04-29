@@ -13,10 +13,22 @@ defmodule Mix.Tasks.Oas.Gen.Plug do
   * `--file`, required, the completed path to the specification file in YAML or JSON format.
   * `--router`, optional, the generated router's module alias, by default it is `Router` (the full module name is `Oasis.Gen.Router` by default), for example we set `--router Hello.MyRouter` meanwhile there is no other special name space defined, the final router module is `Oasis.Gen.Hello.MyRouter` in `/lib/oasis/gen/hello/my_router.ex` path.
   * `--name-space`, optional, the generated all modules' name space, by default it is `Oasis.Gen`, this argument will always override the name space from the input `--file` if any `"x-oasis-name-space"` field(s) defined.
+  * `--force`, optional, forces creation without a shell prompt
+  * `--quiet`, optional, does not log command output
   """
   use Mix.Task
 
-  @switches [file: :string, router: :string, name_space: :string, body_reader: :string]
+  @parse_opts [
+    switches: [
+      file: :string,
+      router: :string,
+      name_space: :string,
+      body_reader: :string,
+      force: :boolean,
+      quiet: :boolean
+    ],
+    aliases: [f: :file, r: :router, n: :name_space, q: :quiet]
+  ]
 
   def run(args) do
     if Mix.Project.umbrella?() do
@@ -27,14 +39,12 @@ defmodule Mix.Tasks.Oas.Gen.Plug do
 
     paths = Mix.Oasis.generator_paths()
 
-    files = build(args)
-
-    Mix.Oasis.copy_from(paths, "priv/templates/oas.gen.plug", files)
+    opts = parse_opts(args)
+    files = build(opts)
+    Mix.Oasis.copy_from(paths, "priv/templates/oas.gen.plug", files, opts)
   end
 
-  defp build(args) do
-    opts = parse_opts(args)
-
+  defp build(opts) do
     %ExJsonSchema.Schema.Root{schema: schema} = Oasis.Spec.read(opts[:file])
 
     opts = Keyword.take(opts, [:router, :name_space, :body_reader])
@@ -43,7 +53,7 @@ defmodule Mix.Tasks.Oas.Gen.Plug do
   end
 
   defp parse_opts(args) do
-    {opts, _, _} = OptionParser.parse(args, switches: @switches)
+    {opts, _, _} = OptionParser.parse(args, @parse_opts)
     validate_opts!(opts)
   end
 
