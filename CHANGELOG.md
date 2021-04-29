@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1 (2021-04-29)
+
+Fix unexpected "..." string in generated `pre_*` module when a large number of parameters defined
+
 ## v0.4.0 (2021-04-14)
 * Improve errors handle and add a guide about it
 
