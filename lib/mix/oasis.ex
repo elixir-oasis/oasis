@@ -111,7 +111,7 @@ defmodule Mix.Oasis do
     |> Enum.join(".")
   end
 
-  def copy_from(apps, source_dir, mapping) when is_list(mapping) do
+  def copy_from(apps, source_dir, mapping, opts \\ []) when is_list(mapping) do
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
 
     for {format, target, source_file_path, module_name, binding} <- mapping do
@@ -122,22 +122,18 @@ defmodule Mix.Oasis do
         end) || raise "could not find #{source_file_path} in any of the sources"
 
       binding = Map.put(binding, :module_name, module_name)
+      file_contents = EEx.eval_file(source, context: binding) |> Code.format_string!()
+      create_file_opts = Keyword.take(opts, [:force, :quiet])
 
       case format do
         :eex ->
-          Mix.Generator.create_file(
-            target,
-            EEx.eval_file(source, context: binding) |> Code.format_string!()
-          )
+          Mix.Generator.create_file(target, file_contents, create_file_opts)
 
         :new_eex ->
           if File.exists?(target) do
             :ok
           else
-            Mix.Generator.create_file(
-              target,
-              EEx.eval_file(source, context: binding) |> Code.format_string!()
-            )
+            Mix.Generator.create_file(target, file_contents, create_file_opts)
           end
       end
     end
