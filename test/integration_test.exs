@@ -41,6 +41,8 @@ defmodule Oasis.IntegrationTest do
 
     assert Oasis.Gen.Plug.TestBearerAuth.init(:ok) == :ok
     assert Oasis.Gen.Plug.TestSignBearerAuth.init(:ok) == :ok
+
+    assert Oasis.Gen.Plug.TestFilesUpload.init(:ok) == :ok
   end
 
   test "parse path parameter in router do body", %{url: url} do
@@ -614,5 +616,56 @@ defmodule Oasis.IntegrationTest do
     assert authenticate =~ ~s|Bearer realm=|
     assert authenticate =~ ~s|error=\"invalid_token\"|
     assert authenticate =~ ~s|error_description=\"the bearer token is expired\"|
+  end
+
+  test "multipart/form-data with upload", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+    headers = [{"content-type", "multipart/form-data; boundary=--76b20336b057"}]
+
+    multipart = """
+    ----76b20336b057\r
+    Content-Disposition: form-data; name=\"file[]\"; filename=\"1.txt\"\r
+    Content-Type: text/plain\r
+    \r
+    file1\r
+    ----76b20336b057\r
+    Content-Disposition: form-data; name=\"file[]\"; filename=\"2.txt\"\r
+    Content-Type: text/plain\r
+    \r
+    file2\r
+    ----76b20336b057\r
+    Content-Disposition: form-data; name=\"logo\"; filename=\"2.png\"\r
+    Content-Type: image/png\r
+    \r
+    fakeimagebinary\r
+    ----76b20336b057--\r
+    """
+    assert {:ok, response} =
+             Finch.build(:post, "#{url}/test_files_upload", headers, multipart)
+             |> Finch.request(TestFinch)
+
+    body = Jason.decode!(response.body)
+
+    assert body["uploaded"] == 2 and body["with_logo"] == true
+
+    multipart = """
+    ----76b20336b057\r
+    Content-Disposition: form-data; name=\"logo\"\r
+    \r
+    1\r
+    ----76b20336b057\r
+    Content-Disposition: form-data; name=\"id\"\r
+    \r
+    1001\r
+    ----76b20336b057--\r
+
+    """
+
+    assert {:ok, response} =
+             Finch.build(:post, "#{url}/test_files_upload", headers, multipart)
+             |> Finch.request(TestFinch)
+
+    assert response.status == 400 and
+             response.body == "Find body parameter `body_request` with error: Type mismatch. Expected Integer but got String."
   end
 end

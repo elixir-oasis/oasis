@@ -73,12 +73,17 @@ defmodule Oasis.Validator do
           message: "Failed to convert parameter"
 
     else
-      value ->
-        case ExJsonSchema.Validator.validate(json_schema_root, value, error_formatter: false) do
-          :ok ->
-            value
+      parsed ->
 
-          {:error, [%ExJsonSchema.Validator.Error{error: error, path: path} | _]} ->
+        result =
+          json_schema_root
+          |> json_schema_validate(parsed)
+          |> recheck_after_validate()
+
+        case result do
+          {:ok, ^parsed} ->
+            parsed
+          {:error, %ExJsonSchema.Validator.Error{error: error, path: path}} ->
             raise BadRequestError,
               error: %BadRequestError.JsonSchemaValidationFailed{error: error, path: path},
               use_in: use_in,
@@ -86,6 +91,43 @@ defmodule Oasis.Validator do
               message: "Failed to validate JSON schema with an error: #{to_string(error)}"
         end
     end
+  end
+
+
+  defp json_schema_validate(json_schema_root, parsed) do
+    {
+      ExJsonSchema.Validator.validate(json_schema_root, parsed, error_formatter: false),
+      parsed
+    }
+  end
+
+  defp recheck_after_validate({:ok, parsed}), do: {:ok, parsed}
+  defp recheck_after_validate({{:error, errors}, parsed}) do
+    errors = Enum.filter(errors, fn %{error: error, path: path} ->
+      error_to_attention?(error, path, parsed)
+    end)
+
+    case errors do
+      [] ->
+        {:ok, parsed}
+      [error | _] ->
+        {:error, error}
+    end
+  end
+
+  defp error_to_attention?(%ExJsonSchema.Validator.Error.Type{actual: "object", expected: ["string"]}, path, parsed) do
+    case value_in_path(path, parsed) do
+      %Plug.Upload{} ->
+        # ignore `Plug.Upload` failed in json schema validation
+        false
+      _ ->
+        true
+    end
+  end
+  defp error_to_attention?(_error, _path, _parsed), do: true
+
+  defp value_in_path("#/" <> path, parsed) when is_map(parsed) do
+    get_in(parsed, String.split(path, "/"))
   end
 
   defp process_media_type("text/plain", %{"schema" => json_schema_root}, use_in, name, value) do

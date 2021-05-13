@@ -91,6 +91,10 @@ defmodule Oasis.HTTPServer.PlugRouter do
     to: Oasis.Gen.Plug.PreTestSignBearerAuth
   )
 
+  post("/test_files_upload",
+    to: Oasis.Gen.Plug.PreTestFilesUpload
+  )
+
   def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do
     message = Map.get(reason, :message) || "Something went wrong"
     send_resp(conn, conn.status, message)

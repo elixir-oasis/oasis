@@ -454,4 +454,21 @@ defmodule Oasis.ParserTest do
       parse(type, input)
     end
   end
+
+  test "parse file upload" do
+    type = %{
+      "properties" => %{"file" => %{"format" => "binary", "type" => "string"}},
+      "type" => "object"
+    }
+
+    input = %{
+      "file" => %Plug.Upload{
+        content_type: "image/png",
+        filename: "test.png",
+        path: "/var/folders/c3/_tk3ftrx1x71xkz6xhpsxpzr0000gn/T//plug-1620/multipart-1620803361-660920818442426-3"
+      }
+    }
+
+    assert parse(type, input) == input
+  end
 end

@@ -841,4 +841,87 @@ defmodule Oasis.ValidatorTest do
                  end
   end
 
+  test "parse multipart/form-data with a file upload" do
+    name = "requestBody"
+
+    param = %{
+      "content" => %{
+        "multipart/form-data" => %{
+          "schema" => %ExJsonSchema.Schema.Root{
+            schema: %{
+              "properties" => %{
+                "file" => %{"format" => "binary", "type" => "string"},
+                "id" => %{"type" => "integer", "maximum" => 10}
+              },
+              "required" => ["file"],
+              "type" => "object"
+            }
+          }
+        }
+      }
+    }
+
+    upload =
+      %Plug.Upload{
+        content_type: "image/png",
+        filename: "test.png",
+        path: "/var/tmp/path"
+      }
+
+    input = %{
+      "file" => upload,
+      "id" => "10"
+    }
+
+    parsed = Validator.parse_and_validate!(param, "body", name, input)
+
+    assert parsed["id"] == 10
+    assert parsed["file"] == upload
+
+    input = %{
+      "file" => upload,
+      "id" => "100"
+    }
+
+    assert_raise Oasis.BadRequestError,
+                 ~r/Failed to validate JSON schema with an error: Expected the value to be <= 10/,
+                 fn -> Validator.parse_and_validate!(param, "body", name, input) end
+  end
+
+  test "parse multipart/form-data with multiple files upload" do
+    name = "requestBody"
+
+    param = %{
+      "content" => %{
+        "multipart/form-data" => %{
+          "schema" => %ExJsonSchema.Schema.Root{
+            schema: %{"properties" => %{"file" => %{"items" => %{}, "type" => "array"}}}
+          }
+        }
+      }
+    }
+
+    upload1 =
+      %Plug.Upload{
+        content_type: "image/png",
+        filename: "test1.png",
+        path: "/var/tmp/path/1"
+      }
+
+    upload2 =
+      %Plug.Upload{
+        content_type: "image/png",
+        filename: "test2.png",
+        path: "/var/tmp/path/2"
+      }
+
+
+    input = %{
+      "file" => [upload1, upload2]
+    }
+
+    parsed = Validator.parse_and_validate!(param, "body", name, input)
+
+    assert parsed == input
+  end
 end
