@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.3 (2021-05-13)
+
+* Fix to make properly handle file uploads
+
 ## v0.4.2 (2021-05-11)
 
 * Add `--force` and `--quiet` options for mix oas.gen.plug
