@@ -23,11 +23,11 @@ defmodule Oasis.ParserTest do
     assert parse(@type_integer, "-1") == -1
     assert parse(@type_integer, -1) == -1
 
-    assert_raise ArgumentError, ~r/\bargument\b.*(integer)/, fn ->
+    assert_raise ArgumentError, ~r/\bargument\b.*(integer)|(argument error)/, fn ->
       parse(@type_integer, "1.2")
     end
 
-    assert_raise ArgumentError, ~r/\bargument\b.*(integer)/, fn ->
+    assert_raise ArgumentError, ~r/\bargument\b.*(integer)|(argument error)/, fn ->
       parse(@type_integer, "a")
     end
   end
@@ -109,7 +109,7 @@ defmodule Oasis.ParserTest do
       parse(type, ["1", "a", "9", "9"])
     end
 
-    assert_raise ArgumentError, ~r/\bargument\b.*(integer)/, fn ->
+    assert_raise ArgumentError, ~r/\bargument\b.*(integer)|(argument error)/, fn ->
       parse(type, ["a", "a", "9"])
     end
 
@@ -219,7 +219,7 @@ defmodule Oasis.ParserTest do
     input = %{"number" => "1600", "street_name" => "hello", "flag" => "true"}
     assert parse(type, input) == %{"number" => 1600, "street_name" => "hello", "flag" => true}
 
-    assert_raise ArgumentError, ~r/\bargument\b.*(integer)/, fn ->
+    assert_raise ArgumentError, ~r/\bargument\b.*(integer)|(argument error)/, fn ->
       input = %{"number" => "1600", "street_name" => "hello", "flag" => "true", "loc" => "12.3a"}
       parse(type, input) == %{"number" => 1600, "street_name" => "hello", "flag" => true}
     end
@@ -450,7 +450,7 @@ defmodule Oasis.ParserTest do
 
     input = %{"builtin" => "1", "I_2" => "abc"}
 
-    assert_raise ArgumentError, ~r/\bargument\b.*(integer)/, fn ->
+    assert_raise ArgumentError, ~r/\bargument\b.*(integer)|(argument error)/, fn ->
       parse(type, input)
     end
   end
