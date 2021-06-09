@@ -484,13 +484,13 @@ defmodule Mix.OasisTest do
         assert router.query_schema == nil and body_schema != nil
 
         schema = body_schema["content"]["application/json"]["schema"]
-        assert is_struct(schema, ExJsonSchema.Schema.Root)
+        assert schema.__struct__ == ExJsonSchema.Schema.Root
 
         assert ExJsonSchema.Validator.valid?(schema, %{"name" => "test-name"})
         assert ExJsonSchema.Validator.valid?(schema, %{"tag" => "test-tag"}) == false
 
         schema = body_schema["content"]["application/x-www-form-urlencoded"]["schema"]
-        assert is_struct(schema, ExJsonSchema.Schema.Root)
+        assert schema.__struct__ == ExJsonSchema.Schema.Root
 
         assert ExJsonSchema.Validator.valid?(schema, %{"name" => "test-name", "fav_number" => 1}) ==
                  true

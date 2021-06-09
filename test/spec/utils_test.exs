@@ -53,7 +53,7 @@ defmodule Oasis.Spec.UtilsTest do
     root = ExJsonSchema.Schema.resolve(data)
 
     root = Oasis.Spec.Utils.expand_ref(root)
-    assert is_struct(root, ExJsonSchema.Schema.Root)
+    assert root.__struct__ == ExJsonSchema.Schema.Root
 
     schema = root.schema
 
