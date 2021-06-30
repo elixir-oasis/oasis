@@ -762,15 +762,10 @@ defmodule Oasis.ValidatorTest do
     name = "test_param"
     input = "input_str"
 
-    # for ex_json_schema 0.7.4
-    assert_raise CaseClauseError, ~r/no case clause matching: "UNKNOWN_JSON_SCHEMA"/, fn ->
+    # for ex_json_schema 0.8.1
+    assert_raise FunctionClauseError, ~r/no function clause matching/, fn ->
       Validator.parse_and_validate!(param, "query", name, input)
     end
-
-    # for ex_json_schema 0.8.0-rc1
-    #assert_raise FunctionClauseError, ~r/no function clause matching/, fn ->
-    #  Validator.parse_and_validate!(param, "query", name, input)
-    #end
   end
 
   test "parse urlencoded" do
