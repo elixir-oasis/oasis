@@ -34,7 +34,7 @@ defmodule Oasis.Plug.HmacAuth do
 
     with {:ok, token} <- parse_hmac_auth(conn, options),
          {:ok, data} <- verify(conn, token, cryptos, options) do
-        custom_verify(conn, security, token, options)
+        custom_verify!(conn, security, token, options)
     else
       error ->
         raise_invalid_auth(error)
@@ -140,9 +140,9 @@ defmodule Oasis.Plug.HmacAuth do
     end
   end
 
-  defp custom_verify(conn, security, token, options) do
-    if function_exported?(security, :verify, 3) do
-      security.verify(conn, token, options)
+  defp custom_verify!(conn, security, token, options) do
+    if function_exported?(security, :verify!, 3) do
+      security.verify!(conn, token, options)
     else
       conn
     end

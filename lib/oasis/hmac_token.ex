@@ -29,5 +29,5 @@ defmodule Oasis.HmacToken do
 
   @callback crypto_configs(conn :: Plug.Conn.t(), opts :: Keyword.t()) :: [Crypto.t()]
 
-  @callback verify(conn :: Plug.Conn.t(), Map.t(), opts :: Keyword.t()) :: [Plug.Conn.t()]
+  @callback verify!(conn :: Plug.Conn.t(), Map.t(), opts :: Keyword.t()) :: [Plug.Conn.t()]
 end
