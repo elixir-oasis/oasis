@@ -10,14 +10,12 @@ defmodule Oasis.HmacToken do
 
     defstruct [
       :credential,
-      :secret,
-      :max_age
+      :secret
     ]
 
     @type t :: %__MODULE__{
             credential: String.t(),
-            secret: String.t(),
-            max_age: pos_integer()
+            secret: String.t()
           }
   end
 

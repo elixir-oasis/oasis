@@ -16,8 +16,7 @@ defmodule Oasis.Plug.HmacAuthTest do
       [
         %Crypto{
           credential: "test_client",
-          secret: "secret",
-          max_age: 1500
+          secret: "secret"
         }
       ]
     end
@@ -25,7 +24,32 @@ defmodule Oasis.Plug.HmacAuthTest do
     @impl true
     def verify!(conn, _token, _opts) do
       conn
-      |> IO.inspect()
+    end
+  end
+
+  defmodule HmacAuthWithDateValidation do
+    @behaviour Oasis.HmacToken
+
+    alias Oasis.HmacToken.Crypto
+
+    @max_age 1
+
+    @impl true
+    def crypto_configs(%Conn{}, _opts) do
+      [
+        %Crypto{
+          credential: "test_client",
+          secret: "secret"
+        }
+      ]
+    end
+
+    @impl true
+    def verify!(conn, _token, _opts) do
+      # actual:
+      # parse & verify date
+      # could not before (now - max_age)
+      conn
     end
   end
 
@@ -35,7 +59,9 @@ defmodule Oasis.Plug.HmacAuthTest do
   @credential "test_client"
   @signature "aqg8DKRSwWhFQq9lr/TwTL//3F3p72bBpDSIfjqYoms="
 
-  describe "parse hmac auth" do
+  @signed_headers_with_date "host;x-oasis-date"
+
+  describe "parse_hmac_auth" do
     test "parse fail with wrong fields" do
       conn =
         conn(:get, "/")
@@ -72,7 +98,7 @@ defmodule Oasis.Plug.HmacAuthTest do
     end
   end
 
-  describe "hmac auth" do
+  describe "hmac_auth" do
     test "missing required :security option" do
       assert_raise RuntimeError,
                    ~r|no :security option found in path /test with plug Oasis.Plug.HmacAuth|,
@@ -120,6 +146,20 @@ defmodule Oasis.Plug.HmacAuthTest do
         )
 
       assert hmac_auth(conn, security: HmacAuth, signed_headers: @signed_headers)
+    end
+
+    test "verify expired" do
+      conn =
+        conn(:get, @path_and_query)
+        |> put_req_header("host", @host)
+        |> put_req_header("x-oasis-date", "Wed, 15 Sep 2021 06:41:35 GMT")
+        |> put_req_header(
+             "authorization",
+             "HMAC-SHA256 Credential=#{@credential}&SignedHeaders=#{@signed_headers_with_date}&Signature=1xRhjH97JJ2r/17XlIxtGv1N4XNf5t8Qu8UN94xmlpM="
+           )
+
+      assert hmac_auth(conn, security: HmacAuthWithDateValidation, signed_headers: @signed_headers_with_date)
+
     end
   end
 end
