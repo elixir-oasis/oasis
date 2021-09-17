@@ -25,7 +25,7 @@ defmodule Oasis.HmacToken do
           {:error, :expired}
           | {:error, :invalid}
 
-  @callback crypto_configs(conn :: Plug.Conn.t(), opts :: Keyword.t()) :: [Crypto.t()]
+  @callback crypto_configs(conn :: Plug.Conn.t(), opts :: opts()) :: [Crypto.t()]
 
-  @callback verify!(conn :: Plug.Conn.t(), Map.t(), opts :: Keyword.t()) :: [Plug.Conn.t()]
+  @callback verify(conn :: Plug.Conn.t(), Map.t(), opts :: opts()) :: {:ok, term()} | verify_error()
 end
