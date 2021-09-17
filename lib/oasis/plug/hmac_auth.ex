@@ -74,7 +74,7 @@ defmodule Oasis.Plug.HmacAuth do
     if keys_expect == keys_actual do
       token
     else
-      raise :invalid_token_keys
+      raise "invalid_token_keys"
     end
   end
 
