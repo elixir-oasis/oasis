@@ -163,6 +163,38 @@ defmodule Oasis.Plug.HmacAuthTest do
              )
     end
 
+    test "verify sha512 success" do
+      conn =
+        conn(:get, @path_and_query)
+        |> put_req_header("host", @host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA512 Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=NNf3rbPKndxcBuqIM3vDm8lW2lGHAyQUxZN6C1Ym9EdfHerIB5Iv/q5rtK61uYlzxWesEv+yMAvKnZxkbXqP2g=="
+        )
+
+      assert hmac_auth(conn,
+               scheme: "hmac-sha512",
+               security: HmacAuth,
+               signed_headers: @signed_headers
+             )
+    end
+
+    test "verify md5 success" do
+      conn =
+        conn(:get, @path_and_query)
+        |> put_req_header("host", @host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-MD5 Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=VuugLKUj0LT62ZwJfrHK8Q=="
+        )
+
+      assert hmac_auth(conn,
+               scheme: "hmac-md5",
+               security: HmacAuth,
+               signed_headers: @signed_headers
+             )
+    end
+
     test "verify expired" do
       assert_raise Oasis.BadRequestError,
                    ~r|the hmac token is expired|,
