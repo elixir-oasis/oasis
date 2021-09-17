@@ -28,6 +28,7 @@ defmodule Mix.Oasis.Router do
   @spec_ext_name_space "x-oasis-name-space"
   @spec_ext_router "x-oasis-router"
   @spec_ext_key_to_assigns "x-oasis-key-to-assigns"
+  @spec_ext_signed_headers "x-oasis-signed-headers"
 
   def generate_files_by_paths_spec(apps, %{"paths" => paths_spec} = spec, opts)
     when is_map(paths_spec) do
@@ -396,6 +397,33 @@ defmodule Mix.Oasis.Router do
     {
       content,
       {:new_eex, Path.join(dir, file_name), "bearer_token.ex", security_module}
+    }
+  end
+
+  defp map_security_scheme(apps, security_name, %{"scheme" => "hmac-" <> _} = security_scheme, %{name_space: name_space}, opts) do
+    # priority use `x-oasis-name-space` field in security scheme object compare to operation's level
+    # but still use the input argument option from the `oas.gen.plug` command line in the highest priority if possible.
+    scheme = security_scheme["scheme"]
+    name_space_from_spec = Map.get(security_scheme, @spec_ext_name_space, name_space)
+    name_space = opts[:name_space] || name_space_from_spec
+
+    {name_space, dir} = Mix.Oasis.name_space(name_space)
+
+    {module_name, file_name} = Mix.Oasis.module_alias(security_name)
+    security_module = Module.concat([name_space, module_name])
+
+    signed_headers = Map.get(security_scheme, @spec_ext_signed_headers)
+
+    content =
+      Mix.Oasis.eval_from(apps, "priv/templates/oas.gen.plug/plug/hmac_auth.exs",
+        scheme: scheme,
+        security: security_module,
+        signed_headers: signed_headers
+      )
+
+    {
+      content,
+      {:new_eex, Path.join(dir, file_name), "hmac_token.ex", security_module}
     }
   end
 

@@ -33,6 +33,7 @@ defmodule Oasis.Spec.Security do
   end
 
   defp supported_security?(%{"type" => "http", "scheme" => "bearer"}), do: true
+  defp supported_security?(%{"type" => "http", "scheme" => "hmac-" <> _}), do: true
   defp supported_security?(_), do: false
 
 end
