@@ -181,13 +181,13 @@ defmodule Oasis.Plug.HmacAuth do
     options[:security] ||
       raise """
       no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
-      Please ensure your specification defines a field `x-oasis-security` in
-      security scheme object, for example:
+      Please ensure your specification defines a valid field `x-oasis-name-space` in
+      security scheme object or use oasis default value, for example:
 
           type: http
           scheme: hmac-sha256
-          x-oasis-security: HmacAuth
           x-oasis-signed-headers: x-oasis-date;host
+          x-oasis-name-space: MyOwnApplication
       """
   end
 
