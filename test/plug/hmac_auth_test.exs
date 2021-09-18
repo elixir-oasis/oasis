@@ -1,61 +1,11 @@
 defmodule Oasis.Plug.HmacAuthTest do
-  use ExUnit.Case, asysnc: false
+  use ExUnit.Case
   use Plug.Test
 
   alias Plug.Conn
 
   import Oasis.Plug.HmacAuth
-
-  defmodule HmacAuth do
-    @behaviour Oasis.HmacToken
-
-    alias Oasis.HmacToken.Crypto
-
-    @impl true
-    def crypto_configs(%Conn{}, _opts) do
-      [
-        %Crypto{
-          credential: "test_client",
-          secret: "secret"
-        }
-      ]
-    end
-
-  end
-
-  defmodule HmacAuthWithDateValidation do
-    @behaviour Oasis.HmacToken
-
-    alias Oasis.HmacToken.Crypto
-
-    @impl true
-    def crypto_configs(%Conn{}, _opts) do
-      [
-        %Crypto{
-          credential: "test_client",
-          secret: "secret"
-        }
-      ]
-    end
-
-    @impl true
-    def verify(conn, token, opts) do
-      with {:ok, _} <- Oasis.HmacToken.verify(conn, token, opts) do
-        # actual:
-        # parse & verify date
-        # could not before (now - max_age)
-        {:error, :expired}
-      end
-    end
-  end
-
-  @path_and_query "/test?a=b"
-  @host "localhost:4000"
-  @signed_headers "host"
-  @credential "test_client"
-  @signature "aqg8DKRSwWhFQq9lr/TwTL//3F3p72bBpDSIfjqYoms="
-
-  @signed_headers_with_date "host;x-oasis-date"
+  import Oasis.Test.Support.Hmac
 
   describe "parse_hmac_auth" do
     test "parse fail with wrong fields" do
@@ -85,7 +35,7 @@ defmodule Oasis.Plug.HmacAuthTest do
         conn(:get, "/")
         |> put_req_header(
           "authorization",
-          "HMAC-SHA256 hello=world&Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=wrong"
+          "HMAC-SHA256 hello=world&Credential=credential#&SignedHeaders=signed_headers&Signature=signature"
         )
 
       assert {:ok, token} = parse_hmac_auth(conn, "hmac-sha256")
@@ -96,119 +46,140 @@ defmodule Oasis.Plug.HmacAuthTest do
 
   describe "hmac_auth" do
     test "missing required :security option" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, "/")
+        |> put_req_header("host", c.host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+
       assert_raise RuntimeError,
                    ~r|no :security option found in path / with plug Oasis.Plug.HmacAuth|,
                    fn ->
-                     conn(:get, "/")
-                     |> put_req_header("host", @host)
-                     |> put_req_header(
-                       "authorization",
-                       "HMAC-SHA256 Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=#{@signature}"
-                     )
-                     |> hmac_auth(scheme: "hmac-sha256", signed_headers: @signed_headers)
+                     hmac_auth(conn, scheme: "hmac-sha256", signed_headers: c.signed_headers)
                    end
     end
 
     test "invalid token" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=invalid"
+        )
+
       assert_raise Oasis.BadRequestError,
                    ~r|the hmac token is invalid|,
                    fn ->
-                     conn(:get, @path_and_query)
-                     |> put_req_header("host", @host)
-                     |> put_req_header(
-                       "authorization",
-                       "HMAC-SHA256 Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=wrong"
-                     )
-                     |> hmac_auth(
+                     hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: HmacAuth,
-                       signed_headers: @signed_headers
+                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       signed_headers: c.signed_headers
                      )
-                     |> IO.inspect()
                    end
     end
 
     test "invalid credential" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=not_exist&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+
       assert_raise Oasis.BadRequestError,
                    ~r|the credential in the authorization header is not assigned|,
                    fn ->
-                     conn(:get, @path_and_query)
-                     |> put_req_header("host", @host)
-                     |> put_req_header(
-                       "authorization",
-                       "HMAC-SHA256 Credential=client_not_exist&SignedHeaders=#{@signed_headers}&Signature=#{@signature}"
-                     )
-                     |> hmac_auth(
+                     hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: HmacAuth,
-                       signed_headers: @signed_headers
+                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       signed_headers: c.signed_headers
                      )
                    end
     end
 
     test "verify success" do
+      c = case_host_only()
+
       conn =
-        conn(:get, @path_and_query)
-        |> put_req_header("host", @host)
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
-          "HMAC-SHA256 Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=#{@signature}"
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
 
       assert hmac_auth(conn,
                scheme: "hmac-sha256",
-               security: HmacAuth,
-               signed_headers: @signed_headers
+               security: Oasis.Test.Support.Hmac.TokenHostOnly,
+               signed_headers: c.signed_headers
              )
     end
 
     test "verify sha512 success" do
+      c = case_host_only()
+
       conn =
-        conn(:get, @path_and_query)
-        |> put_req_header("host", @host)
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
-          "HMAC-SHA512 Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=NNf3rbPKndxcBuqIM3vDm8lW2lGHAyQUxZN6C1Ym9EdfHerIB5Iv/q5rtK61uYlzxWesEv+yMAvKnZxkbXqP2g=="
+          "HMAC-SHA512 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha512}"
         )
 
       assert hmac_auth(conn,
                scheme: "hmac-sha512",
-               security: HmacAuth,
-               signed_headers: @signed_headers
+               security: Oasis.Test.Support.Hmac.TokenHostOnly,
+               signed_headers: c.signed_headers
              )
     end
 
     test "verify md5 success" do
+      c = case_host_only()
+
       conn =
-        conn(:get, @path_and_query)
-        |> put_req_header("host", @host)
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
-          "HMAC-MD5 Credential=#{@credential}&SignedHeaders=#{@signed_headers}&Signature=VuugLKUj0LT62ZwJfrHK8Q=="
+          "HMAC-MD5 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_md5}"
         )
 
       assert hmac_auth(conn,
                scheme: "hmac-md5",
-               security: HmacAuth,
-               signed_headers: @signed_headers
+               security: Oasis.Test.Support.Hmac.TokenHostOnly,
+               signed_headers: c.signed_headers
              )
     end
 
     test "verify expired" do
+      c = case_with_date()
+
+      conn =
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
+        |> put_req_header("x-oasis-date", c.x_oasis_date)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+
       assert_raise Oasis.BadRequestError,
                    ~r|the hmac token is expired|,
                    fn ->
-                     conn(:get, @path_and_query)
-                     |> put_req_header("host", @host)
-                     |> put_req_header("x-oasis-date", "Wed, 15 Sep 2021 06:41:35 GMT")
-                     |> put_req_header(
-                       "authorization",
-                       "HMAC-SHA256 Credential=#{@credential}&SignedHeaders=#{@signed_headers_with_date}&Signature=1xRhjH97JJ2r/17XlIxtGv1N4XNf5t8Qu8UN94xmlpM="
-                     )
-                     |> hmac_auth(
+                     hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: HmacAuthWithDateValidation,
-                       signed_headers: @signed_headers_with_date
+                       security: Oasis.Test.Support.Hmac.TokenWithDate,
+                       signed_headers: c.signed_headers
                      )
                    end
     end
