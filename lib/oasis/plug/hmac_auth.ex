@@ -206,15 +206,6 @@ defmodule Oasis.Plug.HmacAuth do
 
   @behaviour Plug
 
-  @schemes_supported ~w(hmac-sha hmac-sha224 hmac-sha256 hmac-sha384 hmac-sha512 hmac-sha3_224 hmac-sha3_256 hmac-sha3_384 hmac-sha3_512 hmac-blake2b hmac-blake2s hmac-md4 hmac-md5 hmac-ripemd160)
-  @scheme_mapping (for s <- @schemes_supported, into: %{} do
-                     value =
-                       String.split(s, "-", parts: 2)
-                       |> Enum.map(&String.to_atom/1)
-                       |> List.to_tuple()
-
-                     {s, value}
-                   end)
   @auth_keys ~w(Credential Signature SignedHeaders)
   @auth_key_mapping for k <- @auth_keys,
                         into: %{},
@@ -239,20 +230,27 @@ defmodule Oasis.Plug.HmacAuth do
   """
   @spec hmac_auth(conn :: Plug.Conn.t(), options :: opts()) :: Plug.Conn.t()
   def hmac_auth(conn, options) do
-    scheme = scheme(conn, options)
-    signed_headers = signed_headers(conn, options)
-    security = security(conn, options)
-    cryptos = security.crypto_configs(conn, options)
+    options = ensure_options(conn, options)
+    scheme = options[:scheme]
+    security = options[:security]
 
-    with {:ok, token} <- parse_hmac_auth(conn, scheme),
-         {:ok, _} <- verify(conn, token, cryptos, scheme, signed_headers),
-         {:ok, _} <- security_verify(conn, security, token, options) do
-      conn
-    else
+    verify_result =
+      with {:ok, token} <- parse_hmac_auth(conn, scheme) do
+        if function_exported?(security, :verify, 3) do
+          security.verify(conn, token, options)
+        else
+          Oasis.HmacToken.verify(conn, token, options)
+        end
+      end
+
+    case verify_result do
+      {:ok, _} ->
+        conn
+
       {:error, e} when e in [:invalid_request, :invalid_credential, :invalid, :expired] ->
         raise_invalid_auth({:error, e})
 
-      _ ->
+      _unknown_error ->
         raise_invalid_auth({:error, :invalid})
     end
   end
@@ -294,75 +292,11 @@ defmodule Oasis.Plug.HmacAuth do
     end
   end
 
-  defp verify(conn, token, cryptos, scheme, signed_headers) do
-    with {:ok, _} <- validate_signed_headers(token, signed_headers),
-         {:ok, crypto} <- load_crypto(token, cryptos),
-         signature <- sign!(conn, signed_headers, crypto, scheme),
-         {:ok, _} <- validate_signature(token, signature) do
-      {:ok, token}
-    end
-  end
-
-  defp validate_signed_headers(token, signed_headers) do
-    if token.signed_headers == signed_headers do
-      {:ok, token}
-    else
-      {:error, :invalid_request}
-    end
-  end
-
-  defp load_crypto(token, cryptos) do
-    cryptos
-    |> Enum.find(&(&1.credential == token.credential))
-    |> case do
-      nil -> {:error, :invalid_credential}
-      crypto -> {:ok, crypto}
-    end
-  end
-
-  defp sign!(conn, signed_headers, crypto, scheme) do
-    headers =
-      signed_headers
-      |> String.split(";")
-      |> Enum.reduce([], fn header_key, acc ->
-        case get_req_header(conn, header_key) do
-          [value] -> [{header_key, value} | acc]
-          _otherwise -> acc
-        end
-      end)
-      |> Enum.reverse()
-
-    method = conn.method |> to_string() |> String.upcase()
-    path_and_query = conn.request_path <> "?" <> conn.query_string
-
-    signed_header_values = headers |> Enum.map(fn {_, v} -> v end) |> Enum.join(";")
-
-    string_to_sign =
-      method
-      |> Kernel.<>("\n")
-      |> Kernel.<>(path_and_query)
-      |> Kernel.<>("\n")
-      |> Kernel.<>(signed_header_values)
-
-    {digest_type, digest_subtype} = @scheme_mapping[scheme]
-
-    Base.encode64(:crypto.mac(digest_type, digest_subtype, crypto.secret, string_to_sign))
-  end
-
-  defp validate_signature(token, signature) do
-    if token.signature == signature do
-      {:ok, token}
-    else
-      {:error, :invalid}
-    end
-  end
-
-  defp security_verify(conn, security, token, options) do
-    if function_exported?(security, :verify, 3) do
-      security.verify(conn, token, options)
-    else
-      {:ok, conn}
-    end
+  defp ensure_options(conn, options) do
+    scheme = scheme(conn, options)
+    security = security(conn, options)
+    signed_headers = signed_headers(conn, options)
+    [scheme: scheme, security: security, signed_headers: signed_headers]
   end
 
   defp scheme(conn, options) do
@@ -407,8 +341,8 @@ defmodule Oasis.Plug.HmacAuth do
       """
   end
 
-  defp parse_key_value_pair(pair, spliter),
-    do: pair |> String.split(spliter, parts: 2) |> List.to_tuple()
+  defp parse_key_value_pair(pair, splitter),
+    do: pair |> String.split(splitter, parts: 2) |> List.to_tuple()
 
   defp raise_invalid_auth({:error, :invalid_request}) do
     raise BadRequestError,

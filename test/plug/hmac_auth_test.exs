@@ -21,10 +21,6 @@ defmodule Oasis.Plug.HmacAuthTest do
       ]
     end
 
-    @impl true
-    def verify(conn, _token, _opts) do
-      {:ok, conn}
-    end
   end
 
   defmodule HmacAuthWithDateValidation do
@@ -43,11 +39,13 @@ defmodule Oasis.Plug.HmacAuthTest do
     end
 
     @impl true
-    def verify(_conn, _token, _opts) do
-      # actual:
-      # parse & verify date
-      # could not before (now - max_age)
-      {:error, :expired}
+    def verify(conn, token, opts) do
+      with {:ok, _} <- Oasis.HmacToken.verify(conn, token, opts) do
+        # actual:
+        # parse & verify date
+        # could not before (now - max_age)
+        {:error, :expired}
+      end
     end
   end
 
@@ -126,6 +124,7 @@ defmodule Oasis.Plug.HmacAuthTest do
                        security: HmacAuth,
                        signed_headers: @signed_headers
                      )
+                     |> IO.inspect()
                    end
     end
 
