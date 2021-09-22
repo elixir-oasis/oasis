@@ -164,7 +164,7 @@ defmodule Oasis.HmacToken do
       |> Enum.reverse()
 
     method = conn.method |> to_string() |> String.upcase()
-    path_and_query = conn.request_path <> "?" <> conn.query_string
+    path_and_query = build_path_and_query(conn.request_path, conn.query_string)
 
     signed_header_values = headers |> Enum.map(fn {_, v} -> v end) |> Enum.join(";")
 
@@ -179,6 +179,10 @@ defmodule Oasis.HmacToken do
 
     Base.encode64(:crypto.mac(digest_type, digest_subtype, crypto.secret, string_to_sign))
   end
+
+  defp build_path_and_query(path, nil), do: path
+  defp build_path_and_query(path, ""), do: path
+  defp build_path_and_query(path, query), do: path <> "?" <> query
 
   defp validate_signed_headers(token, signed_headers) do
     if token.signed_headers == signed_headers do
