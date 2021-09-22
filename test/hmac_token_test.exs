@@ -103,5 +103,28 @@ defmodule Oasis.HmacTokenTest do
 
       assert {:ok, _} = verify_signature(conn, token, opts)
     end
+
+    test "verify signature success - with body" do
+      c = case_with_body()
+
+      conn =
+        conn(:post, c.path_and_query)
+        |> put_req_header("host", c.host)
+        |> put_req_header("x-oasis-body-sha256", c.x_oasis_body_sha256)
+
+      token = %{
+        credential: c.credential,
+        signed_headers: c.signed_headers,
+        signature: c.signature_sha256
+      }
+
+      opts = [
+        scheme: "hmac-sha256",
+        security: Oasis.Test.Support.Hmac.TokenWithBody,
+        signed_headers: c.signed_headers
+      ]
+
+      assert {:ok, _} = verify_signature(conn, token, opts)
+    end
   end
 end

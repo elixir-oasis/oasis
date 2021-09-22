@@ -347,7 +347,7 @@ defmodule Oasis.Plug.HmacAuth do
   defp raise_invalid_auth({:error, :invalid_request}) do
     raise BadRequestError,
       error: %BadRequestError.Required{},
-      message: "the hmac token is missing in the authorization header",
+      message: "the hmac token is missing in the authorization header or format is wrong",
       use_in: "header",
       param_name: "authorization"
   end
