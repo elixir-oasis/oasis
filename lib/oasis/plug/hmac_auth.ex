@@ -328,17 +328,21 @@ defmodule Oasis.Plug.HmacAuth do
   end
 
   defp security(conn, options) do
-    options[:security] ||
-      raise """
-      no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
-      Please ensure your specification defines a valid field `x-oasis-name-space` in
-      security scheme object or use oasis default value, for example:
+    security =
+      options[:security] ||
+        raise """
+        no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
+        Please ensure your specification defines a valid field `x-oasis-name-space` in
+        security scheme object or use oasis default value, for example:
 
-          type: http
-          scheme: hmac-sha256
-          x-oasis-signed-headers: x-oasis-date;host
-          x-oasis-name-space: MyOwnApplication
-      """
+            type: http
+            scheme: hmac-sha256
+            x-oasis-signed-headers: x-oasis-date;host
+            x-oasis-name-space: MyOwnApplication
+        """
+    # ensure loaded the valid security module
+    # if a module is not loaded, `function_exported?/3` will return false
+    Code.ensure_loaded!(security)
   end
 
   defp parse_key_value_pair(pair, splitter),
