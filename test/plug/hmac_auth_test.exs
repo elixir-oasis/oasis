@@ -2,8 +2,6 @@ defmodule Oasis.Plug.HmacAuthTest do
   use ExUnit.Case
   use Plug.Test
 
-  alias Plug.Conn
-
   import Oasis.Plug.HmacAuth
   import Oasis.Test.Support.Hmac
 

@@ -46,6 +46,7 @@ defmodule Oasis.MixProject do
       {:recase, "~> 0.7", runtime: false},
       {:plug_cowboy, "~> 2.0", only: [:dev, :test]},
       {:finch, "~> 0.6", only: [:dev, :test]},
+      {:timex, "~> 3.7", only: [:dev, :test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
