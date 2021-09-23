@@ -57,6 +57,7 @@ defmodule Oasis.HmacTokenTest do
       ]
 
       assert {:error, :invalid} = verify_signature(conn, token, opts)
+      assert {:error, :invalid} = verify(conn, token, opts)
     end
 
     test "verify signature success - host only" do
@@ -79,6 +80,7 @@ defmodule Oasis.HmacTokenTest do
       ]
 
       assert {:ok, _} = verify_signature(conn, token, opts)
+      assert {:ok, _} = verify(conn, token, opts)
     end
 
     test "verify signature success - with date" do
@@ -102,6 +104,7 @@ defmodule Oasis.HmacTokenTest do
       ]
 
       assert {:ok, _} = verify_signature(conn, token, opts)
+      assert {:ok, _} = verify(conn, token, opts)
     end
 
     test "verify signature success - with body" do
@@ -125,6 +128,7 @@ defmodule Oasis.HmacTokenTest do
       ]
 
       assert {:ok, _} = verify_signature(conn, token, opts)
+      assert {:ok, _} = verify(conn, token, opts)
     end
   end
 end

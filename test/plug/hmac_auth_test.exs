@@ -43,6 +43,27 @@ defmodule Oasis.Plug.HmacAuthTest do
   end
 
   describe "hmac_auth" do
+    test "missing required :scheme option" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, "/")
+        |> put_req_header("host", c.host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+
+      assert_raise RuntimeError,
+                   ~r|no :scheme option found in path / with plug Oasis.Plug.HmacAuth|,
+                   fn ->
+                     hmac_auth(conn,
+                       signed_headers: c.signed_headers,
+                       security: Oasis.Test.Support.Hmac.TokenHostOnly
+                     )
+                   end
+    end
+
     test "missing required :security option" do
       c = case_host_only()
 
@@ -58,6 +79,67 @@ defmodule Oasis.Plug.HmacAuthTest do
                    ~r|no :security option found in path / with plug Oasis.Plug.HmacAuth|,
                    fn ->
                      hmac_auth(conn, scheme: "hmac-sha256", signed_headers: c.signed_headers)
+                   end
+    end
+
+    test "missing required :signed_headers option" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, "/")
+        |> put_req_header("host", c.host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+
+      assert_raise RuntimeError,
+                   ~r|no :signed_headers option found in path / with plug Oasis.Plug.HmacAuth|,
+                   fn ->
+                     hmac_auth(conn,
+                       scheme: "hmac-sha256",
+                       security: Oasis.Test.Support.Hmac.TokenHostOnly
+                     )
+                   end
+    end
+
+    test "token missing" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
+
+      assert_raise Oasis.BadRequestError,
+                   ~r|the hmac token is missing in the authorization header or format is wrong|,
+                   fn ->
+                     hmac_auth(conn,
+                       scheme: "hmac-sha256",
+                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       signed_headers: c.signed_headers
+                     )
+                   end
+    end
+
+    test "invalid token format" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeadersKeyError=#{c.signed_headers}&Signature=invalid"
+        )
+
+      assert_raise Oasis.BadRequestError,
+                   ~r|the hmac token is missing in the authorization header or format is wrong|,
+                   fn ->
+                     hmac_auth(conn,
+                       scheme: "hmac-sha256",
+                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       signed_headers: c.signed_headers
+                     )
                    end
     end
 

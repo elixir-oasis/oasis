@@ -180,7 +180,6 @@ defmodule Oasis.HmacToken do
     Base.encode64(:crypto.mac(digest_type, digest_subtype, crypto.secret, string_to_sign))
   end
 
-  defp build_path_and_query(path, nil), do: path
   defp build_path_and_query(path, ""), do: path
   defp build_path_and_query(path, query), do: path <> "?" <> query
 
