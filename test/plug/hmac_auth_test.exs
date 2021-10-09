@@ -1,9 +1,9 @@
-defmodule Oasis.Plug.HmacAuthTest do
+defmodule Oasis.Plug.HMACAuthTest do
   use ExUnit.Case
   use Plug.Test
 
-  import Oasis.Plug.HmacAuth
-  import Oasis.Test.Support.Hmac
+  import Oasis.Plug.HMACAuth
+  import Oasis.Test.Support.HMAC
 
   describe "parse_hmac_auth" do
     test "parse fail with wrong fields" do
@@ -55,11 +55,11 @@ defmodule Oasis.Plug.HmacAuthTest do
         )
 
       assert_raise RuntimeError,
-                   ~r|no :scheme option found in path / with plug Oasis.Plug.HmacAuth|,
+                   ~r|no :scheme option found in path / with plug Oasis.Plug.HMACAuth|,
                    fn ->
                      hmac_auth(conn,
                        signed_headers: c.signed_headers,
-                       security: Oasis.Test.Support.Hmac.TokenHostOnly
+                       security: Oasis.Test.Support.HMAC.TokenHostOnly
                      )
                    end
     end
@@ -76,7 +76,7 @@ defmodule Oasis.Plug.HmacAuthTest do
         )
 
       assert_raise RuntimeError,
-                   ~r|no :security option found in path / with plug Oasis.Plug.HmacAuth|,
+                   ~r|no :security option found in path / with plug Oasis.Plug.HMACAuth|,
                    fn ->
                      hmac_auth(conn, scheme: "hmac-sha256", signed_headers: c.signed_headers)
                    end
@@ -94,11 +94,11 @@ defmodule Oasis.Plug.HmacAuthTest do
         )
 
       assert_raise RuntimeError,
-                   ~r|no :signed_headers option found in path / with plug Oasis.Plug.HmacAuth|,
+                   ~r|no :signed_headers option found in path / with plug Oasis.Plug.HMACAuth|,
                    fn ->
                      hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: Oasis.Test.Support.Hmac.TokenHostOnly
+                       security: Oasis.Test.Support.HMAC.TokenHostOnly
                      )
                    end
     end
@@ -111,11 +111,11 @@ defmodule Oasis.Plug.HmacAuthTest do
         |> put_req_header("host", c.host)
 
       assert_raise Oasis.BadRequestError,
-                   ~r|the hmac token is missing in the authorization header or format is wrong|,
+                   ~r|the HMAC token is missing in the authorization header or format is wrong|,
                    fn ->
                      hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
@@ -133,11 +133,11 @@ defmodule Oasis.Plug.HmacAuthTest do
         )
 
       assert_raise Oasis.BadRequestError,
-                   ~r|the hmac token is missing in the authorization header or format is wrong|,
+                   ~r|the HMAC token is missing in the authorization header or format is wrong|,
                    fn ->
                      hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
@@ -155,11 +155,11 @@ defmodule Oasis.Plug.HmacAuthTest do
         )
 
       assert_raise Oasis.BadRequestError,
-                   ~r|the hmac token is invalid|,
+                   ~r|the HMAC token is invalid|,
                    fn ->
                      hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
@@ -181,7 +181,7 @@ defmodule Oasis.Plug.HmacAuthTest do
                    fn ->
                      hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: Oasis.Test.Support.Hmac.TokenHostOnly,
+                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
@@ -200,7 +200,7 @@ defmodule Oasis.Plug.HmacAuthTest do
 
       assert hmac_auth(conn,
                scheme: "hmac-sha256",
-               security: Oasis.Test.Support.Hmac.TokenHostOnly,
+               security: Oasis.Test.Support.HMAC.TokenHostOnly,
                signed_headers: c.signed_headers
              )
     end
@@ -218,7 +218,7 @@ defmodule Oasis.Plug.HmacAuthTest do
 
       assert hmac_auth(conn,
                scheme: "hmac-sha512",
-               security: Oasis.Test.Support.Hmac.TokenHostOnly,
+               security: Oasis.Test.Support.HMAC.TokenHostOnly,
                signed_headers: c.signed_headers
              )
     end
@@ -236,7 +236,7 @@ defmodule Oasis.Plug.HmacAuthTest do
 
       assert hmac_auth(conn,
                scheme: "hmac-md5",
-               security: Oasis.Test.Support.Hmac.TokenHostOnly,
+               security: Oasis.Test.Support.HMAC.TokenHostOnly,
                signed_headers: c.signed_headers
              )
     end
@@ -254,11 +254,11 @@ defmodule Oasis.Plug.HmacAuthTest do
         )
 
       assert_raise Oasis.BadRequestError,
-                   ~r|the hmac token is expired|,
+                   ~r|the HMAC token is expired|,
                    fn ->
                      hmac_auth(conn,
                        scheme: "hmac-sha256",
-                       security: Oasis.Test.Support.Hmac.TokenWithDate,
+                       security: Oasis.Test.Support.HMAC.TokenWithDate,
                        signed_headers: c.signed_headers
                      )
                    end

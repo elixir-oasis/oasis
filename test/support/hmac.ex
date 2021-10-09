@@ -1,4 +1,4 @@
-defmodule Oasis.Test.Support.Hmac do
+defmodule Oasis.Test.Support.HMAC do
   def case_host_only() do
     %{
       credential: "test_client",
@@ -59,11 +59,11 @@ defmodule Oasis.Test.Support.Hmac do
   end
 end
 
-defmodule Oasis.Test.Support.Hmac.TokenHostOnly do
-  @behaviour Oasis.HmacToken
+defmodule Oasis.Test.Support.HMAC.TokenHostOnly do
+  @behaviour Oasis.HMACToken
 
-  alias Oasis.HmacToken.Crypto
-  import Oasis.Test.Support.Hmac
+  alias Oasis.HMACToken.Crypto
+  import Oasis.Test.Support.HMAC
 
   @impl true
   def crypto_configs(_conn, _opts) do
@@ -78,11 +78,11 @@ defmodule Oasis.Test.Support.Hmac.TokenHostOnly do
   end
 end
 
-defmodule Oasis.Test.Support.Hmac.TokenWithDate do
-  @behaviour Oasis.HmacToken
+defmodule Oasis.Test.Support.HMAC.TokenWithDate do
+  @behaviour Oasis.HMACToken
 
-  alias Oasis.HmacToken.Crypto
-  import Oasis.Test.Support.Hmac
+  alias Oasis.HMACToken.Crypto
+  import Oasis.Test.Support.HMAC
 
   @impl true
   def crypto_configs(_conn, _opts) do
@@ -98,7 +98,7 @@ defmodule Oasis.Test.Support.Hmac.TokenWithDate do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HmacToken.verify_signature(conn, token, opts) do
+    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts) do
       # actual:
       # parse & verify date
       # could not before (now - max_age)
@@ -107,11 +107,11 @@ defmodule Oasis.Test.Support.Hmac.TokenWithDate do
   end
 end
 
-defmodule Oasis.Test.Support.Hmac.TokenWithBody do
-  @behaviour Oasis.HmacToken
+defmodule Oasis.Test.Support.HMAC.TokenWithBody do
+  @behaviour Oasis.HMACToken
 
-  alias Oasis.HmacToken.Crypto
-  import Oasis.Test.Support.Hmac
+  alias Oasis.HMACToken.Crypto
+  import Oasis.Test.Support.HMAC
 
   @impl true
   def crypto_configs(_conn, _opts) do
@@ -127,16 +127,16 @@ defmodule Oasis.Test.Support.Hmac.TokenWithBody do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HmacToken.verify_signature(conn, token, opts),
-         {:ok, raw_body} <- Oasis.Test.Support.Hmac.read_body(conn) do
+    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
+         {:ok, raw_body} <- Oasis.Test.Support.HMAC.read_body(conn) do
       scheme = opts[:scheme] |> String.trim_leading("hmac-") |> String.to_atom()
 
       crypto =
         crypto_configs(conn, opts)
         |> Enum.find(&(&1.credential == token.credential))
 
-      body_hmac = Oasis.Test.Support.Hmac.hmac(scheme, crypto.secret, raw_body)
-      body_hmac_header = Oasis.Test.Support.Hmac.get_header(conn, "x-oasis-body-sha256")
+      body_hmac = Oasis.Test.Support.HMAC.hmac(scheme, crypto.secret, raw_body)
+      body_hmac_header = Oasis.Test.Support.HMAC.get_header(conn, "x-oasis-body-sha256")
 
       if body_hmac == body_hmac_header do
         {:ok, token}

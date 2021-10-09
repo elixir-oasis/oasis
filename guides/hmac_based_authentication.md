@@ -34,9 +34,9 @@ The client request must contains header:
 `Authorization: HMAC-uppercase(<algorithm>) Credential=<value>&SignedHeaders=<value>&Signature=<value>`
 
 * `Algorithm`
-    * Some digest/hash algorithm, see [Schemes Supported](Oasis.Plug.HmacAuth.html#module-schemes-supported) for details.
+    * Some digest/hash algorithm, see [Schemes Supported](Oasis.Plug.HMACAuth.html#module-schemes-supported) for details.
 * `Credential`
-    * ID of the access key used to signature and verify, must be defined in `Oasis.HmacToken.Crypto`.
+    * ID of the access key used to signature and verify, must be defined in `Oasis.HMACToken.Crypto`.
 * `SignedHeaders`
     * HTTP request header names, separated by semicolons, required to sign the request in your defined order of `x-oasis-signed-headers` spec, the HTTP headers must be correctly provided with the request as well, do not use white spaces.
 * `Signature`
@@ -133,7 +133,7 @@ Then you will get several generated files:
 ```elixir
 # lib/oasis/gen/pre_post_test_hmac.ex
 
-defmodule Oasis.Gen.PrePostTestHmac do
+defmodule Oasis.Gen.PrePostTestHMAC do
   # NOTICE: Please DO NOT write any business code in this module, since it will always be overridden when
   # run `mix oas.gen.plug` task command with the OpenAPI Specification file.
   use Oasis.Controller
@@ -161,29 +161,29 @@ defmodule Oasis.Gen.PrePostTestHmac do
   )
 
   plug(
-    Oasis.Plug.HmacAuth,
+    Oasis.Plug.HMACAuth,
     signed_headers: "host;x-oasis-date;x-oasis-body-sha256",
     scheme: "hmac-sha256",
-    security: Oasis.Gen.HmacAuth
+    security: Oasis.Gen.HMACAuth
   )
 
   def call(conn, opts) do
-    conn |> super(opts) |> Oasis.Gen.PostTestHmacWithBody.call(opts) |> halt()
+    conn |> super(opts) |> Oasis.Gen.PostTestHMACWithBody.call(opts) |> halt()
   end
 
-  defdelegate handle_errors(conn, error), to: Oasis.Gen.PostTestHmacWithBody
+  defdelegate handle_errors(conn, error), to: Oasis.Gen.PostTestHMACWithBody
 end
 ```
 
 ```elixir
 # lib/oasis/gen/hmac_auth.ex
 
-defmodule Oasis.Gen.HmacAuth do
+defmodule Oasis.Gen.HMACAuth do
   # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file
   # in the first time, and then it WILL NOT be modified in the future generation command(s) once this file exists,
   # please write the crypto-related configuration to the bearer token in this module.
-  @behaviour Oasis.HmacToken
-  alias Oasis.HmacToken.Crypto
+  @behaviour Oasis.HMACToken
+  alias Oasis.HMACToken.Crypto
 
   @impl true
   def crypto_configs(_conn, _opts) do
@@ -192,7 +192,7 @@ defmodule Oasis.Gen.HmacAuth do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HmacToken.verify_signature(conn, token, opts) do
+    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts) do
       {:ok, token}
     end
   end
@@ -206,13 +206,13 @@ end
 ```elixir
 # lib/oasis/gen/hmac_auth.ex
 
-defmodule Oasis.Gen.HmacAuth do
+defmodule Oasis.Gen.HMACAuth do
   
   # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file
   # in the first time, and then it WILL NOT be modified in the future generation command(s) once this file exists,
   # please write the crypto-related configuration to the bearer token in this module.
-  @behaviour Oasis.HmacToken
-  alias Oasis.HmacToken.Crypto
+  @behaviour Oasis.HMACToken
+  alias Oasis.HMACToken.Crypto
   
   # in seconds
   @max_diff 60
@@ -235,7 +235,7 @@ defmodule Oasis.Gen.HmacAuth do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HmacToken.verify_signature(conn, token, opts),
+    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
          {:ok, _} <- verify_date(conn, token, opts),
          {:ok, _} <- verify_body(conn, token, opts) do
       {:ok, token}

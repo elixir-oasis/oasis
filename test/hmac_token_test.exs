@@ -1,11 +1,11 @@
-defmodule Oasis.HmacTokenTest do
+defmodule Oasis.HMACTokenTest do
   use ExUnit.Case
   use Plug.Test
 
   #  alias Plug.Conn
-  alias Oasis.HmacToken.Crypto
-  import Oasis.HmacToken
-  import Oasis.Test.Support.Hmac
+  alias Oasis.HMACToken.Crypto
+  import Oasis.HMACToken
+  import Oasis.Test.Support.HMAC
 
   describe "sign!" do
     test "sign success - host only" do
@@ -52,7 +52,7 @@ defmodule Oasis.HmacTokenTest do
 
       opts = [
         scheme: "hmac-sha256",
-        security: Oasis.Test.Support.Hmac.TokenHostOnly,
+        security: Oasis.Test.Support.HMAC.TokenHostOnly,
         signed_headers: c.signed_headers
       ]
 
@@ -75,7 +75,7 @@ defmodule Oasis.HmacTokenTest do
 
       opts = [
         scheme: "hmac-sha256",
-        security: Oasis.Test.Support.Hmac.TokenHostOnly,
+        security: Oasis.Test.Support.HMAC.TokenHostOnly,
         signed_headers: c.signed_headers
       ]
 
@@ -99,7 +99,7 @@ defmodule Oasis.HmacTokenTest do
 
       opts = [
         scheme: "hmac-sha256",
-        security: Oasis.Test.Support.Hmac.TokenWithDate,
+        security: Oasis.Test.Support.HMAC.TokenWithDate,
         signed_headers: c.signed_headers
       ]
 
@@ -123,7 +123,7 @@ defmodule Oasis.HmacTokenTest do
 
       opts = [
         scheme: "hmac-sha256",
-        security: Oasis.Test.Support.Hmac.TokenWithBody,
+        security: Oasis.Test.Support.HMAC.TokenWithBody,
         signed_headers: c.signed_headers
       ]
 

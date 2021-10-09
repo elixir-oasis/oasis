@@ -83,7 +83,7 @@ defmodule Oasis.MixProject do
     [
       Plugs: [
         Oasis.Plug.BearerAuth,
-        Oasis.Plug.HmacAuth,
+        Oasis.Plug.HMACAuth,
         Oasis.Plug.RequestValidator
       ],
       Errors: [

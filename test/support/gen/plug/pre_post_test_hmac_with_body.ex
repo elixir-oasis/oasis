@@ -1,4 +1,4 @@
-defmodule Oasis.Gen.PrePostTestHmacWithBody do
+defmodule Oasis.Gen.PrePostTestHMACWithBody do
   # NOTICE: Please DO NOT write any business code in this module, since it will always be overridden when
   # run `mix oas.gen.plug` task command with the OpenAPI Specification file.
   use Oasis.Controller
@@ -26,15 +26,15 @@ defmodule Oasis.Gen.PrePostTestHmacWithBody do
   )
 
   plug(
-    Oasis.Plug.HmacAuth,
+    Oasis.Plug.HMACAuth,
     signed_headers: "host;x-oasis-body-sha256",
     scheme: "hmac-sha256",
-    security: Oasis.Gen.HmacAuthWithBody
+    security: Oasis.Gen.HMACAuthWithBody
   )
 
   def call(conn, opts) do
-    conn |> super(opts) |> Oasis.Gen.PostTestHmacWithBody.call(opts) |> halt()
+    conn |> super(opts) |> Oasis.Gen.PostTestHMACWithBody.call(opts) |> halt()
   end
 
-  defdelegate handle_errors(conn, error), to: Oasis.Gen.PostTestHmacWithBody
+  defdelegate handle_errors(conn, error), to: Oasis.Gen.PostTestHMACWithBody
 end

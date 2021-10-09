@@ -1,9 +1,9 @@
-defmodule Oasis.Gen.HmacAuthWithDate do
+defmodule Oasis.Gen.HMACAuthWithDate do
   # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file
   # in the first time, and then it WILL NOT be modified in the future generation command(s) once this file exists,
   # please write the crypto-related configuration to the bearer token in this module.
-  @behaviour Oasis.HmacToken
-  alias Oasis.HmacToken.Crypto
+  @behaviour Oasis.HMACToken
+  alias Oasis.HMACToken.Crypto
   # in seconds
   @max_diff 60
 
@@ -19,7 +19,7 @@ defmodule Oasis.Gen.HmacAuthWithDate do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HmacToken.verify_signature(conn, token, opts),
+    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
          {:ok, timestamp} <- conn |> get_header_date() |> parse_header_date() do
       timestamp_now = DateTime.utc_now() |> DateTime.to_unix()
 

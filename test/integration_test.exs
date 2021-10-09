@@ -671,7 +671,7 @@ defmodule Oasis.IntegrationTest do
 
   test "verify hmac auth host only", %{url: url} do
     start_supervised!({Finch, name: TestFinch})
-    c = Oasis.Test.Support.Hmac.case_host_only()
+    c = Oasis.Test.Support.HMAC.case_host_only()
 
     # success
     auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
@@ -688,7 +688,7 @@ defmodule Oasis.IntegrationTest do
 
   test "verify hmac auth with date", %{url: url} do
     start_supervised!({Finch, name: TestFinch})
-    c = Oasis.Test.Support.Hmac.case_with_date()
+    c = Oasis.Test.Support.HMAC.case_with_date()
 
     auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
     headers = [{"host", c.host}, {"x-oasis-date", c.x_oasis_date}, {"authorization", auth}]
@@ -700,7 +700,7 @@ defmodule Oasis.IntegrationTest do
 
   test "verify hmac auth with body", %{url: url} do
     start_supervised!({Finch, name: TestFinch})
-    c = Oasis.Test.Support.Hmac.case_with_body()
+    c = Oasis.Test.Support.HMAC.case_with_body()
 
     # success
     auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"

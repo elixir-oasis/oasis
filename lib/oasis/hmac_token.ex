@@ -1,4 +1,4 @@
-defmodule Oasis.HmacToken do
+defmodule Oasis.HMACToken do
   @moduledoc """
   ## Callback
 
@@ -16,9 +16,9 @@ defmodule Oasis.HmacToken do
   Here is an example to verify that HTTP request time does not exceed the current time by 1 minute.
 
   ```elixir
-  defmodule Oasis.Gen.HmacAuth do
-    @behaviour Oasis.HmacToken
-    alias Oasis.HmacToken.Crypto
+  defmodule Oasis.Gen.HMACAuth do
+    @behaviour Oasis.HMACToken
+    alias Oasis.HMACToken.Crypto
 
     # in seconds
     @max_diff 60
@@ -35,7 +35,7 @@ defmodule Oasis.HmacToken do
 
     @impl true
     def verify(conn, token, _opts) do
-      with {:ok, _} <- Oasis.HmacToken.verify_signature(conn, token, opts),
+      with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
            {:ok, timestamp} <- conn |> get_header_date() |> parse_header_date() do
         timestamp_now = DateTime.utc_now() |> DateTime.to_unix()
 
@@ -98,7 +98,7 @@ defmodule Oasis.HmacToken do
 
   @callback crypto_configs(conn :: Plug.Conn.t(), opts :: Keyword.t()) :: [Crypto.t()]
 
-  @callback verify(conn :: Plug.Conn.t(), token :: Oasis.Plug.HmacAuth.token(), opts :: opts()) ::
+  @callback verify(conn :: Plug.Conn.t(), token :: Oasis.Plug.HMACAuth.token(), opts :: opts()) ::
               {:ok, term()} | verify_error()
 
   @optional_callbacks verify: 3
@@ -125,8 +125,8 @@ defmodule Oasis.HmacToken do
   """
   @spec verify_signature(
           conn :: Plug.Conn.t(),
-          token :: Oasis.Plug.HmacAuth.token(),
-          opts :: Oasis.Plug.HmacAuth.opts()
+          token :: Oasis.Plug.HMACAuth.token(),
+          opts :: Oasis.Plug.HMACAuth.opts()
         ) :: {:ok, term()} | verify_error()
   def verify_signature(conn, token, opts) do
     scheme = opts[:scheme]
@@ -145,7 +145,7 @@ defmodule Oasis.HmacToken do
   @doc """
   Sign HTTP requests according to settings.
 
-  See [HTTP Request](Oasis.Plug.HmacAuth.html#module-http-request) for details.
+  See [HTTP Request](Oasis.Plug.HMACAuth.html#module-http-request) for details.
   """
   @spec sign!(
           conn :: Plug.Conn.t(),
