@@ -6,14 +6,13 @@ defmodule Oasis.Gen.HMACAuthHostOnly do
   alias Oasis.HMACToken.Crypto
 
   @impl true
-  def crypto_configs(_conn, _opts) do
-    [
-      %Crypto{
-        credential: "test_client",
-        secret: "secret"
-      }
-    ]
+  def crypto_config(_conn, _opts, "test_client") do
+    %Crypto{
+      credential: "test_client",
+      secret: "secret"
+    }
   end
+  def crypto_config(_conn, _opts, _credential), do: nil
 
   @impl true
   def verify(conn, token, opts) do

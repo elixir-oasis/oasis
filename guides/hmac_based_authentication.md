@@ -91,7 +91,7 @@ paths:
     post:
       # this API (/test_hmac) should be authenticated by HMAC-based Authentication
       security:
-        - hmacAuth: [ ]
+        - HMACAuth: [ ]
       requestBody:
         content:
           application/json:
@@ -112,7 +112,7 @@ paths:
     
 components:
   securitySchemes:
-    hmacAuth:
+    HMACAuth:
       type: http
       # will use sha256 as digest algorithm
       scheme: hmac-sha256
@@ -186,8 +186,9 @@ defmodule Oasis.Gen.HMACAuth do
   alias Oasis.HMACToken.Crypto
 
   @impl true
-  def crypto_configs(_conn, _opts) do
-    []
+  def crypto_config(_conn, _opts, _credential) do
+    # ...
+    nil
   end
 
   @impl true
@@ -199,7 +200,7 @@ defmodule Oasis.Gen.HMACAuth do
 end
 ```
 
-### 3. Provide your own `crypto_configs/2` and `verify/3` logics
+### 3. Provide your own `crypto_config/3` and `verify/3` logics
 
 * Example:
 
@@ -218,19 +219,13 @@ defmodule Oasis.Gen.HMACAuth do
   @max_diff 60
 
   @impl true
-  def crypto_configs(_conn, _opts) do
+  def crypto_config(_conn, _opts, _credential) do
     # Here just an example
-    # You should provide these sensitive information through config file
-    [
-      %Crypto{
-        credential: "test_client",
-        secret: "secret"
-      },
-      %Crypto{
-        credential: "test_client2",
-        secret: "secret2"
-      },
-    ]
+    # You should provide these sensitive information from config file or database
+    %Crypto{
+      credential: "test_client",
+      secret: "secret"
+    }
   end
 
   @impl true
@@ -253,14 +248,10 @@ defmodule Oasis.Gen.HMACAuth do
     end
   end
   
-  defp verify_body(conn, token, _opts) do
+  defp verify_body(conn, token, opts) do
     raw_body = conn.assigns.raw_body
-
-    crypto = crypto_configs(conn, opts)
-            |> Enum.find(&(&1.credential == token.credential))
-
+    crypto = crypto_config(conn, opts, token.credential)
     body_hmac = hmac(:sha256, crypto.secret, raw_body)
-
     body_hmac_header = get_header(conn, "x-oasis-body-sha256")
 
     if body_hmac == body_hmac_header do

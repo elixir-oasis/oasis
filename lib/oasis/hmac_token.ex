@@ -5,8 +5,8 @@ defmodule Oasis.HMACToken do
   There are two callback functions reserved for use in the generated modules when we use the hmac security
   scheme of the OpenAPI Specification.
 
-  * `c:crypto_configs/2`, provides a way to define the crypto-related key information for the high level usage,
-    it required to return a list of `#{inspect(__MODULE__)}.Crypto` struct.
+  * `c:crypto_config/3`, provides a way to define the crypto-related key information for the high level usage,
+    it required to return a `#{inspect(__MODULE__)}.Crypto` struct (or nil).
   * `c:verify/3`, an optional function to provide a way to custom the verification of the token, you may
     want to validate request datetime, HTTP body or other more rules to verify it.
 
@@ -24,13 +24,11 @@ defmodule Oasis.HMACToken do
     @max_diff 60
 
     @impl true
-    def crypto_configs(_conn, _opts) do
-      [
-        %Crypto{
-          credential: "...",
-          secret: "..."
-        }
-      ]
+    def crypto_config(_conn, _opts, _credential) do
+      %Crypto{
+        credential: "...",
+        secret: "..."
+      }
     end
 
     @impl true
@@ -96,7 +94,8 @@ defmodule Oasis.HMACToken do
           | {:error, :invalid}
           | {:error, :expired}
 
-  @callback crypto_configs(conn :: Plug.Conn.t(), opts :: Keyword.t()) :: [Crypto.t()]
+  @callback crypto_config(conn :: Plug.Conn.t(), opts :: Keyword.t(), credential :: String.t()) ::
+              Crypto.t() | nil
 
   @callback verify(conn :: Plug.Conn.t(), token :: Oasis.Plug.HMACAuth.token(), opts :: opts()) ::
               {:ok, term()} | verify_error()
@@ -131,11 +130,8 @@ defmodule Oasis.HMACToken do
   def verify_signature(conn, token, opts) do
     scheme = opts[:scheme]
     signed_headers = opts[:signed_headers]
-    security = opts[:security]
-    cryptos = security.crypto_configs(conn, opts)
 
-    with {:ok, _} <- validate_signed_headers(token, signed_headers),
-         {:ok, crypto} <- load_crypto(token, cryptos),
+    with {:ok, crypto} <- load_crypto(conn, opts, token),
          signature <- sign!(conn, signed_headers, crypto, scheme),
          {:ok, _} <- validate_signature(token, signature) do
       {:ok, token}
@@ -185,17 +181,10 @@ defmodule Oasis.HMACToken do
   defp build_path_and_query(path, ""), do: path
   defp build_path_and_query(path, query), do: path <> "?" <> query
 
-  defp validate_signed_headers(token, signed_headers) do
-    if token.signed_headers == signed_headers do
-      {:ok, token}
-    else
-      {:error, :invalid_request}
-    end
-  end
+  defp load_crypto(conn, opts, token) do
+    security = opts[:security]
 
-  defp load_crypto(token, cryptos) do
-    cryptos
-    |> Enum.find(&(&1.credential == token.credential))
+    security.crypto_config(conn, opts, token.credential)
     |> case do
       nil -> {:error, :invalid_credential}
       crypto -> {:ok, crypto}

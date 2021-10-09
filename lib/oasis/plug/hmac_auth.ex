@@ -25,15 +25,12 @@ defmodule Oasis.Plug.HMACAuth do
     @behaviour Oasis.HMACToken
 
     @impl true
-    def crypto_configs(_conn, _options) do
-      # return `Oasis.HMACToken.Crypto` struct list in your preferred way
-      [
-        %Oasis.HMACToken.Crypto{
-          credential: "client id",
-          secret: "hmac secret",
-        },
-        ...
-      ]
+    def crypto_config(_conn, _options, _credential) do
+      # return `Oasis.HMACToken.Crypto` struct in your preferred way
+      %Oasis.HMACToken.Crypto{
+        credential: "client id",
+        secret: "hmac secret",
+      }
     end
   end
   ```
@@ -54,10 +51,8 @@ defmodule Oasis.Plug.HMACAuth do
     @behaviour Oasis.HMACToken
 
     @impl true
-    def crypto_configs(_conn, _options) do
-      [
-        ...
-      ]
+    def crypto_config(_conn, _options, _credential) do
+      ...
     end
   end
   ```
@@ -71,21 +66,21 @@ defmodule Oasis.Plug.HMACAuth do
 
   components:
     securitySchemes:
-      hmacAuth: # arbitrary name for the security scheme
+      HMACAuth: # arbitrary name for the security scheme
         type: http
         scheme: hmac-sha256
         x-oasis-signed-headers: x-oasis-date;host
         x-oasis-name-space: MyAuth
 
   security:
-    - hmacAuth: []
+    - HMACAuth: []
   ```
 
-  The above arbitrary name for the security scheme `"hmacAuth"` will be transferred into a generated module (see the mentioned "Oasis.Gen.HMACAuth"
+  The above arbitrary name for the security scheme `HMACAuth` will be transferred into a generated module (see the mentioned "Oasis.Gen.HMACAuth"
   module) to provide the required crypto-related configuration, and use it as the value to the `:security` option of `hmac_auth/2`.
 
-  By default, the generated "HMACAuth" module will inherit the module name space in order from the paths object, the operation object if they defined
-  the `"x-oasis-name-space"` field, or defaults to `Oasis.Gen` if there are no any specification defined, as an optional, we can add an `"x-oasis-name-space"`
+  By default, the generated `HMACAuth` module will inherit the module name space in order from the paths object, the operation object if they defined
+  the `x-oasis-name-space` field, or defaults to `Oasis.Gen` if there are no any specification defined, as an optional, we can add an `x-oasis-name-space`
   field as a specification extension of the security scheme object to override the module name space, meanwhile, the optional `--name-space` argument to the
   `mix oas.gen.plug` command line is in the highest priority to set the name space of the generated module.
 
@@ -99,7 +94,7 @@ defmodule Oasis.Plug.HMACAuth do
         x-oasis-name-space: MyAuth
   ```
 
-  In the above example, the final generated module name of `"HMACAuth"` is `MyAuth.HMACAuth` when there is no `--name-space` argument input to generate.
+  In the above example, the final generated module name of `HMACAuth` is `MyAuth.HMACAuth` when there is no `--name-space` argument input to generate.
 
   After we define HMAC authentication into the spec, then run `mix oas.gen.plug` task with this spec file (via `--file` argument), there will
   generate the above similar code to the related module file as long as it does not exist, it also follows the name space definition
@@ -115,10 +110,8 @@ defmodule Oasis.Plug.HMACAuth do
     @behaviour Oasis.HMACToken
 
     @impl true
-    def crypto_configs(conn, options) do
-      [
-        ...
-      ]
+    def crypto_config(conn, options, credential) do
+      ...
     end
 
     @impl true
@@ -190,9 +183,11 @@ defmodule Oasis.Plug.HMACAuth do
     options = ensure_options(conn, options)
     scheme = options[:scheme]
     security = options[:security]
+    signed_headers = options[:signed_headers]
 
     verify_result =
-      with {:ok, token} <- parse_hmac_auth(conn, scheme) do
+      with {:ok, token} <- parse_hmac_auth(conn, scheme),
+           {:ok, _} <- validate_signed_headers(token, signed_headers) do
         if function_exported?(security, :verify, 3) do
           security.verify(conn, token, options)
         else
@@ -249,6 +244,14 @@ defmodule Oasis.Plug.HMACAuth do
     end
   end
 
+  defp validate_signed_headers(token, signed_headers) do
+    if token.signed_headers == signed_headers do
+      {:ok, token}
+    else
+      {:error, :invalid_request}
+    end
+  end
+
   defp ensure_options(conn, options) do
     scheme = scheme(conn, options)
     security = security(conn, options)
@@ -297,6 +300,7 @@ defmodule Oasis.Plug.HMACAuth do
             x-oasis-signed-headers: x-oasis-date;host
             x-oasis-name-space: MyOwnApplication
         """
+
     # ensure loaded the valid security module
     # if a module is not loaded, `function_exported?/3` will return false
     Code.ensure_loaded!(security)

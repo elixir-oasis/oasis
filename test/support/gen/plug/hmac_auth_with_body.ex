@@ -6,14 +6,14 @@ defmodule Oasis.Gen.HMACAuthWithBody do
   alias Oasis.HMACToken.Crypto
 
   @impl true
-  def crypto_configs(_conn, _opts) do
-    [
-      %Crypto{
-        credential: "test_client",
-        secret: "secret"
-      }
-    ]
+  def crypto_config(_conn, _opts, "test_client") do
+    %Crypto{
+      credential: "test_client",
+      secret: "secret"
+    }
   end
+
+  def crypto_config(_conn, _opts, _credential), do: nil
 
   @impl true
   def verify(conn, token, opts) do
@@ -21,9 +21,7 @@ defmodule Oasis.Gen.HMACAuthWithBody do
       scheme = opts[:scheme] |> String.trim_leading("hmac-") |> String.to_atom()
       raw_body = conn.assigns.raw_body
 
-      crypto =
-        crypto_configs(conn, opts)
-        |> Enum.find(&(&1.credential == token.credential))
+      crypto = crypto_config(conn, opts, token.credential)
 
       body_hmac = hmac(scheme, crypto.secret, raw_body)
 

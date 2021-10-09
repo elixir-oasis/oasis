@@ -6,13 +6,12 @@ defmodule <%= inspect context.module_name %> do
   alias Oasis.HMACToken.Crypto
 
   @impl true
-  def crypto_configs(_conn, _opts) do
-    # [
-    #   %Crypto{
-    #     credential: "...",
-    #     secret: "..."
-    #   }
-    # ]
+  def crypto_config(_conn, _opts, _credential) do
+    # %Crypto{
+    #   credential: "...",
+    #   secret: "..."
+    # }
+    nil
   end
 
   @impl true

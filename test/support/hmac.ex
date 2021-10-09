@@ -66,15 +66,17 @@ defmodule Oasis.Test.Support.HMAC.TokenHostOnly do
   import Oasis.Test.Support.HMAC
 
   @impl true
-  def crypto_configs(_conn, _opts) do
+  def crypto_config(_conn, _opts, credential) do
     c = case_host_only()
 
-    [
+    if c.credential == credential do
       %Crypto{
         credential: c.credential,
         secret: c.secret
       }
-    ]
+    else
+      nil
+    end
   end
 end
 
@@ -85,15 +87,17 @@ defmodule Oasis.Test.Support.HMAC.TokenWithDate do
   import Oasis.Test.Support.HMAC
 
   @impl true
-  def crypto_configs(_conn, _opts) do
+  def crypto_config(_conn, _opts, credential) do
     c = case_host_only()
 
-    [
+    if c.credential == credential do
       %Crypto{
         credential: c.credential,
         secret: c.secret
       }
-    ]
+    else
+      nil
+    end
   end
 
   @impl true
@@ -114,15 +118,17 @@ defmodule Oasis.Test.Support.HMAC.TokenWithBody do
   import Oasis.Test.Support.HMAC
 
   @impl true
-  def crypto_configs(_conn, _opts) do
+  def crypto_config(_conn, _opts, credential) do
     c = case_host_only()
 
-    [
+    if c.credential == credential do
       %Crypto{
         credential: c.credential,
         secret: c.secret
       }
-    ]
+    else
+      nil
+    end
   end
 
   @impl true
@@ -131,9 +137,7 @@ defmodule Oasis.Test.Support.HMAC.TokenWithBody do
          {:ok, raw_body} <- Oasis.Test.Support.HMAC.read_body(conn) do
       scheme = opts[:scheme] |> String.trim_leading("hmac-") |> String.to_atom()
 
-      crypto =
-        crypto_configs(conn, opts)
-        |> Enum.find(&(&1.credential == token.credential))
+      crypto = crypto_config(conn, opts, token.credential)
 
       body_hmac = Oasis.Test.Support.HMAC.hmac(scheme, crypto.secret, raw_body)
       body_hmac_header = Oasis.Test.Support.HMAC.get_header(conn, "x-oasis-body-sha256")
