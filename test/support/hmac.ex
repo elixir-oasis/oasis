@@ -19,9 +19,9 @@ defmodule Oasis.Test.Support.HMAC do
       secret: "secret",
       path_and_query: "/test_hmac_with_date?a=b",
       host: "localhost:4000",
-      x_oasis_date: "Wed, 15 Sep 2021 06:41:35 GMT",
+      x_oasis_date: "2021-09-15T06:41:35+00:00",
       signed_headers: "host;x-oasis-date",
-      signature_sha256: "UrEyRzhGrsNm2PdIDQV89wdVTCJlP8flshTxs3hO4vw="
+      signature_sha256: "oUicQj78yrLUm/7VtMOXvIp81eIj4hubSPCYX5tFzMU="
     }
   end
 
