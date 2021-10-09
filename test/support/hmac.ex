@@ -145,7 +145,7 @@ defmodule Oasis.Test.Support.HMAC.TokenWithBody do
       if body_hmac == body_hmac_header do
         {:ok, token}
       else
-        {:error, :invalid}
+        {:error, :invalid_token}
       end
     end
   end

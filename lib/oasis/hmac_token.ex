@@ -89,9 +89,9 @@ defmodule Oasis.HMACToken do
   @type opts :: Plug.opts()
 
   @type verify_error ::
-          {:error, :invalid_request}
+          {:error, :header_mismatch}
           | {:error, :invalid_credential}
-          | {:error, :invalid}
+          | {:error, :invalid_token}
           | {:error, :expired}
 
   @callback crypto_config(conn :: Plug.Conn.t(), opts :: Keyword.t(), credential :: String.t()) ::
@@ -195,7 +195,7 @@ defmodule Oasis.HMACToken do
     if token.signature == signature do
       {:ok, token}
     else
-      {:error, :invalid}
+      {:error, :invalid_token}
     end
   end
 end

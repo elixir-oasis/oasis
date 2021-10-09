@@ -120,7 +120,7 @@ defmodule Oasis.Plug.HMACAuth do
       # and return the expected results in:
       #   {:ok, token}, verified
       #   {:error, :expired}, expired token
-      #   {:error, :invalid}, invalid token
+      #   {:error, :invalid_token}, invalid token
     end
   end
   ```
@@ -199,11 +199,11 @@ defmodule Oasis.Plug.HMACAuth do
       {:ok, _} ->
         conn
 
-      {:error, e} when e in [:invalid_request, :invalid_credential, :invalid, :expired] ->
+      {:error, e} when e in [:header_mismatch, :invalid_credential, :invalid_token, :expired] ->
         raise_invalid_auth({:error, e})
 
       _unknown_error ->
-        raise_invalid_auth({:error, :invalid})
+        raise_invalid_auth({:error, :invalid_token})
     end
   end
 
@@ -211,13 +211,13 @@ defmodule Oasis.Plug.HMACAuth do
   Parses the request token from HMAC HTTP authentication.
   """
   @spec parse_hmac_auth(conn :: Plug.Conn.t(), scheme :: String.t()) ::
-          {:ok, token()} | {:error, :invalid_request}
+          {:ok, token()} | {:error, :header_mismatch}
   def parse_hmac_auth(conn, scheme) do
     try do
       {:ok, do_parse_hmac_auth!(conn, scheme)}
     rescue
       _ ->
-        {:error, :invalid_request}
+        {:error, :header_mismatch}
     end
   end
 
@@ -248,7 +248,7 @@ defmodule Oasis.Plug.HMACAuth do
     if token.signed_headers == signed_headers do
       {:ok, token}
     else
-      {:error, :invalid_request}
+      {:error, :header_mismatch}
     end
   end
 
@@ -309,7 +309,7 @@ defmodule Oasis.Plug.HMACAuth do
   defp parse_key_value_pair(pair, splitter),
     do: pair |> String.split(splitter, parts: 2) |> List.to_tuple()
 
-  defp raise_invalid_auth({:error, :invalid_request}) do
+  defp raise_invalid_auth({:error, :header_mismatch}) do
     raise BadRequestError,
       error: %BadRequestError.Required{},
       message: "the HMAC token is missing in the authorization header or format is wrong",
@@ -334,7 +334,7 @@ defmodule Oasis.Plug.HMACAuth do
       plug_status: 401
   end
 
-  defp raise_invalid_auth({:error, :invalid}) do
+  defp raise_invalid_auth({:error, :invalid_token}) do
     raise BadRequestError,
       error: %BadRequestError.InvalidToken{},
       message: "the HMAC token is invalid",
