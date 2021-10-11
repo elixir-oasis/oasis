@@ -37,7 +37,7 @@ defmodule Oasis.HMACToken do
            {:ok, timestamp} <- conn |> get_header_date() |> parse_header_date() do
         timestamp_now = DateTime.utc_now() |> DateTime.to_unix()
 
-        if timestamp_now - timestamp < @max_diff do
+        if abs(timestamp_now - timestamp) < @max_diff do
           {:ok, timestamp}
         else
           {:error, :expired}

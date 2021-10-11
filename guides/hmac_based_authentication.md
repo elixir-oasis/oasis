@@ -240,7 +240,7 @@ defmodule Oasis.Gen.HMACAuth do
     with {:ok, timestamp} <- conn |> get_header("x-oasis-date") |> parse_header_date() do
       timestamp_now = DateTime.utc_now() |> DateTime.to_unix()
 
-      if timestamp_now - timestamp < @max_diff do
+      if abs(timestamp_now - timestamp) < @max_diff do
         {:ok, timestamp}
       else
         {:error, :expired}

@@ -56,7 +56,7 @@ defmodule Oasis.Plug.HMACAuth do
     end
   end
   ```
-  In general, when we define the hmac security scheme like [Azure](https://docs.microsoft.com/en-us/azure/azure-app-configuration/rest-api-authentication-hmac)
+  In general, when we define the HMAC security scheme like [Azure](https://docs.microsoft.com/en-us/azure/azure-app-configuration/rest-api-authentication-hmac)
   of the OpenAPI Specification in our API design document, for example:
 
   Here, apply the security globally to all operations:
