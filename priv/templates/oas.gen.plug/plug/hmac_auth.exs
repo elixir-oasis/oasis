@@ -1,6 +1,6 @@
 plug(
   Oasis.Plug.HMACAuth,
   signed_headers: <%= inspect(signed_headers) %>,
-  scheme: <%= inspect(scheme) %>,
+  algorithm: <%= inspect(algorithm) %>,
   security: <%= inspect(security) %>
 )

@@ -16,7 +16,7 @@ defmodule Oasis.Plug.HMACAuth do
   plug(
     :hmac_auth,
     signed_headers: "x-oasis-date;host",
-    scheme: "hmac-sha256",
+    algorithm: :sha256,
     security: Oasis.Gen.HMACAuth
   )
 
@@ -42,7 +42,7 @@ defmodule Oasis.Plug.HMACAuth do
   plug(
     Oasis.Plug.HMACAuth,
     signed_headers: "x-oasis-date;host",
-    scheme: "hmac-sha256",
+    algorithm: :sha256,
     security: Oasis.Gen.HMACAuth
   )
 
@@ -125,30 +125,48 @@ defmodule Oasis.Plug.HMACAuth do
   end
   ```
 
-  ## Schemes Supported
-  We recommend using `hmac-sha256` to verify the request, but it also supports the following schemes:
-  - `hmac-sha`
-  - `hmac-sha224`
-  - `hmac-sha256`
-  - `hmac-sha387`
-  - `hmac-sha512`
-  - `hmac-sha3_224`
-  - `hmac-sha3_256`
-  - `hmac-sha3_384`
-  - `hmac-sha3_512`
-  - `hmac-blake2b`
-  - `hmac-blake2s`
-  - `hmac-md4`
-  - `hmac-md5`
-  - `hmac-ripemd160`
+  ## Algorithms Supported
+  We recommend using `sha256` to verify the request, but it also supports the following schemes:
+  - `sha`
+  - `sha224`
+  - `sha256`
+  - `sha387`
+  - `sha512`
+  - `sha3_224`
+  - `sha3_256`
+  - `sha3_384`
+  - `sha3_512`
+  - `blake2b`
+  - `blake2s`
+  - `md4`
+  - `md5`
+  - `ripemd160`
+
+  You could see [Erlang/OTP docs - HMAC](https://erlang.org/doc/apps/crypto/algorithm_details.html#hmac)  for more details.
   """
 
   import Plug.Conn
   alias Oasis.BadRequestError
   require Logger
 
+  @type algorithm ::
+          :sha
+          | :sha224
+          | :sha256
+          | :sha384
+          | :sha512
+          | :sha3_224
+          | :sha3_256
+          | :sha3_384
+          | :sha3_512
+          | :blake2b
+          | :blake2s
+          | :md4
+          | :md5
+          | :ripemd160
+
   @type opts :: [
-          scheme: String.t(),
+          algorithm: algorithm(),
           security: module(),
           signed_headers: String.t()
         ]
@@ -174,19 +192,19 @@ defmodule Oasis.Plug.HMACAuth do
 
   ## Options
 
-    * `:scheme`, required, see [Schemes Supported](#module-schemes-supported) for details.
+    * `:algorithm`, required, see [Algorithms Supported](#module-algorithms-supported) for details.
     * `:security`, required, a module be with `Oasis.HMACToken` behaviour.
     * `:signed_headers`, required, defines HTTP request headers added to the signature, the provided headers are required in the request, and both in client/server side will use them into signature in the explicit definition order. (e.g., `x-oasis-date;host`)
   """
   @spec hmac_auth(conn :: Plug.Conn.t(), options :: opts()) :: Plug.Conn.t()
   def hmac_auth(conn, options) do
     options = ensure_options(conn, options)
-    scheme = options[:scheme]
+    algorithm = options[:algorithm]
     security = options[:security]
     signed_headers = options[:signed_headers]
 
     verify_result =
-      with {:ok, token} <- parse_hmac_auth(conn, scheme),
+      with {:ok, token} <- parse_hmac_auth(conn, algorithm),
            {:ok, _} <- validate_signed_headers(token, signed_headers) do
         if function_exported?(security, :verify, 3) do
           security.verify(conn, token, options)
@@ -210,19 +228,19 @@ defmodule Oasis.Plug.HMACAuth do
   @doc """
   Parses the request token from HMAC HTTP authentication.
   """
-  @spec parse_hmac_auth(conn :: Plug.Conn.t(), scheme :: String.t()) ::
+  @spec parse_hmac_auth(conn :: Plug.Conn.t(), algorithm :: algorithm()) ::
           {:ok, token()} | {:error, :header_mismatch}
-  def parse_hmac_auth(conn, scheme) do
+  def parse_hmac_auth(conn, algorithm) do
     try do
-      {:ok, do_parse_hmac_auth!(conn, scheme)}
+      {:ok, do_parse_hmac_auth!(conn, algorithm)}
     rescue
       _ ->
         {:error, :header_mismatch}
     end
   end
 
-  defp do_parse_hmac_auth!(conn, scheme) do
-    hmac_auth_prefix = String.upcase(scheme) <> " "
+  defp do_parse_hmac_auth!(conn, algorithm) do
+    hmac_auth_prefix = "HMAC-#{algorithm |> to_string() |> String.upcase()} "
     [authorization] = get_req_header(conn, "authorization")
 
     token =
@@ -253,14 +271,14 @@ defmodule Oasis.Plug.HMACAuth do
   end
 
   defp ensure_options(conn, options) do
-    scheme = scheme(conn, options)
+    algorithm = algorithm(conn, options)
     security = security(conn, options)
     signed_headers = signed_headers(conn, options)
-    [scheme: scheme, security: security, signed_headers: signed_headers]
+    [algorithm: algorithm, security: security, signed_headers: signed_headers]
   end
 
-  defp scheme(conn, options) do
-    options[:scheme] ||
+  defp algorithm(conn, options) do
+    options[:algorithm] ||
       raise """
       no :scheme option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
       Please ensure your specification defines a field `scheme` in

@@ -7,7 +7,7 @@ defmodule Oasis.Gen.PreGetTestHMACWithDate do
   plug(
     Oasis.Plug.HMACAuth,
     signed_headers: "host;x-oasis-date",
-    scheme: "hmac-sha256",
+    algorithm: :sha256,
     security: Oasis.Gen.HMACAuthWithDate
   )
 

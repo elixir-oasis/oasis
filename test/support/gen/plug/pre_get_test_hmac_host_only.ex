@@ -7,7 +7,7 @@ defmodule Oasis.Gen.PreGetTestHMACHostOnly do
   plug(
     Oasis.Plug.HMACAuth,
     signed_headers: "host",
-    scheme: "hmac-sha256",
+    algorithm: :sha256,
     security: Oasis.Gen.HMACAuthHostOnly
   )
 

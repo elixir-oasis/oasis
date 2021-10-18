@@ -102,16 +102,6 @@ defmodule Oasis.HMACToken do
 
   @optional_callbacks verify: 3
 
-  @schemes_supported ~w(hmac-sha hmac-sha224 hmac-sha256 hmac-sha384 hmac-sha512 hmac-sha3_224 hmac-sha3_256 hmac-sha3_384 hmac-sha3_512 hmac-blake2b hmac-blake2s hmac-md4 hmac-md5 hmac-ripemd160)
-  @scheme_mapping (for s <- @schemes_supported, into: %{} do
-                     value =
-                       String.split(s, "-", parts: 2)
-                       |> Enum.map(&String.to_atom/1)
-                       |> List.to_tuple()
-
-                     {s, value}
-                   end)
-
   @doc """
     Default implementation of the callback `verify`, only verify the signature.
 
@@ -128,11 +118,11 @@ defmodule Oasis.HMACToken do
           opts :: Oasis.Plug.HMACAuth.opts()
         ) :: {:ok, term()} | verify_error()
   def verify_signature(conn, token, opts) do
-    scheme = opts[:scheme]
+    algorithm = opts[:algorithm]
     signed_headers = opts[:signed_headers]
 
     with {:ok, crypto} <- load_crypto(conn, opts, token),
-         signature <- sign!(conn, signed_headers, crypto, scheme),
+         signature <- sign(conn, signed_headers, crypto.secret, algorithm),
          {:ok, _} <- validate_signature(token, signature) do
       {:ok, token}
     end
@@ -140,16 +130,14 @@ defmodule Oasis.HMACToken do
 
   @doc """
   Sign HTTP requests according to settings.
-
-  See [HTTP Request](Oasis.Plug.HMACAuth.html#module-http-request) for details.
   """
-  @spec sign!(
+  @spec sign(
           conn :: Plug.Conn.t(),
           signed_headers :: String.t(),
-          crypto :: Crypto.t(),
-          scheme :: String.t()
+          secret :: String.t(),
+          algorithm :: Oasis.Plug.HMACAuth.algorithm()
         ) :: String.t()
-  def sign!(conn, signed_headers, crypto, scheme) do
+  def sign(conn, signed_headers, secret, algorithm) do
     headers =
       signed_headers
       |> String.split(";")
@@ -173,9 +161,7 @@ defmodule Oasis.HMACToken do
       |> Kernel.<>("\n")
       |> Kernel.<>(signed_header_values)
 
-    {digest_type, digest_subtype} = @scheme_mapping[scheme]
-
-    Base.encode64(:crypto.mac(digest_type, digest_subtype, crypto.secret, string_to_sign))
+    Base.encode64(:crypto.mac(:hmac, algorithm, secret, string_to_sign))
   end
 
   defp build_path_and_query(path, ""), do: path

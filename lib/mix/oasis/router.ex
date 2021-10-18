@@ -400,10 +400,9 @@ defmodule Mix.Oasis.Router do
     }
   end
 
-  defp map_security_scheme(apps, security_name, %{"scheme" => "hmac-" <> _} = security_scheme, %{name_space: name_space}, opts) do
+  defp map_security_scheme(apps, security_name, %{"scheme" => "hmac-" <> algorithm} = security_scheme, %{name_space: name_space}, opts) do
     # priority use `x-oasis-name-space` field in security scheme object compare to operation's level
     # but still use the input argument option from the `oas.gen.plug` command line in the highest priority if possible.
-    scheme = security_scheme["scheme"]
     name_space_from_spec = Map.get(security_scheme, @spec_ext_name_space, name_space)
     name_space = opts[:name_space] || name_space_from_spec
 
@@ -416,7 +415,7 @@ defmodule Mix.Oasis.Router do
 
     content =
       Mix.Oasis.eval_from(apps, "priv/templates/oas.gen.plug/plug/hmac_auth.exs",
-        scheme: scheme,
+        algorithm: String.to_atom(algorithm),
         security: security_module,
         signed_headers: signed_headers
       )

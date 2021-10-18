@@ -18,12 +18,12 @@ defmodule Oasis.Gen.HMACAuthWithBody do
   @impl true
   def verify(conn, token, opts) do
     with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts) do
-      scheme = opts[:scheme] |> String.trim_leading("hmac-") |> String.to_atom()
+      algorithm = opts[:algorithm]
       raw_body = conn.assigns.raw_body
 
       crypto = crypto_config(conn, opts, token.credential)
 
-      body_hmac = hmac(scheme, crypto.secret, raw_body)
+      body_hmac = hmac(algorithm, crypto.secret, raw_body)
 
       body_hmac_header = get_header(conn, "x-oasis-body-sha256")
 

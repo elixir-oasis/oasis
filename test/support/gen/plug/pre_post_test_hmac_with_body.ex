@@ -28,7 +28,7 @@ defmodule Oasis.Gen.PrePostTestHMACWithBody do
   plug(
     Oasis.Plug.HMACAuth,
     signed_headers: "host;x-oasis-body-sha256",
-    scheme: "hmac-sha256",
+    algorithm: :sha256,
     security: Oasis.Gen.HMACAuthWithBody
   )
 

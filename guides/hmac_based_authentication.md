@@ -34,7 +34,7 @@ The client request must contains header:
 `Authorization: HMAC-uppercase(<algorithm>) Credential=<value>&SignedHeaders=<value>&Signature=<value>`
 
 * `Algorithm`
-    * Some digest/hash algorithm, see [Schemes Supported](Oasis.Plug.HMACAuth.html#module-schemes-supported) for details.
+    * Some digest/hash algorithm, see [Algorithms Supported](Oasis.Plug.HMACAuth.html#module-algorithms-supported) for details.
 * `Credential`
     * ID of the access key used to signature and verify, must be defined in `Oasis.HMACToken.Crypto`.
 * `SignedHeaders`
@@ -163,7 +163,7 @@ defmodule Oasis.Gen.PrePostTestHMAC do
   plug(
     Oasis.Plug.HMACAuth,
     signed_headers: "host;x-oasis-date;x-oasis-body-sha256",
-    scheme: "hmac-sha256",
+    algorithm: :sha256,
     security: Oasis.Gen.HMACAuth
   )
 
@@ -249,9 +249,10 @@ defmodule Oasis.Gen.HMACAuth do
   end
   
   defp verify_body(conn, token, opts) do
+    algorithm = opts[:algorithm]
     raw_body = conn.assigns.raw_body
     crypto = crypto_config(conn, opts, token.credential)
-    body_hmac = hmac(:sha256, crypto.secret, raw_body)
+    body_hmac = hmac(algorithm, crypto.secret, raw_body)
     body_hmac_header = get_header(conn, "x-oasis-body-sha256")
 
     if body_hmac == body_hmac_header do

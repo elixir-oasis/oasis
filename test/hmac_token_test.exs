@@ -2,37 +2,31 @@ defmodule Oasis.HMACTokenTest do
   use ExUnit.Case
   use Plug.Test
 
-  #  alias Plug.Conn
-  alias Oasis.HMACToken.Crypto
   import Oasis.HMACToken
   import Oasis.Test.Support.HMAC
 
-  describe "sign!" do
+  describe "sign" do
     test "sign success - host only" do
       c = case_host_only()
-
-      crypto = %Crypto{credential: c.credential, secret: c.secret}
 
       conn =
         conn(:get, c.path_and_query)
         |> put_req_header("host", c.host)
 
-      assert sign!(conn, c.signed_headers, crypto, "hmac-sha256") == c.signature_sha256
-      assert sign!(conn, c.signed_headers, crypto, "hmac-sha512") == c.signature_sha512
-      assert sign!(conn, c.signed_headers, crypto, "hmac-md5") == c.signature_md5
+      assert sign(conn, c.signed_headers, c.secret, :sha256) == c.signature_sha256
+      assert sign(conn, c.signed_headers, c.secret, :sha512) == c.signature_sha512
+      assert sign(conn, c.signed_headers, c.secret, :md5) == c.signature_md5
     end
 
     test "sign success - with date" do
       c = case_with_date()
-
-      crypto = %Crypto{credential: c.credential, secret: c.secret}
 
       conn =
         conn(:get, c.path_and_query)
         |> put_req_header("host", c.host)
         |> put_req_header("x-oasis-date", c.x_oasis_date)
 
-      assert sign!(conn, c.signed_headers, crypto, "hmac-sha256") == c.signature_sha256
+      assert sign(conn, c.signed_headers, c.secret, :sha256) == c.signature_sha256
     end
   end
 
@@ -51,7 +45,7 @@ defmodule Oasis.HMACTokenTest do
       }
 
       opts = [
-        scheme: "hmac-sha256",
+        algorithm: :sha256,
         security: Oasis.Test.Support.HMAC.TokenHostOnly,
         signed_headers: c.signed_headers
       ]
@@ -74,7 +68,7 @@ defmodule Oasis.HMACTokenTest do
       }
 
       opts = [
-        scheme: "hmac-sha256",
+        algorithm: :sha256,
         security: Oasis.Test.Support.HMAC.TokenHostOnly,
         signed_headers: c.signed_headers
       ]
@@ -98,7 +92,7 @@ defmodule Oasis.HMACTokenTest do
       }
 
       opts = [
-        scheme: "hmac-sha256",
+        algorithm: :sha256,
         security: Oasis.Test.Support.HMAC.TokenWithDate,
         signed_headers: c.signed_headers
       ]
@@ -122,7 +116,7 @@ defmodule Oasis.HMACTokenTest do
       }
 
       opts = [
-        scheme: "hmac-sha256",
+        algorithm: :sha256,
         security: Oasis.Test.Support.HMAC.TokenWithBody,
         signed_headers: c.signed_headers
       ]
