@@ -38,14 +38,9 @@ defmodule Oasis.IntegrationTest do
 
     assert Oasis.Plug.RequestValidator.init(:ok) == :ok
     assert Oasis.Plug.BearerAuth.init(:ok) == :ok
-    assert Oasis.Plug.HMACAuth.init(:ok) == :ok
 
     assert Oasis.Gen.Plug.TestBearerAuth.init(:ok) == :ok
     assert Oasis.Gen.Plug.TestSignBearerAuth.init(:ok) == :ok
-    assert Oasis.Gen.Plug.GetTestHMACHostOnly.init(:ok) == :ok
-    assert Oasis.Gen.Plug.GetTestHMACWithDate.init(:ok) == :ok
-    assert Oasis.Gen.Plug.PostTestHMACWithBody.init(:ok) == :ok
-
 
     assert Oasis.Gen.Plug.TestFilesUpload.init(:ok) == :ok
   end
@@ -673,84 +668,4 @@ defmodule Oasis.IntegrationTest do
     assert response.status == 400 and
              response.body == "Find body parameter `body_request` with error: Type mismatch. Expected Integer but got String."
   end
-
-  test "verify hmac auth host only", %{url: url} do
-    start_supervised!({Finch, name: TestFinch})
-    c = Oasis.Test.Support.HMAC.case_host_only()
-
-    # success
-    auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
-    headers = [{"host", c.host}, {"authorization", auth}]
-    {:ok, response} = Finch.build(:get, "#{url}#{c.path_and_query}", headers, nil) |> Finch.request(TestFinch)
-    assert response.status == 200
-
-    # invalid signature
-    wrong_auth = auth <> "wrong"
-    headers = [{"host", c.host}, {"authorization", wrong_auth}]
-    {:ok, response} = Finch.build(:get, "#{url}#{c.path_and_query}", headers, nil) |> Finch.request(TestFinch)
-    assert response.status == 401
-  end
-
-  test "verify hmac auth with date expired", %{url: url} do
-    start_supervised!({Finch, name: TestFinch})
-    c = Oasis.Test.Support.HMAC.case_with_date()
-
-    auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
-    headers = [{"host", c.host}, {"x-oasis-date", c.x_oasis_date}, {"authorization", auth}]
-    {:ok, response} = Finch.build(:get, "#{url}#{c.path_and_query}", headers, nil) |> Finch.request(TestFinch)
-
-    # expired
-    assert response.status == 401
-  end
-
-  test "verify hmac auth with date success", %{url: url} do
-    start_supervised!({Finch, name: TestFinch})
-    c = Oasis.Test.Support.HMAC.case_with_date_now()
-
-    auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
-    headers = [{"host", c.host}, {"x-oasis-date", c.x_oasis_date}, {"authorization", auth}]
-    {:ok, response} = Finch.build(:get, "#{url}#{c.path_and_query}", headers, nil) |> Finch.request(TestFinch)
-
-    assert response.status == 200
-  end
-
-  test "verify hmac auth with body", %{url: url} do
-    start_supervised!({Finch, name: TestFinch})
-    c = Oasis.Test.Support.HMAC.case_with_body()
-
-    # success
-    auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
-    headers = [
-      {"content-type", c.content_type},
-      {"host", c.host},
-      {"x-oasis-body-sha256", c.x_oasis_body_sha256},
-      {"authorization", auth}
-    ]
-    {:ok, response} = Finch.build(:post, "#{url}#{c.path_and_query}", headers, c.body) |> Finch.request(TestFinch)
-
-    assert response.status == 200
-
-    # invalid body
-    headers = [
-      {"content-type", c.content_type},
-      {"host", c.host},
-      {"x-oasis-body-sha256", c.x_oasis_body_sha256 <> "wrong"},
-      {"authorization", auth}
-    ]
-    {:ok, response} = Finch.build(:post, "#{url}#{c.path_and_query}", headers, c.body) |> Finch.request(TestFinch)
-
-    assert response.status == 401
-
-    # invalid signature
-    headers = [
-      {"content-type", c.content_type},
-      {"host", c.host},
-      {"x-oasis-body-sha256", c.x_oasis_body_sha256},
-      {"authorization", auth <> "wrong"}
-    ]
-    {:ok, response} = Finch.build(:post, "#{url}#{c.path_and_query}", headers, c.body) |> Finch.request(TestFinch)
-
-    assert response.status == 401
-  end
-
 end

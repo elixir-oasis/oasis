@@ -147,39 +147,4 @@ defmodule Mix.Tasks.Oas.Gen.PlugTest do
       end)
     end)
   end
-  
-  test "generates with HMAC token", config do
-    in_tmp_project(config.test, fn ->
-      file_path = Path.join([__DIR__, "file/petstore-expanded-with-hmac-auth.yaml"])
-      Gen.Plug.run(["--file", file_path])
-
-      assert_file("lib/oasis/gen/hmac_auth1.ex", fn file ->
-        assert file =~ ~s|defmodule Oasis.Gen.HmacAuth1 do|
-        assert file =~ ~s|@behaviour Oasis.HMACToken|
-        assert file =~ ~s|def crypto_config(_conn, _opts, _credential) do|
-      end)
-
-      assert_file("lib/oasis/gen/hmac_auth2.ex", fn file ->
-        assert file =~ ~s|defmodule Oasis.Gen.HmacAuth2 do|
-        assert file =~ ~s|@behaviour Oasis.HMACToken|
-        assert file =~ ~s|def crypto_config(_conn, _opts, _credential) do|
-      end)
-
-      assert_file("lib/oasis/gen/pre_find_pets.ex", fn file ->
-        assert file =~ ~s|plug(\n    Oasis.Plug.HMACAuth,\n    security: Oasis.Gen.HmacAuth1|
-      end)
-
-      assert_file("lib/oasis/gen/pre_add_pet.ex", fn file ->
-        assert file =~ ~s|plug(\n    Oasis.Plug.HMACAuth,\n    security: Oasis.Gen.HmacAuth1|
-      end)
-
-      assert_file("lib/oasis/gen/pre_delete_pet.ex", fn file ->
-        assert file =~ ~s|plug(\n    Oasis.Plug.HMACAuth,\n    security: Oasis.Gen.HmacAuth2|
-      end)
-
-      assert_file("lib/oasis/gen/pre_find_pet_by_id.ex", fn file ->
-        assert file =~ ~s|plug(\n    Oasis.Plug.HMACAuth,\n    security: Oasis.Gen.HmacAuth2|
-      end)
-    end)
-  end
 end

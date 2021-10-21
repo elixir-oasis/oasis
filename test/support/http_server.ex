@@ -95,21 +95,6 @@ defmodule Oasis.HTTPServer.PlugRouter do
     to: Oasis.Gen.Plug.PreTestFilesUpload
   )
 
-  get(
-    "/test_hmac_host_only",
-    to: Oasis.Gen.Plug.PreGetTestHMACHostOnly
-  )
-
-  post(
-    "/test_hmac_with_body",
-    to: Oasis.Gen.Plug.PrePostTestHMACWithBody
-  )
-
-  get(
-    "/test_hmac_with_date",
-    to: Oasis.Gen.Plug.PreGetTestHMACWithDate
-  )
-
   def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do
     message = Map.get(reason, :message) || "Something went wrong"
     send_resp(conn, conn.status, message)
