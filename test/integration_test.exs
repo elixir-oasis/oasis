@@ -711,7 +711,6 @@ defmodule Oasis.IntegrationTest do
     headers = [{"host", c.host}, {"x-oasis-date", c.x_oasis_date}, {"authorization", auth}]
     {:ok, response} = Finch.build(:get, "#{url}#{c.path_and_query}", headers, nil) |> Finch.request(TestFinch)
 
-    # expired
     assert response.status == 200
   end
 
