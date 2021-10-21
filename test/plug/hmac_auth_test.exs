@@ -59,7 +59,7 @@ defmodule Oasis.Plug.HMACAuthTest do
                    fn ->
                      hmac_auth(conn,
                        signed_headers: c.signed_headers,
-                       security: Oasis.Test.Support.HMAC.TokenHostOnly
+                       security: Oasis.Gen.HMACAuthHostOnly
                      )
                    end
     end
@@ -98,7 +98,7 @@ defmodule Oasis.Plug.HMACAuthTest do
                    fn ->
                      hmac_auth(conn,
                        algorithm: :sha256,
-                       security: Oasis.Test.Support.HMAC.TokenHostOnly
+                       security: Oasis.Gen.HMACAuthHostOnly
                      )
                    end
     end
@@ -115,7 +115,7 @@ defmodule Oasis.Plug.HMACAuthTest do
                    fn ->
                      hmac_auth(conn,
                        algorithm: :sha256,
-                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
+                       security: Oasis.Gen.HMACAuthHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
@@ -137,7 +137,7 @@ defmodule Oasis.Plug.HMACAuthTest do
                    fn ->
                      hmac_auth(conn,
                        algorithm: :sha256,
-                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
+                       security: Oasis.Gen.HMACAuthHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
@@ -159,7 +159,7 @@ defmodule Oasis.Plug.HMACAuthTest do
                    fn ->
                      hmac_auth(conn,
                        algorithm: :sha256,
-                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
+                       security: Oasis.Gen.HMACAuthHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
@@ -181,13 +181,13 @@ defmodule Oasis.Plug.HMACAuthTest do
                    fn ->
                      hmac_auth(conn,
                        algorithm: :sha256,
-                       security: Oasis.Test.Support.HMAC.TokenHostOnly,
+                       security: Oasis.Gen.HMACAuthHostOnly,
                        signed_headers: c.signed_headers
                      )
                    end
     end
 
-    test "verify success" do
+    test "verify success - host only" do
       c = case_host_only()
 
       conn =
@@ -200,7 +200,55 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       assert hmac_auth(conn,
                algorithm: :sha256,
-               security: Oasis.Test.Support.HMAC.TokenHostOnly,
+               security: Oasis.Gen.HMACAuthHostOnly,
+               signed_headers: c.signed_headers
+             )
+    end
+
+    test "verify success - with date now" do
+      c = case_with_date_now()
+
+      conn =
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
+        |> put_req_header("x-oasis-date", c.x_oasis_date)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+
+      assert hmac_auth(conn,
+               algorithm: :sha256,
+               security: Oasis.Gen.HMACAuthWithDate,
+               signed_headers: c.signed_headers
+             )
+    end
+
+    test "verify success - with body" do
+      c = case_with_body()
+
+      conn =
+        conn(:post, c.path_and_query, c.body)
+        |> put_req_header("host", c.host)
+        |> put_req_header("x-oasis-body-sha256", c.x_oasis_body_sha256)
+        |> put_req_header("content-type", c.content_type)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+        |> Plug.run([
+          {Plug.Parsers,
+           [
+             parsers: [:json],
+             json_decoder: Jason,
+             pass: ["*/*"],
+             body_reader: {Oasis.CacheRawBodyReader, :read_body, []}
+           ]}
+        ])
+
+      assert hmac_auth(conn,
+               algorithm: :sha256,
+               security: Oasis.Gen.HMACAuthWithBody,
                signed_headers: c.signed_headers
              )
     end
@@ -218,7 +266,7 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       assert hmac_auth(conn,
                algorithm: :sha512,
-               security: Oasis.Test.Support.HMAC.TokenHostOnly,
+               security: Oasis.Gen.HMACAuthHostOnly,
                signed_headers: c.signed_headers
              )
     end
@@ -236,7 +284,7 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       assert hmac_auth(conn,
                algorithm: :md5,
-               security: Oasis.Test.Support.HMAC.TokenHostOnly,
+               security: Oasis.Gen.HMACAuthHostOnly,
                signed_headers: c.signed_headers
              )
     end
@@ -258,7 +306,29 @@ defmodule Oasis.Plug.HMACAuthTest do
                    fn ->
                      hmac_auth(conn,
                        algorithm: :sha256,
-                       security: Oasis.Test.Support.HMAC.TokenWithDate,
+                       security: Oasis.Gen.HMACAuthWithDate,
+                       signed_headers: c.signed_headers
+                     )
+                   end
+    end
+
+    test "verify user return unknown error" do
+      c = case_host_only()
+
+      conn =
+        conn(:get, c.path_and_query)
+        |> put_req_header("host", c.host)
+        |> put_req_header(
+          "authorization",
+          "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+        )
+
+      assert_raise Oasis.BadRequestError,
+                   ~r|the HMAC token is invalid|,
+                   fn ->
+                     hmac_auth(conn,
+                       algorithm: :sha256,
+                       security: Oasis.Test.Support.HMAC.TokenVerifyReturnUnknown,
                        signed_headers: c.signed_headers
                      )
                    end

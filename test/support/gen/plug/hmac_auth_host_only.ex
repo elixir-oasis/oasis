@@ -4,22 +4,19 @@ defmodule Oasis.Gen.HMACAuthHostOnly do
   # please write the crypto-related configuration to the bearer token in this module.
   @behaviour Oasis.HMACToken
   alias Oasis.HMACToken.Crypto
+  import Oasis.Test.Support.HMAC
 
   @impl true
-  def crypto_config(_conn, _opts, "test_client") do
-    %Crypto{
-      credential: "test_client",
-      secret: "secret"
-    }
-  end
-  def crypto_config(_conn, _opts, _credential), do: nil
+  def crypto_config(_conn, _opts, credential) do
+    c = case_host_only()
 
-  @impl true
-  def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts) do
-      # {:error, :expired}
-      # {:error, :invalid_token}
-      {:ok, token}
+    if c.credential == credential do
+      %Crypto{
+        credential: c.credential,
+        secret: c.secret
+      }
+    else
+      nil
     end
   end
 end

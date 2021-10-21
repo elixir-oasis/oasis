@@ -4,18 +4,23 @@ defmodule Oasis.Gen.HMACAuthWithDate do
   # please write the crypto-related configuration to the bearer token in this module.
   @behaviour Oasis.HMACToken
   alias Oasis.HMACToken.Crypto
+  import Oasis.Test.Support.HMAC
   # in seconds
   @max_diff 60
 
   @impl true
-  def crypto_config(_conn, _opts, "test_client") do
-    %Crypto{
-      credential: "test_client",
-      secret: "secret"
-    }
-  end
+  def crypto_config(_conn, _opts, credential) do
+    c = case_with_date()
 
-  def crypto_config(_conn, _opts, _credential), do: nil
+    if c.credential == credential do
+      %Crypto{
+        credential: c.credential,
+        secret: c.secret
+      }
+    else
+      nil
+    end
+  end
 
   @impl true
   def verify(conn, token, opts) do

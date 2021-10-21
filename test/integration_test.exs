@@ -38,9 +38,14 @@ defmodule Oasis.IntegrationTest do
 
     assert Oasis.Plug.RequestValidator.init(:ok) == :ok
     assert Oasis.Plug.BearerAuth.init(:ok) == :ok
+    assert Oasis.Plug.HMACAuth.init(:ok) == :ok
 
     assert Oasis.Gen.Plug.TestBearerAuth.init(:ok) == :ok
     assert Oasis.Gen.Plug.TestSignBearerAuth.init(:ok) == :ok
+    assert Oasis.Gen.Plug.GetTestHMACHostOnly.init(:ok) == :ok
+    assert Oasis.Gen.Plug.GetTestHMACWithDate.init(:ok) == :ok
+    assert Oasis.Gen.Plug.PostTestHMACWithBody.init(:ok) == :ok
+
 
     assert Oasis.Gen.Plug.TestFilesUpload.init(:ok) == :ok
   end
@@ -686,7 +691,7 @@ defmodule Oasis.IntegrationTest do
     assert response.status == 401
   end
 
-  test "verify hmac auth with date", %{url: url} do
+  test "verify hmac auth with date expired", %{url: url} do
     start_supervised!({Finch, name: TestFinch})
     c = Oasis.Test.Support.HMAC.case_with_date()
 
@@ -698,6 +703,18 @@ defmodule Oasis.IntegrationTest do
     assert response.status == 401
   end
 
+  test "verify hmac auth with date success", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+    c = Oasis.Test.Support.HMAC.case_with_date_now()
+
+    auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
+    headers = [{"host", c.host}, {"x-oasis-date", c.x_oasis_date}, {"authorization", auth}]
+    {:ok, response} = Finch.build(:get, "#{url}#{c.path_and_query}", headers, nil) |> Finch.request(TestFinch)
+
+    # expired
+    assert response.status == 200
+  end
+
   test "verify hmac auth with body", %{url: url} do
     start_supervised!({Finch, name: TestFinch})
     c = Oasis.Test.Support.HMAC.case_with_body()
@@ -705,7 +722,7 @@ defmodule Oasis.IntegrationTest do
     # success
     auth = "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
     headers = [
-      {"content-type", "application/json"},
+      {"content-type", c.content_type},
       {"host", c.host},
       {"x-oasis-body-sha256", c.x_oasis_body_sha256},
       {"authorization", auth}
@@ -716,7 +733,7 @@ defmodule Oasis.IntegrationTest do
 
     # invalid body
     headers = [
-      {"content-type", "application/json"},
+      {"content-type", c.content_type},
       {"host", c.host},
       {"x-oasis-body-sha256", c.x_oasis_body_sha256 <> "wrong"},
       {"authorization", auth}
@@ -727,7 +744,7 @@ defmodule Oasis.IntegrationTest do
 
     # invalid signature
     headers = [
-      {"content-type", "application/json"},
+      {"content-type", c.content_type},
       {"host", c.host},
       {"x-oasis-body-sha256", c.x_oasis_body_sha256},
       {"authorization", auth <> "wrong"}

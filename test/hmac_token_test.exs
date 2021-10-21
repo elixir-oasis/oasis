@@ -28,6 +28,17 @@ defmodule Oasis.HMACTokenTest do
 
       assert sign(conn, c.signed_headers, c.secret, :sha256) == c.signature_sha256
     end
+
+    test "sign failed - with date and miss host" do
+      c = case_with_date()
+
+      conn =
+        conn(:get, c.path_and_query)
+        # miss host
+        |> put_req_header("x-oasis-date", c.x_oasis_date)
+
+      assert sign(conn, c.signed_headers, c.secret, :sha256) != c.signature_sha256
+    end
   end
 
   describe "verify" do
@@ -46,7 +57,7 @@ defmodule Oasis.HMACTokenTest do
 
       opts = [
         algorithm: :sha256,
-        security: Oasis.Test.Support.HMAC.TokenHostOnly,
+        security: Oasis.Gen.HMACAuthHostOnly,
         signed_headers: c.signed_headers
       ]
 
@@ -68,7 +79,7 @@ defmodule Oasis.HMACTokenTest do
 
       opts = [
         algorithm: :sha256,
-        security: Oasis.Test.Support.HMAC.TokenHostOnly,
+        security: Oasis.Gen.HMACAuthHostOnly,
         signed_headers: c.signed_headers
       ]
 
@@ -91,7 +102,7 @@ defmodule Oasis.HMACTokenTest do
 
       opts = [
         algorithm: :sha256,
-        security: Oasis.Test.Support.HMAC.TokenWithDate,
+        security: Oasis.Gen.HMACAuthHostOnly,
         signed_headers: c.signed_headers
       ]
 
@@ -114,7 +125,7 @@ defmodule Oasis.HMACTokenTest do
 
       opts = [
         algorithm: :sha256,
-        security: Oasis.Test.Support.HMAC.TokenWithBody,
+        security: Oasis.Gen.HMACAuthHostOnly,
         signed_headers: c.signed_headers
       ]
 
