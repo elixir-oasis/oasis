@@ -97,17 +97,17 @@ defmodule Oasis.HTTPServer.PlugRouter do
 
   get(
     "/test_hmac_host_only",
-    to: Oasis.Gen.PreGetTestHMACHostOnly
+    to: Oasis.Gen.Plug.PreGetTestHMACHostOnly
   )
 
   post(
     "/test_hmac_with_body",
-    to: Oasis.Gen.PrePostTestHMACWithBody
+    to: Oasis.Gen.Plug.PrePostTestHMACWithBody
   )
 
   get(
     "/test_hmac_with_date",
-    to: Oasis.Gen.PreGetTestHMACWithDate
+    to: Oasis.Gen.Plug.PreGetTestHMACWithDate
   )
 
   def handle_errors(conn, %{kind: _kind, reason: reason, stack: _stack}) do

@@ -1,4 +1,4 @@
-defmodule Oasis.Gen.GetTestHMACHostOnly do
+defmodule Oasis.Gen.Plug.GetTestHMACHostOnly do
   # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file
   # in the first time, and then it WILL NOT be modified in the future generation command(s) once this file exists,
   # please write your business code in this module.
