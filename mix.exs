@@ -70,7 +70,8 @@ defmodule Oasis.MixProject do
         "README.md",
         "CHANGELOG.md",
         "guides/handle_errors.md",
-        "guides/specification_ext.md"
+        "guides/specification_ext.md",
+        "guides/hmac_based_authentication.md",
       ],
       groups_for_modules: groups_for_modules(),
       groups_for_extras: groups_for_extras()
@@ -81,6 +82,7 @@ defmodule Oasis.MixProject do
     [
       Plugs: [
         Oasis.Plug.BearerAuth,
+        Oasis.Plug.HMACAuth,
         Oasis.Plug.RequestValidator
       ],
       Errors: [

@@ -19,7 +19,7 @@ defmodule Oasis.Token do
   There are two callback functions reserved for use in the generated modules when we use the bearer security
   scheme of the OpenAPI Specification.
 
-  * `c:crypto_config/2`, provides a way to define the crypto-related key information for the high level useage,
+  * `c:crypto_config/2`, provides a way to define the crypto-related key information for the high level usage,
     it required to return an `#{inspect(__MODULE__)}.Crypto` struct.
   * `c:verify/3`, an optional function to provide a way to custom the verification of the token, you may
     want to use encrypt/decrypt to the token, or other more rules to verify it.
