@@ -88,6 +88,8 @@ defmodule Oasis.HMACToken do
 
   @type opts :: Plug.opts()
 
+  @type token :: %{credential: String.t(), signed_headers: String.t(), signature: String.t()}
+
   @type verify_error ::
           {:error, :header_mismatch}
           | {:error, :invalid_credential}
@@ -97,7 +99,7 @@ defmodule Oasis.HMACToken do
   @callback crypto_config(conn :: Plug.Conn.t(), opts :: Keyword.t(), credential :: String.t()) ::
               Crypto.t() | nil
 
-  @callback verify(conn :: Plug.Conn.t(), token :: Oasis.Plug.HMACAuth.token(), opts :: opts()) ::
+  @callback verify(conn :: Plug.Conn.t(), token :: token(), opts :: opts()) ::
               {:ok, term()} | verify_error()
 
   @optional_callbacks verify: 3
@@ -107,7 +109,7 @@ defmodule Oasis.HMACToken do
   """
   @spec verify(
           conn :: Plug.Conn.t(),
-          token :: Oasis.Plug.HMACAuth.token(),
+          token :: token(),
           opts :: Oasis.Plug.HMACAuth.opts()
         ) :: {:ok, term()} | verify_error()
   def verify(conn, token, opts) do

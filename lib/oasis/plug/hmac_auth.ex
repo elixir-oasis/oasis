@@ -170,7 +170,6 @@ defmodule Oasis.Plug.HMACAuth do
           security: module(),
           signed_headers: String.t()
         ]
-  @type token :: %{credential: String.t(), signed_headers: String.t(), signature: String.t()}
 
   @behaviour Plug
 
@@ -229,7 +228,7 @@ defmodule Oasis.Plug.HMACAuth do
   Parses the request token from HMAC HTTP authentication.
   """
   @spec parse_hmac_auth(conn :: Plug.Conn.t(), algorithm :: algorithm()) ::
-          {:ok, token()} | {:error, :header_mismatch}
+          {:ok, Oasis.HMACToken.token()} | {:error, :header_mismatch}
   def parse_hmac_auth(conn, algorithm) do
     try do
       {:ok, do_parse_hmac_auth!(conn, algorithm)}
