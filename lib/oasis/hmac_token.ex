@@ -33,7 +33,7 @@ defmodule Oasis.HMACToken do
 
     @impl true
     def verify(conn, token, _opts) do
-      with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
+      with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts),
            {:ok, timestamp} <- conn |> get_header_date() |> parse_header_date() do
         timestamp_now = DateTime.utc_now() |> DateTime.to_unix()
 
@@ -104,20 +104,13 @@ defmodule Oasis.HMACToken do
 
   @doc """
     Default implementation of the callback `verify`, only verify the signature.
-
-    See `verify_signature/3` for details.
   """
-  defdelegate verify(conn, token, opts), to: __MODULE__, as: :verify_signature
-
-  @doc """
-  Verify the signature in `token`.
-  """
-  @spec verify_signature(
+  @spec verify(
           conn :: Plug.Conn.t(),
           token :: Oasis.Plug.HMACAuth.token(),
           opts :: Oasis.Plug.HMACAuth.opts()
         ) :: {:ok, term()} | verify_error()
-  def verify_signature(conn, token, opts) do
+  def verify(conn, token, opts) do
     algorithm = opts[:algorithm]
     signed_headers = opts[:signed_headers]
 

@@ -102,7 +102,7 @@ defmodule Oasis.Test.Support.HMAC.TokenWithDate do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts) do
+    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts) do
       # actual:
       # parse & verify date
       # could not before (now - max_age)
@@ -133,7 +133,7 @@ defmodule Oasis.Test.Support.HMAC.TokenWithBody do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
+    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts),
          {:ok, raw_body} <- Oasis.Test.Support.HMAC.read_body(conn) do
       scheme = opts[:scheme] |> String.trim_leading("hmac-") |> String.to_atom()
 

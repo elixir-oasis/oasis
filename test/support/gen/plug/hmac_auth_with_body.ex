@@ -17,7 +17,7 @@ defmodule Oasis.Gen.HMACAuthWithBody do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts) do
+    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts) do
       algorithm = opts[:algorithm]
       raw_body = conn.assigns.raw_body
 

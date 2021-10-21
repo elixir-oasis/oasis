@@ -193,7 +193,7 @@ defmodule Oasis.Gen.HMACAuth do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts) do
+    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts) do
       {:ok, token}
     end
   end
@@ -230,7 +230,7 @@ defmodule Oasis.Gen.HMACAuth do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
+    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts),
          {:ok, _} <- verify_date(conn, token, opts),
          {:ok, _} <- verify_body(conn, token, opts) do
       {:ok, token}

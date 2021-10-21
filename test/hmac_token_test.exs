@@ -30,7 +30,7 @@ defmodule Oasis.HMACTokenTest do
     end
   end
 
-  describe "verify_signature" do
+  describe "verify" do
     test "verify signature failed" do
       c = case_host_only()
 
@@ -50,7 +50,6 @@ defmodule Oasis.HMACTokenTest do
         signed_headers: c.signed_headers
       ]
 
-      assert {:error, :invalid_token} = verify_signature(conn, token, opts)
       assert {:error, :invalid_token} = verify(conn, token, opts)
     end
 
@@ -73,7 +72,6 @@ defmodule Oasis.HMACTokenTest do
         signed_headers: c.signed_headers
       ]
 
-      assert {:ok, _} = verify_signature(conn, token, opts)
       assert {:ok, _} = verify(conn, token, opts)
     end
 
@@ -97,7 +95,6 @@ defmodule Oasis.HMACTokenTest do
         signed_headers: c.signed_headers
       ]
 
-      assert {:ok, _} = verify_signature(conn, token, opts)
       assert {:ok, _} = verify(conn, token, opts)
     end
 
@@ -121,7 +118,6 @@ defmodule Oasis.HMACTokenTest do
         signed_headers: c.signed_headers
       ]
 
-      assert {:ok, _} = verify_signature(conn, token, opts)
       assert {:ok, _} = verify(conn, token, opts)
     end
   end

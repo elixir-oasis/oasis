@@ -19,7 +19,7 @@ defmodule Oasis.Gen.HMACAuthWithDate do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts),
+    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts),
          {:ok, timestamp} <- conn |> get_header_date() |> parse_header_date() do
       timestamp_now = DateTime.utc_now() |> DateTime.to_unix()
 

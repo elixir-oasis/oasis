@@ -16,7 +16,7 @@ defmodule <%= inspect context.module_name %> do
 
   @impl true
   def verify(conn, token, opts) do
-    with {:ok, _} <- Oasis.HMACToken.verify_signature(conn, token, opts) do
+    with {:ok, _} <- Oasis.HMACToken.verify(conn, token, opts) do
       # {:error, :expired}
       # {:error, :invalid_token}
       {:ok, token}
