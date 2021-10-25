@@ -267,7 +267,18 @@ defmodule Oasis.Plug.BearerAuth do
       """
     # ensure loaded the valid security module
     # if a module is not loaded, `function_exported?/3` will return false
-    Code.ensure_loaded!(security)
+    ensure_loaded!(security)
+  end
+
+  def ensure_loaded!(module) do
+    case Code.ensure_loaded(module) do
+      {:module, module} ->
+        module
+
+      {:error, reason} ->
+        raise ArgumentError,
+              "could not load module #{inspect(module)} due to reason #{inspect(reason)}"
+    end
   end
 
   defp raise_invalid_auth({:error, "invalid_request"}) do
@@ -293,5 +304,4 @@ defmodule Oasis.Plug.BearerAuth do
       param_name: "authorization",
       plug_status: 401
   end
-
 end

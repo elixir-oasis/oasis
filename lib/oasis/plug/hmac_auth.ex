@@ -320,11 +320,22 @@ defmodule Oasis.Plug.HMACAuth do
 
     # ensure loaded the valid security module
     # if a module is not loaded, `function_exported?/3` will return false
-    Code.ensure_loaded!(security)
+    ensure_loaded!(security)
   end
 
   defp parse_key_value_pair(pair, splitter),
     do: pair |> String.split(splitter, parts: 2) |> List.to_tuple()
+
+  def ensure_loaded!(module) do
+    case Code.ensure_loaded(module) do
+      {:module, module} ->
+        module
+
+      {:error, reason} ->
+        raise ArgumentError,
+              "could not load module #{inspect(module)} due to reason #{inspect(reason)}"
+    end
+  end
 
   defp raise_invalid_auth({:error, :header_mismatch}) do
     raise BadRequestError,
