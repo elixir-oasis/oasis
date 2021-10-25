@@ -415,7 +415,7 @@ defmodule Mix.Oasis.Router do
 
     content =
       Mix.Oasis.eval_from(apps, "priv/templates/oas.gen.plug/plug/hmac_auth.exs",
-        algorithm: String.to_existing_atom(algorithm),
+        algorithm: String.to_atom(algorithm),
         security: security_module,
         signed_headers: signed_headers
       )
