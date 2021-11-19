@@ -226,11 +226,11 @@ defmodule Mix.Oasis.Router do
   end
 
   defp merge_security_to_operation({acc, operation}, opts) do
-    {_, security_schemes} = opts[:global_security]
+    {global_security, security_schemes} = opts[:global_security]
     security =
-      case {Oasis.Spec.Security.build(operation, security_schemes), opts[:global_security]} do
-        {nil, {global_security, _}} -> global_security
-        {operation_security_schemes, _} -> operation_security_schemes
+      case Oasis.Spec.Security.build(operation, security_schemes) do
+        nil -> global_security
+        operation_security_schemes -> operation_security_schemes
       end
 
     {

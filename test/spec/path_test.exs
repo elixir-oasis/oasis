@@ -62,7 +62,7 @@ defmodule Oasis.Spec.PathTest do
             - name: lang
               in: query
               required: true
-              schema: 
+              schema:
                 type: integer
             - name: content
               in: query
@@ -294,6 +294,30 @@ defmodule Oasis.Spec.PathTest do
 
     assert_raise Oasis.InvalidSpecError,
                  ~r(MUST correspond to a template expression occurring within the path: `/content/{id}`),
+                 fn ->
+                   Path.build(root)
+                 end
+
+    yaml_str = """
+      paths:
+        /content/{id}:
+          get:
+            operationId: content
+            parameters:
+              - name: tag
+                in: query
+                schema:
+                  type: string
+              - name: id
+                in: path
+                schema:
+                  type: integer
+    """
+
+    root = yaml_to_json_schema(yaml_str)
+
+    assert_raise Oasis.InvalidSpecError,
+                 ~r(MUST correspond to a template expression occurring within the path: `/content/{id}`, and the property of required is REQUIRED and its value MUST be true, like: `required: true`),
                  fn ->
                    Path.build(root)
                  end
