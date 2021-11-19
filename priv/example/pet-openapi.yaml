@@ -2,16 +2,12 @@ openapi: 3.1.0
 info:
   title: Webhook Example
   version: 1.0.0
-security: # globle security setting
-  - token: []
 paths:
   # OpenAPI documents all need a paths element
   /pets:
     get:
       summary: List all pets
       operationId: listPets
-      security:
-        - HMACAuth: []
       parameters:
         - name: limit
           in: query
@@ -20,12 +16,6 @@ paths:
           schema:
             type: integer
             format: int32
-        - name: author
-          in: query
-          description: author field test
-          required: false
-          schema:
-            type: string
       responses:
         '200':
           description: A paged array of pets
@@ -33,93 +23,6 @@ paths:
             application/json:    
               schema:
                 $ref: "#/components/schemas/Pets"
-    post:
-      tags:
-        - Room_voucher
-      security:
-        - HMACAuth: []
-      x-oasis-name-space: Openapi.room_voucher
-      requestBody:
-        $ref: "#/components/requestBodies/roomVoucherAssign"
-      responses:
-        "200":
-          description: CBE Room Voucher Assign
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - code
-                properties:
-                  code:
-                    type: integer
-                    enum:
-                      - 0
-        default:
-          $ref: "#/components/responses/error"
-  /get_pet:
-    get:
-      summary: Get a pet infos
-      operationId: GetPet
-      parameters:
-        - name: id
-          in: query
-          description: Get a pet infomation
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: A pet infomation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Pet"
-  /get_pet2/{id}:
-    parameters:
-      - name: lang
-        in: query
-        description: Get a pet infomation
-        required: false
-        schema:
-          type: integer
-    get:
-      summary: Get a pet infos, method 2
-      operationId: GetPet2
-      parameters:
-        - name: id
-          in: path
-          description: Get a pet infomation
-          schema:
-            type: integer
-        - name: lang
-          in: query
-          description: Get a pet infomation
-          required: false
-          schema:
-            type: string
-        - name: author
-          in: query
-          description: author field test
-          required: false
-          schema:
-            type: string
-        # - name: x-cbe-content-sha256
-        - name: x-cbe-content-SHA256
-          in: header
-          description: header field test
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: A pet infomation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Pet"
-
-
 
 webhooks:
   # Each webhook needs a name
@@ -137,38 +40,6 @@ webhooks:
           description: Return a 200 status to indicate that the data was received successfully
 
 components:
-  responses:
-    error:
-      description: error
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/error"
-    UnauthorizedError:
-      description: Access token is missing or invalid
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/error"
-
-  securitySchemes:
-      token:
-        type: http
-        scheme: bearer
-        x-oasis-name-space: Openapi
-        x-oasis-key-to-assigns: token
-      HMACAuth:
-        type: http
-        scheme: hmac-sha256
-        x-oasis-signed-headers: date;x-cbe-content-sha256
-  
-  requestBodies:
-    roomVoucherAssign:
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/roomVoucherAssign"
-        
   schemas:
     Pet:
       required:
@@ -186,45 +57,3 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/Pet"
-
-    phone_number:
-      type: string
-    transaction_id:
-      type: string
-      minLength: 9
-      maxLength: 32
-      example: 6fa459eaee8a3ca4894edb77e160355e
-    room_voucher_id:
-      type: string
-      minLength: 12
-      example: 0RkVXoQ1DL4O
-    room_voucher_num:
-      type: integer
-      example: 1
-
-    error:
-      type: object
-      required:
-        - error_code
-        - error_message
-      properties:
-        error_code:
-          type: integer
-        error_message:
-          type: string
-    roomVoucherAssign:
-      type: object
-      required:
-        - transaction_id
-        - phone
-        - room_voucher_id
-        - room_voucher_num
-      properties:
-        transaction_id:
-          $ref: "#/components/schemas/transaction_id"
-        phone:
-          $ref: "#/components/schemas/phone_number"
-        room_voucher_id:
-          $ref: "#/components/schemas/room_voucher_id"
-        room_voucher_num:
-          $ref: "#/components/schemas/room_voucher_num"
