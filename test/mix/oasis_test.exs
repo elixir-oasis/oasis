@@ -936,7 +936,7 @@ defmodule Mix.OasisTest do
       }
     }
 
-    [_router, _pre_say_hello, _say_hello, bearer_auth_file] = Mix.Oasis.new(paths_spec, name_space: "Security.MyOpenAPI") |> IO.inspect(label: ">>>>>result", limit: :infinity, pretty: true)
+    [_router, _pre_say_hello, _say_hello, bearer_auth_file] = Mix.Oasis.new(paths_spec, name_space: "Security.MyOpenAPI")
 
     {_, path, template, module, binding} = bearer_auth_file
 
