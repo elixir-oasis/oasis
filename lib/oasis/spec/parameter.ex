@@ -23,7 +23,7 @@ defmodule Oasis.Spec.Parameter do
   end
 
   defp check_schema_or_content(parameter, nil, content) when content != nil do
-    Enum.map(content, fn {content_type, media_type} ->
+    Enum.each(content, fn {content_type, media_type} ->
       if media_type["schema"] == nil do
         raise InvalidSpecError,
               "Not found required schema field in media type object #{inspect(content_type)}: #{
@@ -42,7 +42,7 @@ defmodule Oasis.Spec.Parameter do
           }"
   end
 
-  defp check_name(%{"in" => "path", "name" => name} = parameter, path_expr)
+  defp check_name(%{"in" => "path", "name" => name, "required" => true} = parameter, path_expr)
        when is_bitstring(name) do
     if String.contains?(path_expr, name) do
       parameter
@@ -52,6 +52,12 @@ defmodule Oasis.Spec.Parameter do
               path_expr
             }`"
     end
+  end
+
+  defp check_name(%{"in" => "path", "name" => name} = _parameter, path_expr)
+       when is_bitstring(name) do
+    raise InvalidSpecError,
+          "Define a parameter object in path named as: `#{name}`, but missing explicitly define this parameter be with `required: true` in the specification"
   end
 
   defp check_name(%{"in" => "header", "name" => name} = parameter, _path_expr)

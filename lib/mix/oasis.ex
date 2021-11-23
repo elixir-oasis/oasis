@@ -59,7 +59,6 @@ defmodule Mix.Oasis do
     aliases
     |> Enum.map(&Recase.to_snake(&1))
     |> Enum.join("/")
-    |> String.downcase()
   end
 
   def module_alias(name) when is_bitstring(name) do
@@ -113,6 +112,7 @@ defmodule Mix.Oasis do
 
   def copy_from(apps, source_dir, mapping, opts \\ []) when is_list(mapping) do
     roots = Enum.map(apps, &to_app_source(&1, source_dir))
+    create_file_opts = Keyword.take(opts, [:force, :quiet])
 
     for {format, target, source_file_path, module_name, binding} <- mapping do
       source =
@@ -123,7 +123,6 @@ defmodule Mix.Oasis do
 
       binding = Map.put(binding, :module_name, module_name)
       file_contents = EEx.eval_file(source, context: binding) |> Code.format_string!()
-      create_file_opts = Keyword.take(opts, [:force, :quiet])
 
       case format do
         :eex ->

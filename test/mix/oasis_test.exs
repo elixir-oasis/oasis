@@ -896,6 +896,61 @@ defmodule Mix.OasisTest do
     end)
   end
 
+  test "security of operation overrides top-level security" do
+    paths_spec = %{
+      "security" => [
+        %{"myHMACAuth" => []}
+      ],
+      "paths" => %{
+        "/say_hello" => %{
+          "get" => %{
+            "parameters" => %{
+              "query" => [
+                %{
+                  "name" => "username",
+                  "required" => true,
+                  "schema" => %{"type" => "string"}
+                }
+              ]
+            },
+            "operationId" => "hello",
+            "x-oasis-name-space" => "Wont.Use",
+            "security" => [
+              %{"myBearerAuth" => []}
+            ]
+          }
+        }
+      },
+      "components" => %{
+        "securitySchemes" => %{
+          "myBearerAuth" => %{
+            "scheme" => "bearer",
+            "type" => "http"
+          },
+          "myHMACAuth" => %{
+            "scheme" => "hmac-sha256",
+            "type" => "http",
+            "x-oasis-signed-headers" => "date;x-cbe-content-sha256"
+          }
+        }
+      }
+    }
+
+    [_router, _pre_say_hello, _say_hello, bearer_auth_file] = Mix.Oasis.new(paths_spec, name_space: "Security.MyOpenAPI")
+
+    {_, path, template, module, binding} = bearer_auth_file
+
+    assert path == "lib/security/my_open_api/my_bearer_auth.ex"
+    assert template == "bearer_token.ex"
+    assert module == Security.MyOpenApi.MyBearerAuth
+    assert is_list(binding.security)
+
+    [content] = binding.security
+    assert content =~ ~s/Oasis.Plug.BearerAuth/
+    assert content =~ ~s/security: #{inspect(module)}/
+    assert (content =~ ~s/key_to_assigns:/) == false
+  end
+
   test "new/2 with not supported security scheme" do
     paths_spec = %{
       "paths" => %{
