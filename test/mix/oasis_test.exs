@@ -828,7 +828,7 @@ defmodule Mix.OasisTest do
     assert content =~ ~s/key_to_assigns: :id/
   end
 
-  test "new/2 with global bearer token" do
+  test "new/2 with which security mechanisms can be used for operation object" do
     paths_spec = %{
       "paths" => %{
         "/say_hello" => %{
@@ -881,18 +881,29 @@ defmodule Mix.OasisTest do
     |> Enum.chunk_every(3)
     |> Enum.map(fn(files) ->
 
-      [_pre_plug, _plug, bearer_auth_file] = files
+      [_pre_plug, plug, auth_file] = files
 
-      {_, path, template, module, binding} = bearer_auth_file
-
-      assert path == "lib/oasis/gen/global_bearer_auth.ex"
-      assert template == "bearer_token.ex"
-      assert module == Oasis.Gen.GlobalBearerAuth
-
+      {_, plug_path, _, _, _} = plug
+      {_, path, "bearer_token.ex", module, binding} = auth_file
       [content] = binding.security
-      assert content =~ ~s/Oasis.Plug.BearerAuth/
-      assert content =~ ~s/key_to_assigns: :user/
-      assert content =~ ~s/security: Oasis.Gen.GlobalBearerAuth/
+
+      case path do
+        "lib/oasis/gen/global_bearer_auth.ex" ->
+          assert plug_path == "lib/oasis/gen/post_save.ex"
+          assert module == Oasis.Gen.GlobalBearerAuth
+
+          assert content =~ ~s/Oasis.Plug.BearerAuth/
+          assert content =~ ~s/key_to_assigns: :user/
+          assert content =~ ~s/security: Oasis.Gen.GlobalBearerAuth/
+
+        "lib/oasis/gen/hello_bearer_auth.ex" ->
+          assert plug_path == "lib/oasis/gen/hello.ex"
+          assert module == Oasis.Gen.HelloBearerAuth
+
+          assert content =~ ~s/Oasis.Plug.BearerAuth/
+          assert content =~ ~s/key_to_assigns: :id/
+          assert content =~ ~s/security: Oasis.Gen.HelloBearerAuth/
+      end
     end)
   end
 
