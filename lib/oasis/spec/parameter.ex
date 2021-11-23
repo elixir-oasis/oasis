@@ -57,9 +57,7 @@ defmodule Oasis.Spec.Parameter do
   defp check_name(%{"in" => "path", "name" => name} = _parameter, path_expr)
        when is_bitstring(name) do
     raise InvalidSpecError,
-          "The name field: `#{name}` MUST correspond to a template expression occurring within the path: `#{
-            path_expr
-          }`, and the property of required is REQUIRED and its value MUST be true, like: `required: true`"
+          "Define a parameter object in path named as: `#{name}`, but missing explicitly define this parameter be with `required: true` in the specification"
   end
 
   defp check_name(%{"in" => "header", "name" => name} = parameter, _path_expr)

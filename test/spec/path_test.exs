@@ -286,6 +286,7 @@ defmodule Oasis.Spec.PathTest do
                   type: string
               - name: typo_id
                 in: path
+                required: true
                 schema:
                   type: integer
     """
@@ -308,7 +309,7 @@ defmodule Oasis.Spec.PathTest do
                 in: query
                 schema:
                   type: string
-              - name: id
+              - name: typo_id
                 in: path
                 schema:
                   type: integer
@@ -317,7 +318,7 @@ defmodule Oasis.Spec.PathTest do
     root = yaml_to_json_schema(yaml_str)
 
     assert_raise Oasis.InvalidSpecError,
-                 ~r(MUST correspond to a template expression occurring within the path: `/content/{id}`, and the property of required is REQUIRED and its value MUST be true, like: `required: true`),
+                 ~r(Define a parameter object in path named as: `typo_id`, but missing explicitly define this parameter be with `required: true` in the specification),
                  fn ->
                    Path.build(root)
                  end

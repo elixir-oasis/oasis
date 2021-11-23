@@ -896,7 +896,7 @@ defmodule Mix.OasisTest do
     end)
   end
 
-  test "new/2 with global security and local security" do
+  test "security of operation overrides top-level security" do
     paths_spec = %{
       "security" => [
         %{"myHMACAuth" => []}
