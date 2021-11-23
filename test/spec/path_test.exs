@@ -320,7 +320,8 @@ defmodule Oasis.Spec.PathTest do
     root = yaml_to_json_schema(yaml_str)
 
     assert_raise Oasis.InvalidSpecError,
-                 ~r(Define a parameter object in path named as: `id`, but missing explicitly define this parameter be with `required: true` in the specification),
+                 "Define a parameter object in path named as: `id` within the path: `/content/{id}`, " <>
+                   "but missing explicitly define this parameter be with `required: true` in the specification",
                  fn ->
                    Path.build(root)
                  end
