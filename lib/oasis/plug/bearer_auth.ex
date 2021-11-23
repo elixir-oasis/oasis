@@ -237,8 +237,10 @@ defmodule Oasis.Plug.BearerAuth do
   end
 
   defp verify(conn, security, crypto, token, options) do
+    # ensure loaded the valid security module
+    # if a module is not loaded, `function_exported?/3` will return false
     result =
-      if function_exported?(security, :verify, 3) == true do
+      if Code.ensure_loaded?(security) and function_exported?(security, :verify, 3) do
         security.verify(conn, token, options)
       else
         Oasis.Token.verify(crypto, token)
@@ -255,7 +257,7 @@ defmodule Oasis.Plug.BearerAuth do
   end
 
   defp security(conn, options) do
-    security = options[:security] ||
+    options[:security] ||
       raise """
       no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
       Please ensure your specification defines a valid `x-oasis-name-space` in
@@ -265,20 +267,6 @@ defmodule Oasis.Plug.BearerAuth do
           scheme: bearer
           x-oasis-name-space: MyOwnApplication
       """
-    # ensure loaded the valid security module
-    # if a module is not loaded, `function_exported?/3` will return false
-    ensure_loaded!(security)
-  end
-
-  def ensure_loaded!(module) do
-    case Code.ensure_loaded(module) do
-      {:module, module} ->
-        module
-
-      {:error, reason} ->
-        raise ArgumentError,
-              "could not load module #{inspect(module)} due to reason #{inspect(reason)}"
-    end
   end
 
   defp raise_invalid_auth({:error, "invalid_request"}) do

@@ -205,7 +205,7 @@ defmodule Oasis.Plug.HMACAuth do
     verify_result =
       with {:ok, token} <- parse_hmac_auth(conn, algorithm),
            {:ok, _} <- validate_signed_headers(token, signed_headers) do
-        if function_exported?(security, :verify, 3) do
+        if Code.ensure_loaded?(security) and function_exported?(security, :verify, 3) do
           security.verify(conn, token, options)
         else
           Oasis.HMACToken.verify(conn, token, options)
@@ -305,37 +305,21 @@ defmodule Oasis.Plug.HMACAuth do
   end
 
   defp security(conn, options) do
-    security =
-      options[:security] ||
-        raise """
-        no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
-        Please ensure your specification defines a valid field `x-oasis-name-space` in
-        security scheme object or use oasis default value, for example:
+    options[:security] ||
+      raise """
+      no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
+      Please ensure your specification defines a valid field `x-oasis-name-space` in
+      security scheme object or use oasis default value, for example:
 
-            type: http
-            scheme: hmac-sha256
-            x-oasis-signed-headers: x-oasis-date;host
-            x-oasis-name-space: MyOwnApplication
-        """
-
-    # ensure loaded the valid security module
-    # if a module is not loaded, `function_exported?/3` will return false
-    ensure_loaded!(security)
+          type: http
+          scheme: hmac-sha256
+          x-oasis-signed-headers: x-oasis-date;host
+          x-oasis-name-space: MyOwnApplication
+      """
   end
 
   defp parse_key_value_pair(pair, splitter),
     do: pair |> String.split(splitter, parts: 2) |> List.to_tuple()
-
-  def ensure_loaded!(module) do
-    case Code.ensure_loaded(module) do
-      {:module, module} ->
-        module
-
-      {:error, reason} ->
-        raise ArgumentError,
-              "could not load module #{inspect(module)} due to reason #{inspect(reason)}"
-    end
-  end
 
   defp raise_invalid_auth({:error, :header_mismatch}) do
     raise BadRequestError,
