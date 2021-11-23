@@ -298,7 +298,9 @@ defmodule Oasis.Spec.PathTest do
                  fn ->
                    Path.build(root)
                  end
+  end
 
+  test "inexplicitly define a parameter object with `required: true`" do
     yaml_str = """
       paths:
         /content/{id}:
@@ -309,7 +311,7 @@ defmodule Oasis.Spec.PathTest do
                 in: query
                 schema:
                   type: string
-              - name: typo_id
+              - name: id
                 in: path
                 schema:
                   type: integer
@@ -318,7 +320,7 @@ defmodule Oasis.Spec.PathTest do
     root = yaml_to_json_schema(yaml_str)
 
     assert_raise Oasis.InvalidSpecError,
-                 ~r(Define a parameter object in path named as: `typo_id`, but missing explicitly define this parameter be with `required: true` in the specification),
+                 ~r(Define a parameter object in path named as: `id`, but missing explicitly define this parameter be with `required: true` in the specification),
                  fn ->
                    Path.build(root)
                  end
