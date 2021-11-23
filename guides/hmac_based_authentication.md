@@ -11,7 +11,7 @@ Then we need a mechanism based on `HTTP Authorization Header` to authenticate ac
 3. *(Optional)* Make sure that the `HTTP Body` has not been tampered with.
 4. *(Optional)* Make sure that the interval between request start-time and the current time does not exceed a certain critical value.
 
-`Oasis` provides a complete set of scaffolding to easily build such a set of certification services.
+Oasis provides a complete set of scaffolding to easily build such a set of certification services.
 
 ## Protocol
 
