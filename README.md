@@ -46,6 +46,7 @@ Oasis does not cover the full OpenAPI specification, so far the implements conta
 * [Schema Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#schemaObject)
 * [Security Scheme Object](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
   * Bearer Authentication, please see `Oasis.Plug.BearerAuth` for details.
+  * HMAC Authentication, please see `Oasis.Plug.HMACAuth` for details.
 
 We also have some OpenAPI Specification Extensions defined for use, please see [our Specification Extensions Guide](https://hexdocs.pm/oasis/specification_ext.html).
 

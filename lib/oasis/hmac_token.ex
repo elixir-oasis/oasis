@@ -105,7 +105,7 @@ defmodule Oasis.HMACToken do
   @optional_callbacks verify: 3
 
   @doc """
-    Default implementation of the callback `verify`, only verify the signature.
+  Default implementation of the callback `verify`, only verify the signature.
   """
   @spec verify(
           conn :: Plug.Conn.t(),

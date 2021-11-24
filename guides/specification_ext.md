@@ -135,3 +135,8 @@ paths:
       security:
         - bearerAuth: []
 ```
+
+## Signed Headers for HAMC Authentication
+
+`"x-oasis-signed-headers"`, requried when use HMAC authentication in `security` scheme object, this field represents which HTTP header(s) will be used
+into signature, please see [HMAC-based authentication](hmac_based_authentication.html) document for details.
