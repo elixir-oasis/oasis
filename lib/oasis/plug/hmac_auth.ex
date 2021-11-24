@@ -185,7 +185,7 @@ defmodule Oasis.Plug.HMACAuth do
     * `:signed_headers`, required, defines HTTP request headers added to the signature, the provided headers are required in the request,
       and both in client/server side will use them into signature in the explicit definition order. (e.g., `"x-oasis-date;host"`)
   """
-  @spec hmac_auth(conn :: Plug.Conn.t(), options :: opts()) :: Plug.Conn.t()
+  @spec hmac_auth(conn :: Plug.Conn.t(), opts :: opts()) :: Plug.Conn.t()
   def hmac_auth(conn, opts) do
     opts = ensure_options(conn, opts)
     algorithm = opts[:algorithm]
