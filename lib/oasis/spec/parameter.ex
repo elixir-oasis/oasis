@@ -57,7 +57,8 @@ defmodule Oasis.Spec.Parameter do
   defp check_name(%{"in" => "path", "name" => name} = _parameter, path_expr)
        when is_bitstring(name) do
     raise InvalidSpecError,
-          "Define a parameter object in path named as: `#{name}`, but missing explicitly define this parameter be with `required: true` in the specification"
+          "Define a parameter object in path named as: `#{name}` within the path: `#{path_expr}`, but missing explicitly define this " <>
+          "parameter be with `required: true` in the specification"
   end
 
   defp check_name(%{"in" => "header", "name" => name} = parameter, _path_expr)

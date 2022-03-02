@@ -1,79 +1,84 @@
 # HMAC-based Authentication
 
-## Scenario
+## Backgroupd
 
-Sometimes our services need to allow other specific backend applications to access.
+*STATEMENT*: Currently there is no standard HMAC authentication definition in the OpenAPI v3.1.0 specification,
+we implement this function to add an `hmac-<algorithm>` as the corresponding `scheme` field to `http`
+type of the security scheme object in YAML/JSON specification, thanks for some public HMAC services or API design as references:
 
-Then we need a mechanism based on `HTTP Authorization Header` to authenticate access permissions to meet the following requirements:
+  * [Azure REST API Authentication HMAC](https://docs.microsoft.com/en-us/azure/azure-app-configuration/rest-api-authentication-hmac)
+  * [AWS S3 sigv4 Authentication](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html)
+  * [AWS general sigv4 Authentication example](https://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html)
+
+We need a mechanism based on the [HTTP Authorization Header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization) to
+authenticate access permissions to meet the following requirements:
 
 1. Make sure that the request is from a trusted client.
-2. Make sure that the `HTTP Header` has not been tampered with.
-3. *(Optional)* Make sure that the `HTTP Body` has not been tampered with.
-4. *(Optional)* Make sure that the interval between request start-time and the current time does not exceed a certain critical value.
+2. Make sure that the some key HTTP headers are not tampered.
+3. *(Optional)* Make sure that the HTTP body is not tampered.
+4. *(Optional)* Make sure that the interval between the request send-time and the server received-time does not exceed a certain critical value.
 
-`Oasis` provides a complete set of scaffolding to easily build such a set of certification services.
+Oasis provides a complete set of scaffolding to easily build such a set of certification services.
 
 ## Protocol
 
-### Notice
-
-Requests must be transmitted over `TLS`.
-
-### Reference
-
-Here are some related implementation by other services:
-
-* https://docs.microsoft.com/en-us/azure/azure-app-configuration/rest-api-authentication-hmac
-* https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html
-* https://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html
+Recommend HTTP request sent be transmitted over `TLS/SSL` on production.
 
 ### HTTP Authorization Header
 
-The client request must contains header:
+The client request must contains an `Authorization` HTTP header in this syntax:
 
-`Authorization: HMAC-uppercase(<algorithm>) Credential=<value>&SignedHeaders=<value>&Signature=<value>`
+    Authorization: HMAC-<Algorithm> Credential=<value1>&SignedHeaders=<value2>&Signature=<value3>
 
-* `Algorithm`
-    * Some digest/hash algorithm, see [Algorithms Supported](Oasis.Plug.HMACAuth.html#module-algorithms-supported) for details.
-* `Credential`
-    * ID of the access key used to signature and verify, must be defined in `Oasis.HMACToken.Crypto`.
-* `SignedHeaders`
-    * HTTP request header names, separated by semicolons, required to sign the request in your defined order of `x-oasis-signed-headers` spec, the HTTP headers must be correctly provided with the request as well, do not use white spaces.
-* `Signature`
-    * Base64 encoded HMAC-<algorithm> hash of the String-To-Sign, it uses the value(aka Secret) of the access key identified by Credential
-    * pseudo code as below:
-        * `base64_encode(hmac-<algorithm>(String-To-Sign, Secret))`
-* `String-To-Sign`
-    * `String-To-Sign` = `HTTP_METHOD` + `'\n'` + `path_and_query` + `'\n'` + `signed_headers_values`
-    * `HTTP_METHOD`, uppercase HTTP method name used with the request.
-    * `path_and_query`, concatenation of request absolute URI and query string.
-    * `signed_headers_values`, semicolon-separated values of all HTTP request headers listed in `SignedHeaders`.
+* `<Algorithm>`, the algorithm name(in uppercase, e.g. `SHA256`) used to compute a Message Authentication Code of type hmac, supported algorithms please
+  see [here](Oasis.Plug.HMACAuth.html#module-supported-algorithms). 
+* `Credential`, the ID of the access key used to identify for server.
+* `SignedHeaders`, the HTTP header names separated by semicolons(`;`), the values of these headers are required to signature the request in your defined order,
+  the values of these HTTP headers should be properly provided in this request as well, do not use white spaces for the HTTP header name.
+* `Signature`, a hash <Algorithm> with the `String-to-Sign`, and the value(aka `Secret`) of the access key to the `Credential`, and then base64 encode the hashed result.
 
-### Example
-Assume we define `x-oasis-signed-headers: x-oasis-date;host` as a part of the security scheme, the following HTTP headers in request:
+About the `String-to-Sign`, please see as below:
 
-  ```text
-  x-oasis-date: Mon, 13 Sep 2021 03:21:00 GMT
-  Host: www.foo.bar
-  ```
+*String-to-Sign* =
+  *HTTP_METHOD* + "\n" +
+  *path_and_query_string* + "\n" +
+  *values_of_signed_headers*
 
-In this case, the concatenated String-To-Sign as below:
+| Variable | Description |
+| --- | --- |
+| *HTTP_METHOD* | The HTTP method of the request in uppercase, e.g. "POST" |
+| *path_and_query_string* | The absolute URI with query string(if existed) of the request, e.g. "/foo/bar?a=1" |
+| *values_of_signed_headers* | The values of all HTTP request headers listed in `SignedHeaders`, use semicolons(`;`) to separate the values in order of `SignedHeaders`. |
 
-  ```text
-  String-To-Sign =
-  "GET" + "\n"
-  "/post?a=1&b=2" + "\n"
-  "Mon, 13 Sep 2021 03:21:00 GMT;www.foo.bar"
-  ```
+Example:
 
-Reference the best practices, the above example missing the key important variable Body of HTTP request, it should be used into the signature even if there is no body.
+    String-to-Sign =
+        "POST" + "\n" +
+        "/new?version=1" + "\n" +
+        "2021-11-24 06:43:20.393420Z;foo.bar.host;{\"name\":\"test\",\"type\":1}"
 
-Since the way to concatenate String-To-Sign is a fixed step, we can customize a new HTTP header field to represent the Body into the SignedHeaders, and keep the value of the new field in the request for the service side verification, for example:
+Let's take this pair of access key for example:
 
-  ```text
-  x-oasis-content-sha256: base64_encode(SHA256(body))
-  x-oasis-content-md5: base64_encode(MD5(body))
-  ```
+Access Key ID | Access Key Secret
+----- | -----
+*mykey_abc* | *123456789*
+
+Notice: the value of the access key secret should be only the client and server know it, and DO NOT use in plaintext in any transmission.
+
+The corresponding HTTP headers of the request are:
+
+    Host: foo.bar.host
+    Date: 2021-11-24 06:43:20.393420Z
+    Authorization: HMAC-SHA256 Credential=mykey_abc&SignedHeaders=date;host;body&Signature=oSBomxpJWcwlhVkif5LV80zecDLpts9Z13+cth1NKV4=
+    Body: "{\"name\":\"test\",\"type\":1}"
+
+Refer the best practices, please try to keep the dynamic part of request into the signature.
+
+The way to concatenate a `String-To-Sign` is fixed, but there is a flexible customization to define your HTTP headers to sign via `SignedHeaders` field,
+properly keep the value(s) of the signed header(s) for the server side's verification, here are some pseudocode for example:
+
+    x-oasis-content-sha256: base64_encode(SHA256(body))
+    x-oasis-content-md5: base64_encode(MD5(body))
 
 ## Tutorial
 
@@ -82,7 +87,7 @@ Since the way to concatenate String-To-Sign is a fixed step, we can customize a 
 ```yaml
 # priv/oas/main.yaml
 
-openapi: "3.0.0"
+openapi: "3.1.0"
 info:
   title: My API Title
   version: "1.0"
@@ -114,12 +119,18 @@ components:
   securitySchemes:
     HMACAuth:
       type: http
-      # will use sha256 as digest algorithm
+      # will use hmac hash sha256 algorithm
       scheme: hmac-sha256
       # will verify host, request datetime and body hash
       x-oasis-signed-headers: host;x-oasis-date;x-oasis-body-sha256
 ```
 
+The `x-oasis-signed-headers` field is a specification extension to define which HTTP header(s) will be used into signature.
+
+Some HTTP client libraries don't let you set the HTTP "Date" header, in this case, we can define an arbitrary naming(should be started with "x-") to represent
+date related, for example, the above specification example defines an `x-oasis-date` HTTP header.
+
+In the above specification example, the `x-oasis-body-sha256` is a customization HTTP header field, you can name it in a arbitrary naming(should be started with "x-").
 
 ### 2. Generate Code
 
@@ -128,11 +139,10 @@ components:
 mix oas.gen.plug --file priv/oas/main.yaml
 ```
 
-Then you will get several generated files:
+Then you will get some similar generated files:
 
 ```elixir
 # lib/oasis/gen/pre_post_test_hmac.ex
-
 defmodule Oasis.Gen.PrePostTestHMAC do
   # NOTICE: Please DO NOT write any business code in this module, since it will always be overridden when
   # run `mix oas.gen.plug` task command with the OpenAPI Specification file.
@@ -177,7 +187,6 @@ end
 
 ```elixir
 # lib/oasis/gen/hmac_auth.ex
-
 defmodule Oasis.Gen.HMACAuth do
   # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file
   # in the first time, and then it WILL NOT be modified in the future generation command(s) once this file exists,
@@ -200,15 +209,11 @@ defmodule Oasis.Gen.HMACAuth do
 end
 ```
 
-### 3. Provide your own `crypto_config/3` and `verify/3` logics
-
-* Example:
+### 3. Implement your `crypto_config/3` and `verify/3` callbacks.
 
 ```elixir
 # lib/oasis/gen/hmac_auth.ex
-
 defmodule Oasis.Gen.HMACAuth do
-  
   # NOTICE: This module is generated when run `mix oas.gen.plug` task command with the OpenAPI Specification file
   # in the first time, and then it WILL NOT be modified in the future generation command(s) once this file exists,
   # please write the crypto-related configuration to the bearer token in this module.
@@ -223,8 +228,8 @@ defmodule Oasis.Gen.HMACAuth do
     # Here just an example
     # You should provide these sensitive information from config file or database
     %Crypto{
-      credential: "test_client",
-      secret: "secret"
+      credential: "mykey_abc",
+      secret: "123456789"
     }
   end
 
@@ -283,6 +288,5 @@ defmodule Oasis.Gen.HMACAuth do
   defp hmac(subtype, secret, content) do
     Base.encode64(:crypto.mac(:hmac, subtype, secret, content))
   end
-  
 end
 ```

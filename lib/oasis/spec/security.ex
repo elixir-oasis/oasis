@@ -1,7 +1,7 @@
 defmodule Oasis.Spec.Security do
   @moduledoc false
 
-  @hmac_algorithms_supported ~w(sha sha224 sha256 sha384 sha512 sha3_224 sha3_256 sha3_384 sha3_512 blake2b blake2s md4 md5 ripemd160)
+  @hmac_algorithms_supported for alg <- :crypto.supports(:hashs), do: Atom.to_string(alg)
 
   def build(%{"security" => security_requirement_objects}, security_schemes)
       when is_map(security_schemes) and security_schemes != %{}

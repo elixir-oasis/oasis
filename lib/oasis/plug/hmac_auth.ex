@@ -1,9 +1,16 @@
 defmodule Oasis.Plug.HMACAuth do
-  @moduledoc ~S"""
-  Functionality for providing HMAC HTTP authentication.
+  @moduledoc """
+  Functionality for providing an HMAC HTTP authentication.
+
+  *STATEMENT*: Currently there is no standard HMAC authentication definition in the OpenAPI v3.1.0 specification,
+  we implement this function to add an `hmac-<algorithm>` as the corresponding `scheme` field to `http`
+  type of the security scheme, thanks for some public HMAC services or API design as references:
+
+    * [Azure REST API Authentication HMAC](https://docs.microsoft.com/en-us/azure/azure-app-configuration/rest-api-authentication-hmac)
+    * [AWS S3 sigv4 Authentication](https://docs.aws.amazon.com/AmazonS3/latest/API/sigv4-auth-using-authorization-header.html)
+    * [AWS general sigv4 Authentication example](https://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html)
 
   It is recommended to only use this module in production if SSL is enabled and enforced.
-  See `Plug.SSL` for more information.
 
   ## Usage
 
@@ -20,7 +27,7 @@ defmodule Oasis.Plug.HMACAuth do
     security: Oasis.Gen.HMACAuth
   )
 
-  # lib/oasis/gen/HMAC_auth.ex
+  # lib/oasis/gen/hmac_auth.ex
   defmodule Oasis.Gen.HMACAuth do
     @behaviour Oasis.HMACToken
 
@@ -35,7 +42,7 @@ defmodule Oasis.Plug.HMACAuth do
   end
   ```
 
-  Or directly to Oasis.Plug.HMACAuth:
+  Or directly plug `#{inspect(__MODULE__)}`:
 
   ```elixir
   # lib/pre_handler.ex
@@ -56,10 +63,8 @@ defmodule Oasis.Plug.HMACAuth do
     end
   end
   ```
-  In general, when we define the HMAC security scheme like [Azure](https://docs.microsoft.com/en-us/azure/azure-app-configuration/rest-api-authentication-hmac)
-  of the OpenAPI Specification in our API design document, for example:
 
-  Here, apply the security globally to all operations:
+  Let's take an example from a YAML specification, we apply a global security to all operation objects:
 
   ```yaml
   openapi: 3.1.0
@@ -76,13 +81,13 @@ defmodule Oasis.Plug.HMACAuth do
     - HMACAuth: []
   ```
 
-  The above arbitrary name for the security scheme `HMACAuth` will be transferred into a generated module (see the mentioned "Oasis.Gen.HMACAuth"
+  The above arbitrary name `"HMACAuth"` for the security scheme will be transferred into a generated module (see the above mentioned "Oasis.Gen.HMACAuth"
   module) to provide the required crypto-related configuration, and use it as the value to the `:security` option of `hmac_auth/2`.
 
-  By default, the generated `HMACAuth` module will inherit the module name space in order from the paths object, the operation object if they defined
-  the `x-oasis-name-space` field, or defaults to `Oasis.Gen` if there are no any specification defined, as an optional, we can add an `x-oasis-name-space`
-  field as a specification extension of the security scheme object to override the module name space, meanwhile, the optional `--name-space` argument to the
-  `mix oas.gen.plug` command line is in the highest priority to set the name space of the generated module.
+  By default, the generated `"HMACAuth"` module will inherit the module name space in order from the paths object, and then the operation object if they defined
+  an `x-oasis-name-space` field, or defaults to `Oasis.Gen` if there are no any specification defined. As an option, we can add an `x-oasis-name-space`
+  field as a specification extension of the security scheme object to override the generated module's name space, meanwhile, the optional `--name-space` argument to the
+  `mix oas.gen.plug` command line is in the highest priority to set the name space of the all generated modules.
 
   ```yaml
   components:
@@ -94,60 +99,43 @@ defmodule Oasis.Plug.HMACAuth do
         x-oasis-name-space: MyAuth
   ```
 
-  In the above example, the final generated module name of `HMACAuth` is `MyAuth.HMACAuth` when there is no `--name-space` argument input to generate.
+  In the above example, the final generated module name of `"HMACAuth"` is `"MyAuth.HMACAuth"` when there is no `--name-space` argument of mix task input.
 
-  After we define HMAC authentication into the spec, then run `mix oas.gen.plug` task with this spec file (via `--file` argument), there will
+  After we define the HMAC authentication into the specification, then run `mix oas.gen.plug` task with this spec file (via `--file` argument), there will
   generate the above similar code to the related module file as long as it does not exist, it also follows the name space definition
-  of the module, and the generation does not override it once the file existed, we need to further edit this file to provide a crypto-related
+  to that module, and the generation does not override it once the file existed, we need to further edit this file to provide a crypto-related
   configuration in your preferred way.
 
-  If we need a customization to verify the HMAC token, we can implement a callback function `c:Oasis.HMACToken.verify/3`
-  to this scenario.
+  If we need a customization to verify the HMAC token, we can implement a callback function `c:Oasis.HMACToken.verify/3` to this scenario.
 
-  ```elixir
-  # lib/hmac_auth.ex
-  defmodule HMACAuth do
-    @behaviour Oasis.HMACToken
+      # lib/hmac_auth.ex
+      defmodule HMACAuth do
+        @behaviour Oasis.HMACToken
 
-    @impl true
-    def crypto_config(conn, options, credential) do
-      ...
-    end
+        @impl true
+        def crypto_config(conn, options, credential) do
+          ...
+        end
 
-    @impl true
-    def verify(conn, token, options) do
-      # write your rules to verify the token,
-      # and return the expected results in:
-      #   {:ok, token}, verified
-      #   {:error, :expired}, expired token
-      #   {:error, :invalid_token}, invalid token
-    end
-  end
-  ```
+        @impl true
+        def verify(conn, token, options) do
+          # write your rules to verify the token,
+          # and return the expected results in:
+          #   {:ok, token}, verified
+          #   {:error, :expired}, expired token
+          #   {:error, :invalid_token}, invalid token
+        end
+      end
 
-  ## Algorithms Supported
-  We recommend using `sha256` to verify the request, but it also supports the following schemes:
-  - `sha`
-  - `sha224`
-  - `sha256`
-  - `sha387`
-  - `sha512`
-  - `sha3_224`
-  - `sha3_256`
-  - `sha3_384`
-  - `sha3_512`
-  - `blake2b`
-  - `blake2s`
-  - `md4`
-  - `md5`
-  - `ripemd160`
+  ## Supported Algorithms
 
-  You could see [Erlang/OTP docs - HMAC](https://erlang.org/doc/apps/crypto/algorithm_details.html#hmac)  for more details.
+  Here we use `:crypto.mac/4` to compute a MAC of type `:hmac` from data, the completed supported algorithms can be found in
+  the [hash algorithm type](https://www.erlang.org/doc/man/crypto.html#type-hash_algorithm) of `:crypto`, see
+  [Erlang/OTP crypto user's guide - HMAC](https://erlang.org/doc/apps/crypto/algorithm_details.html#hmac) for more details.
   """
 
   import Plug.Conn
   alias Oasis.BadRequestError
-  require Logger
 
   @type algorithm ::
           :sha
@@ -173,19 +161,20 @@ defmodule Oasis.Plug.HMACAuth do
 
   @behaviour Plug
 
-  @auth_keys ~w(Credential Signature SignedHeaders)
-  @auth_key_mapping for k <- @auth_keys,
+  @auth_key_mapping for k <- ~w(Credential Signature SignedHeaders),
                         into: %{},
                         do: {k, k |> Recase.to_snake() |> String.to_atom()}
 
+  @doc false
   def init(options), do: options
 
+  @doc false
   def call(conn, options) do
     hmac_auth(conn, options)
   end
 
   @doc """
-  Higher level usage of HMAC HTTP authentication.
+  High-level usage of HMAC HTTP authentication.
 
   See the module docs for examples.
 
@@ -193,22 +182,23 @@ defmodule Oasis.Plug.HMACAuth do
 
     * `:algorithm`, required, see [Algorithms Supported](#module-algorithms-supported) for details.
     * `:security`, required, a module be with `Oasis.HMACToken` behaviour.
-    * `:signed_headers`, required, defines HTTP request headers added to the signature, the provided headers are required in the request, and both in client/server side will use them into signature in the explicit definition order. (e.g., `x-oasis-date;host`)
+    * `:signed_headers`, required, defines HTTP request headers added to the signature, the provided headers are required in the request,
+      and both in client/server side will use them into signature in the explicit definition order. (e.g., `"x-oasis-date;host"`)
   """
-  @spec hmac_auth(conn :: Plug.Conn.t(), options :: opts()) :: Plug.Conn.t()
-  def hmac_auth(conn, options) do
-    options = ensure_options(conn, options)
-    algorithm = options[:algorithm]
-    security = options[:security]
-    signed_headers = options[:signed_headers]
+  @spec hmac_auth(conn :: Plug.Conn.t(), opts :: opts()) :: Plug.Conn.t()
+  def hmac_auth(conn, opts) do
+    opts = ensure_options(conn, opts)
+    algorithm = opts[:algorithm]
+    security = opts[:security]
+    signed_headers = opts[:signed_headers]
 
     verify_result =
       with {:ok, token} <- parse_hmac_auth(conn, algorithm),
            {:ok, _} <- validate_signed_headers(token, signed_headers) do
-        if function_exported?(security, :verify, 3) do
-          security.verify(conn, token, options)
+        if Code.ensure_loaded?(security) and function_exported?(security, :verify, 3) do
+          security.verify(conn, token, opts)
         else
-          Oasis.HMACToken.verify(conn, token, options)
+          Oasis.HMACToken.verify(conn, token, opts)
         end
       end
 
@@ -305,37 +295,21 @@ defmodule Oasis.Plug.HMACAuth do
   end
 
   defp security(conn, options) do
-    security =
-      options[:security] ||
-        raise """
-        no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
-        Please ensure your specification defines a valid field `x-oasis-name-space` in
-        security scheme object or use oasis default value, for example:
+    options[:security] ||
+      raise """
+      no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
+      Please ensure your specification defines a valid field `x-oasis-name-space` in
+      security scheme object or use oasis default value, for example:
 
-            type: http
-            scheme: hmac-sha256
-            x-oasis-signed-headers: x-oasis-date;host
-            x-oasis-name-space: MyOwnApplication
-        """
-
-    # ensure loaded the valid security module
-    # if a module is not loaded, `function_exported?/3` will return false
-    ensure_loaded!(security)
+          type: http
+          scheme: hmac-sha256
+          x-oasis-signed-headers: x-oasis-date;host
+          x-oasis-name-space: MyOwnApplication
+      """
   end
 
   defp parse_key_value_pair(pair, splitter),
     do: pair |> String.split(splitter, parts: 2) |> List.to_tuple()
-
-  def ensure_loaded!(module) do
-    case Code.ensure_loaded(module) do
-      {:module, module} ->
-        module
-
-      {:error, reason} ->
-        raise ArgumentError,
-              "could not load module #{inspect(module)} due to reason #{inspect(reason)}"
-    end
-  end
 
   defp raise_invalid_auth({:error, :header_mismatch}) do
     raise BadRequestError,

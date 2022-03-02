@@ -1,9 +1,8 @@
 defmodule Oasis.Plug.BearerAuth do
-  @moduledoc ~S"""
+  @moduledoc """
   Functionality for providing Bearer HTTP authentication.
 
   It is recommended to only use this module in production if SSL is enabled and enforced.
-  See `Plug.SSL` for more information.
 
   ## Example
 
@@ -31,7 +30,7 @@ defmodule Oasis.Plug.BearerAuth do
         end
       end
 
-  Or directly to Oasis.Plug.BearerAuth:
+  Or directly plug `#{inspect(__MODULE__)}`:
 
       # lib/pre_handler.ex
 
@@ -51,11 +50,11 @@ defmodule Oasis.Plug.BearerAuth do
         end
       end
 
+  We define the [bearer security scheme](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
+  of the OpenAPI specification in our API design document, and then generate the related module and provide the requried configuration,
+  let's take some examples from YAML specifications.
 
-  In general, when we define the [bearer security scheme](https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.1.0.md#securitySchemeObject)
-  of the OpenAPI Specification in our API design document, for example:
-
-  Here, apply the security globally to all operations:
+  Here we apply a global security to all operation objects:
 
       openapi: 3.1.0
 
@@ -69,7 +68,7 @@ defmodule Oasis.Plug.BearerAuth do
       security:
         - bearerAuth: []
 
-  Here, apply the security to a operation, and define an optional specification extension `"x-oasis-key-to-assigns"` field
+  Here we apply a security to a operation object, and define an optional specification extension `"x-oasis-key-to-assigns"` field
   to the `:key_to_assigns` option of `bearer_auth/2`:
 
       openapi: 3.1.0
@@ -88,13 +87,13 @@ defmodule Oasis.Plug.BearerAuth do
             security:
               - bearerAuth: []
 
-  The above arbitrary name for the security scheme `"bearerAuth"` will be transferred into a generated module (see the mentioned "Oasis.Gen.BearerAuth"
+  The above arbitrary name `"bearerAuth"` for the security scheme will be transferred into a generated module (see the above mentioned "Oasis.Gen.BearerAuth"
   module) to provide the required crypto-related configuration, and use it as the value to the `:security` option of `bearer_auth/2`.
 
-  By default, the generated "BearerAuth" module will inherit the module name space in order from the paths object, the operation object if they defined
-  the `"x-oasis-name-space"` field, or defaults to `Oasis.Gen` if there are no any specification defined, as an optional, we can add an `"x-oasis-name-space"`
+  By default, the generated "BearerAuth" module will inherit the module name space in order from the paths object, and then the operation object if they defined
+  the `"x-oasis-name-space"` field, or defaults to `Oasis.Gen` if there are no any specification defined. As an option, we can add an `"x-oasis-name-space"`
   field as a specification extension of the security scheme object to override the module name space, meanwhile, the optional `--name-space` argument to the
-  `mix oas.gen.plug` command line is in the highest priority to set the name space of the generated module.
+  `mix oas.gen.plug` command line is in the highest priority to set the name space of the generated modules.
 
       components:
         securitySchemes:
@@ -103,17 +102,16 @@ defmodule Oasis.Plug.BearerAuth do
             scheme: bearer
             bearerFormat: JWT
             x-oasis-key-to-assigns: user_id
-            x-oasis-name-space: MyToken
+            x-oasis-name-space: MyAuth
 
-  In the above example, the final generated module name of `"bearerAuth"` is `MyToken.BearerAuth` when there is no `--name-space` argument input to generate.
+  In the above example, the final generated module name of `"bearerAuth"` is `MyAuth.BearerAuth` when there is no `--name-space` argument of mix task input.
 
-  After we define bearer authentication into the spec, then run `mix oas.gen.plug` task with this spec file (via `--file` argument), there will
+  After we define the bearer authentication into the specification, then run `mix oas.gen.plug` task with this spec file (via `--file` argument), there will
   generate the above similar code to the related module file as long as it does not exist, it also follows the name space definition
-  of the module, and the generation does not override it once the file existed, we need to further edit this file to provide a crypto-related
+  of that module, and the generation does not override it once the file existed, we need to further edit this file to provide a crypto-related
   configuration in your preferred way.
 
-  If we need a customization to verify the bearer token, we can implement a callback function `c:Oasis.Token.verify/3`
-  to this scenario.
+  If we need a customization to verify the bearer token, we can implement a callback function `c:Oasis.Token.verify/3` to this scenario.
 
       # lib/bearer_auth.ex
       defmodule BearerAuth do
@@ -141,14 +139,16 @@ defmodule Oasis.Plug.BearerAuth do
 
   @behaviour Plug
 
+  @doc false
   def init(options), do: options
 
+  @doc false
   def call(conn, options) do
     bearer_auth(conn, options)
   end
 
   @doc """
-  Higher level usage of Baerer HTTP authentication.
+  High-level usage of Baerer HTTP authentication.
 
   See the module docs for examples.
 
@@ -237,8 +237,10 @@ defmodule Oasis.Plug.BearerAuth do
   end
 
   defp verify(conn, security, crypto, token, options) do
+    # ensure loaded the valid security module
+    # if a module is not loaded, `function_exported?/3` will return false
     result =
-      if function_exported?(security, :verify, 3) == true do
+      if Code.ensure_loaded?(security) and function_exported?(security, :verify, 3) do
         security.verify(conn, token, options)
       else
         Oasis.Token.verify(crypto, token)
@@ -255,7 +257,7 @@ defmodule Oasis.Plug.BearerAuth do
   end
 
   defp security(conn, options) do
-    security = options[:security] ||
+    options[:security] ||
       raise """
       no :security option found in path #{conn.request_path} with plug #{inspect(__MODULE__)}.
       Please ensure your specification defines a valid `x-oasis-name-space` in
@@ -265,20 +267,6 @@ defmodule Oasis.Plug.BearerAuth do
           scheme: bearer
           x-oasis-name-space: MyOwnApplication
       """
-    # ensure loaded the valid security module
-    # if a module is not loaded, `function_exported?/3` will return false
-    ensure_loaded!(security)
-  end
-
-  def ensure_loaded!(module) do
-    case Code.ensure_loaded(module) do
-      {:module, module} ->
-        module
-
-      {:error, reason} ->
-        raise ArgumentError,
-              "could not load module #{inspect(module)} due to reason #{inspect(reason)}"
-    end
   end
 
   defp raise_invalid_auth({:error, "invalid_request"}) do
