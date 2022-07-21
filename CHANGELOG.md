@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.5.0 (2022-07-21)
+
+* Fix test failed in OTP24
+* Add HMAC based authentication implement ([#8](https://github.com/elixir-oasis/oasis/issues/8))
+* Some fixing and enhancement ([#12](https://github.com/elixir-oasis/oasis/pull/12))
+
 ## v0.4.3 (2021-05-13)
 
 * Fix to make properly handle file uploads

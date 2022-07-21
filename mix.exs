@@ -6,7 +6,7 @@ defmodule Oasis.MixProject do
   def project do
     [
       app: :oasis,
-      version: "0.4.3",
+      version: "0.5.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
