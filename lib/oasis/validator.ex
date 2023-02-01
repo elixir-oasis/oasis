@@ -130,10 +130,6 @@ defmodule Oasis.Validator do
     get_in(parsed, String.split(path, "/"))
   end
 
-  defp process_media_type("text/plain", %{"schema" => json_schema_root}, use_in, name, value) do
-    do_parse_and_validate!(json_schema_root, use_in, name, value)
-  end
-
   defp process_media_type(
          "text/plain" <> _charset,
          %{"schema" => json_schema_root},
@@ -145,14 +141,22 @@ defmodule Oasis.Validator do
   end
 
   defp process_media_type(
-         content_type,
+         "application/json" <> _charset,
          %{"schema" => json_schema_root},
          use_in,
          name,
          value
-       )
-       when content_type == "application/json"
-       when content_type == "application/x-www-form-urlencoded" do
+       ) do
+    do_parse_and_validate!(json_schema_root, use_in, name, value)
+  end
+
+  defp process_media_type(
+         "application/x-www-form-urlencoded" <> _charset,
+         %{"schema" => json_schema_root},
+         use_in,
+         name,
+         value
+       ) do
     do_parse_and_validate!(json_schema_root, use_in, name, value)
   end
 

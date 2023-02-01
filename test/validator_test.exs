@@ -728,6 +728,43 @@ defmodule Oasis.ValidatorTest do
     assert input == formatted_value
   end
 
+  test "content application/json" do
+    param = %{
+      "required" => true,
+      "content" => %{
+        "application/json; charset=utf-8" => %{
+          "schema" => %ExJsonSchema.Schema.Root{
+            schema: %{
+              "type" => "object",
+              "properties" => %{
+                "name" => %{"type" => "string"}
+              }
+            }
+          }
+        }
+      }
+    }
+
+    assert_raise Oasis.BadRequestError,
+                 ~r/Type mismatch. Expected String but got Integer/,
+                 fn ->
+                   Validator.parse_and_validate!(param, "body", "name", %{"name" => 1})
+                end
+
+    valid_value = %{"name" => "hello"}
+    assert Validator.parse_and_validate!(param, "body", "name", valid_value) == valid_value
+
+    content = param["content"]
+    content = %{"application/json" => content["application/json; charset=utf-8"]}
+    param_without_charset = Map.put(param, "content", content)
+
+    assert_raise Oasis.BadRequestError,
+                 ~r/Type mismatch. Expected String but got Integer/,
+                 fn ->
+                   Validator.parse_and_validate!(param_without_charset, "body", "name", %{"name" => 1})
+                end
+  end
+
   test "invalid json" do
     param = %{
       "schema" => %ExJsonSchema.Schema.Root{
@@ -768,7 +805,7 @@ defmodule Oasis.ValidatorTest do
     end
   end
 
-  test "parse urlencoded" do
+  test "content form-urlencoded" do
     param = %{
       "content" => %{
         "application/x-www-form-urlencoded" => %{
@@ -790,17 +827,27 @@ defmodule Oasis.ValidatorTest do
       "required" => true
     }
 
-    input = %{"key" => "value"}
+    invalid_input = %{"key" => "value"}
 
     assert_raise Oasis.BadRequestError,
                  ~r/Required properties name, fav_number were not present./,
                  fn ->
-                   Validator.parse_and_validate!(param, "body", "body_request", input)
+                   Validator.parse_and_validate!(param, "body", "body_request", invalid_input)
                  end
 
     input = %{"fav_number" => 1, "name" => "test_name"}
     result = Validator.parse_and_validate!(param, "body", "body_request", input)
     assert result == %{"fav_number" => 1, "name" => "test_name"}
+
+    content = param["content"]
+    content = %{"application/x-www-form-urlencoded; charset=utf-8" => content["application/x-www-form-urlencoded"]}
+    param_with_charset = Map.put(param, "content", content)
+
+    assert_raise Oasis.BadRequestError,
+                 ~r/Required properties name, fav_number were not present./,
+                 fn ->
+                   Validator.parse_and_validate!(param_with_charset, "body", "body_request", invalid_input)
+                 end
   end
 
   test "invalid definition to be ignored" do
