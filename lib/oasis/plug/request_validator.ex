@@ -91,9 +91,10 @@ defmodule Oasis.Plug.RequestValidator do
          body_schema
        )
        when is_map(body_schema) do
+
     matched_schema =
       req_headers
-      |> List.keyfind("content-type", 0)
+      |> find_content_type()
       |> schema_may_match_by_request(body_schema)
 
     body_params =
@@ -123,15 +124,36 @@ defmodule Oasis.Plug.RequestValidator do
     end)
   end
 
-  defp schema_may_match_by_request({"content-type", "multipart/mixed" <> _}, definition) do
+  defp find_content_type(req_headers) do
+    case List.keyfind(req_headers, "content-type", 0) do
+      {_, content} ->
+        String.downcase(content)
+      nil ->
+        nil
+    end
+  end
+
+  defp schema_may_match_by_request("multipart/mixed" <> _, definition) do
     schema_by_request_content_type("multipart/mixed", definition)
   end
 
-  defp schema_may_match_by_request({"content-type", "multipart/form-data" <> _}, definition) do
+  defp schema_may_match_by_request("multipart/form-data" <> _, definition) do
     schema_by_request_content_type("multipart/form-data", definition)
   end
 
-  defp schema_may_match_by_request({"content-type", content_type}, definition) do
+  defp schema_may_match_by_request("text/plain" <> _charset, definition) do
+    schema_by_request_content_type("text/plain", definition)
+  end
+
+  defp schema_may_match_by_request("application/json" <> _charset, definition) do
+    schema_by_request_content_type("application/json", definition)
+  end
+
+  defp schema_may_match_by_request("application/x-www-form-urlencoded" <> _charset, definition) do
+    schema_by_request_content_type("application/x-www-form-urlencoded", definition)
+  end
+
+  defp schema_may_match_by_request(content_type, definition) do
     schema_by_request_content_type(content_type, definition)
   end
 
