@@ -133,21 +133,10 @@ defmodule Oasis.HMACToken do
           algorithm :: Oasis.Plug.HMACAuth.algorithm()
         ) :: String.t()
   def sign(conn, signed_headers, secret, algorithm) do
-    headers =
-      signed_headers
-      |> String.split(";")
-      |> Enum.reduce([], fn header_key, acc ->
-        case Plug.Conn.get_req_header(conn, header_key) do
-          [value] -> [{header_key, value} | acc]
-          _otherwise -> acc
-        end
-      end)
-      |> Enum.reverse()
-
     method = conn.method |> to_string() |> String.upcase()
     path_and_query = build_path_and_query(conn.request_path, conn.query_string)
 
-    signed_header_values = headers |> Enum.map(fn {_, v} -> v end) |> Enum.join(";")
+    signed_header_values = values_of_req_headers(conn, signed_headers)
 
     string_to_sign =
       method
@@ -157,6 +146,22 @@ defmodule Oasis.HMACToken do
       |> Kernel.<>(signed_header_values)
 
     Base.encode64(:crypto.mac(:hmac, algorithm, secret, string_to_sign))
+  end
+
+  defp values_of_req_headers(%Plug.Conn{req_headers: req_headers} = conn, signed_headers) when is_binary(signed_headers) do
+    signed_headers
+    |> String.split(";")
+    |> Enum.reduce([], fn
+      "host", acc ->
+        [conn.host | acc]
+      header, acc ->
+        case List.keyfind(req_headers, header, 0) do
+          nil -> acc
+          {_header, value} -> [value | acc]
+        end
+    end)
+    |> Enum.reverse()
+    |> Enum.join(";")
   end
 
   defp build_path_and_query(path, ""), do: path

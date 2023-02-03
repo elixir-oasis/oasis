@@ -9,9 +9,8 @@ defmodule Oasis.HMACTokenTest do
     test "sign success - host only" do
       c = case_host_only()
 
-      conn =
-        conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
+      conn = conn(:get, c.path_and_query)
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert sign(conn, c.signed_headers, c.secret, :sha256) == c.signature_sha256
       assert sign(conn, c.signed_headers, c.secret, :sha512) == c.signature_sha512
@@ -21,10 +20,11 @@ defmodule Oasis.HMACTokenTest do
     test "sign success - with date" do
       c = case_with_date()
 
-      conn =
+      conn = 
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header("x-oasis-date", c.x_oasis_date)
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert sign(conn, c.signed_headers, c.secret, :sha256) == c.signature_sha256
     end
@@ -45,9 +45,8 @@ defmodule Oasis.HMACTokenTest do
     test "verify signature failed" do
       c = case_host_only()
 
-      conn =
-        conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
+      conn = conn(:get, c.path_and_query)
+      conn = %Plug.Conn{conn | host: c.host}
 
       token = %{
         credential: c.credential,
@@ -67,9 +66,8 @@ defmodule Oasis.HMACTokenTest do
     test "verify signature success - host only" do
       c = case_host_only()
 
-      conn =
-        conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
+      conn = conn(:get, c.path_and_query)
+      conn = %Plug.Conn{conn | host: c.host}
 
       token = %{
         credential: c.credential,
@@ -91,8 +89,9 @@ defmodule Oasis.HMACTokenTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header("x-oasis-date", c.x_oasis_date)
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       token = %{
         credential: c.credential,
@@ -114,8 +113,9 @@ defmodule Oasis.HMACTokenTest do
 
       conn =
         conn(:post, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header("x-oasis-body-sha256", c.x_oasis_body_sha256)
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       token = %{
         credential: c.credential,

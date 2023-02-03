@@ -715,6 +715,7 @@ defmodule Oasis.IntegrationTest do
   end
 
   test "verify hmac auth with body", %{url: url} do
+    IO.puts "url: #{url}"
     start_supervised!({Finch, name: TestFinch})
     c = Oasis.Test.Support.HMAC.case_with_body()
 

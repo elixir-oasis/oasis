@@ -48,11 +48,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, "/")
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise RuntimeError,
                    ~r|no :scheme option found in path / with plug Oasis.Plug.HMACAuth|,
@@ -69,11 +70,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, "/")
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise RuntimeError,
                    ~r|no :security option found in path / with plug Oasis.Plug.HMACAuth|,
@@ -87,11 +89,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, "/")
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise RuntimeError,
                    ~r|no :signed_headers option found in path / with plug Oasis.Plug.HMACAuth|,
@@ -106,9 +109,9 @@ defmodule Oasis.Plug.HMACAuthTest do
     test "token missing" do
       c = case_host_only()
 
-      conn =
-        conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
+      conn = conn(:get, c.path_and_query)
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise Oasis.BadRequestError,
                    ~r|the HMAC token is missing in the authorization header or format is wrong|,
@@ -126,11 +129,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeadersKeyError=#{c.signed_headers}&Signature=invalid"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise Oasis.BadRequestError,
                    ~r|the HMAC token is missing in the authorization header or format is wrong|,
@@ -148,11 +152,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=invalid"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise Oasis.BadRequestError,
                    ~r|the HMAC token is invalid|,
@@ -170,11 +175,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=not_exist&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise Oasis.BadRequestError,
                    ~r|the credential in the authorization header is not assigned|,
@@ -192,11 +198,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert hmac_auth(conn,
                algorithm: :sha256,
@@ -210,12 +217,13 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header("x-oasis-date", c.x_oasis_date)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert hmac_auth(conn,
                algorithm: :sha256,
@@ -229,7 +237,6 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:post, c.path_and_query, c.body)
-        |> put_req_header("host", c.host)
         |> put_req_header("x-oasis-body-sha256", c.x_oasis_body_sha256)
         |> put_req_header("content-type", c.content_type)
         |> put_req_header(
@@ -246,6 +253,8 @@ defmodule Oasis.Plug.HMACAuthTest do
            ]}
         ])
 
+      conn = %Plug.Conn{conn | host: c.host}
+
       assert hmac_auth(conn,
                algorithm: :sha256,
                security: Oasis.Gen.HMACAuthWithBody,
@@ -258,11 +267,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA512 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha512}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert hmac_auth(conn,
                algorithm: :sha512,
@@ -276,11 +286,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-MD5 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_md5}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert hmac_auth(conn,
                algorithm: :md5,
@@ -294,12 +305,13 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header("x-oasis-date", c.x_oasis_date)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise Oasis.BadRequestError,
                    ~r|the HMAC token is expired|,
@@ -317,11 +329,12 @@ defmodule Oasis.Plug.HMACAuthTest do
 
       conn =
         conn(:get, c.path_and_query)
-        |> put_req_header("host", c.host)
         |> put_req_header(
           "authorization",
           "HMAC-SHA256 Credential=#{c.credential}&SignedHeaders=#{c.signed_headers}&Signature=#{c.signature_sha256}"
         )
+
+      conn = %Plug.Conn{conn | host: c.host}
 
       assert_raise Oasis.BadRequestError,
                    ~r|the HMAC token is invalid|,
