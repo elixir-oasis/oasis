@@ -4,12 +4,13 @@ defmodule Oasis.Test.Support.HMAC do
       credential: "test_client",
       secret: "secret",
       path_and_query: "/test_hmac_host_only?a=b",
-      host: "localhost:4000",
+      host: "localhost",
+      port: 4000,
       signed_headers: "host",
-      signature_sha256: "XOZxCY4ccTBtHmMDoyURR2SO+cRUV4ZvmxGD0KAdpmU=",
+      signature_sha256: "NA6oAtt+2G4ckGHuCTHirkirkCeLZE497SCR5Hz8byc=",
       signature_sha512:
-        "xlZmPwrZ8IBSl9aPpKN2aScaDvpdl2XkFR34rGWIXTstHCJW05CtZk/N8aAFX7QHqiKSAj50FPrQZyAUVKa/4g==",
-      signature_md5: "sMujcUnCkq86wbGpyZ63Pg=="
+        "XRZmh65tktr7LZWAdScEMMSQTf0nfwm23GCI2wR6ijenq4ZRRUfONSEZAeNcuhKtvjOwtNzkgZWOXGCEA5kNvQ==",
+      signature_md5: "/q5xnWpFvqVMxOjkIb25aQ=="
     }
   end
 
@@ -18,10 +19,11 @@ defmodule Oasis.Test.Support.HMAC do
       credential: "test_client",
       secret: "secret",
       path_and_query: "/test_hmac_with_date?a=b",
-      host: "localhost:4000",
+      host: "localhost",
+      port: 4002,
       x_oasis_date: "2021-09-15T06:41:35+00:00",
       signed_headers: "host;x-oasis-date",
-      signature_sha256: "oUicQj78yrLUm/7VtMOXvIp81eIj4hubSPCYX5tFzMU="
+      signature_sha256: "tILVsjYOPLqMmkKTsPldFg41DcHshZ7EojKFe450vGA="
     }
   end
 
@@ -32,7 +34,8 @@ defmodule Oasis.Test.Support.HMAC do
       credential: "test_client",
       secret: "secret",
       path_and_query: "/test_hmac_with_date?a=b",
-      host: "localhost:4000",
+      host: "localhost",
+      port: 4002,
       x_oasis_date: DateTime.to_iso8601(now),
       signed_headers: "host;x-oasis-date",
       signature_sha256: ""
@@ -48,12 +51,13 @@ defmodule Oasis.Test.Support.HMAC do
       credential: "test_client",
       secret: "secret",
       path_and_query: "/test_hmac_with_body",
-      host: "localhost:4000",
+      host: "localhost",
+      port: 4002,
       body: "{\"a\": \"b\"}",
       content_type: "application/json",
       x_oasis_body_sha256: "3P5+6CXpXgFhLem7XGgE59ZNsvVA4DSuMwTRtYv2FTM=",
       signed_headers: "host;x-oasis-body-sha256",
-      signature_sha256: "FE2ny2hYuP/02bSxOv3YjZnYJbgn/ZNUuE6ZwJ9p/6Q="
+      signature_sha256: "m8O7D9VfeEzPwXjvqUaEw2fRmunQOZLOo3n5YxmtS9M=",
     }
   end
 end
