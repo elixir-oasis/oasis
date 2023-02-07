@@ -494,6 +494,55 @@ defmodule Oasis.IntegrationTest do
                "Find body parameter `body_request` with error: Required property addresses was not present."
   end
 
+  test "post application/json with non object type", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+
+    headers = [{"content-type", "application/json"}]
+    body = "[{\"id\":1,\"name\":\"hello\"}]"
+
+    assert {:ok, response} = Finch.build(:post, "#{url}/test_post_json", headers, body) |> Finch.request(TestFinch)
+    body = Jason.decode!(response.body)
+    assert response.status == 200 and
+             body["body_params"] == [%{"id" => 1, "name" => "hello"}] and
+             body["body_params"] == body["params"]
+
+    headers = [{"content-type", "application/vnd.api-v1+json"}]
+    body = "1"
+
+    assert {:ok, response} = Finch.build(:post, "#{url}/test_post_json", headers, body) |> Finch.request(TestFinch)
+    body = Jason.decode!(response.body)
+    assert response.status == 200 and
+             body["body_params"] == 1 and
+             body["body_params"] == body["params"]
+
+    headers = [{"content-type", "application/vnd.api-v2+json"}]
+    body = "1.5"
+
+    assert {:ok, response} = Finch.build(:post, "#{url}/test_post_json", headers, body) |> Finch.request(TestFinch)
+    body = Jason.decode!(response.body)
+    assert response.status == 200 and
+             body["body_params"] == 1.5 and
+             body["body_params"] == body["params"]
+  end
+
+  test "post application/json with object type use _json key", %{url: url} do
+    start_supervised!({Finch, name: TestFinch})
+
+    headers = [{"content-type", "application/vnd.api-v3+json"}]
+    # valid `street_type` is ["Street", "Avenue", "Boulevard"]
+    body = "{\"_json\":{\"street_name\":\"S1\", \"street_type\":\"Avenue2\"}}"
+
+    assert {:ok, response} = Finch.build(:post, "#{url}/test_post_json", headers, body) |> Finch.request(TestFinch)
+    assert response.body == "Find body parameter `body_request` with error: Value is not allowed in enum."
+
+    body = "{\"_json\":{\"street_name\":\"S1\", \"id\":\"1\", \"street_type\":\"Avenue\"}}"
+    assert {:ok, response} = Finch.build(:post, "#{url}/test_post_json", headers, body) |> Finch.request(TestFinch)
+    body = Jason.decode!(response.body)
+    assert response.status == 200 and
+             body["body_params"]["_json"] == %{"street_name" => "S1", "street_type" => "Avenue", "id" => 1} and
+             body["body_params"] == body["params"]
+  end
+
   test "delete request with body schema validation", %{url: url} do
     start_supervised!({Finch, name: TestFinch})
 
@@ -715,7 +764,6 @@ defmodule Oasis.IntegrationTest do
   end
 
   test "verify hmac auth with body", %{url: url} do
-    IO.puts "url: #{url}"
     start_supervised!({Finch, name: TestFinch})
     c = Oasis.Test.Support.HMAC.case_with_body()
 

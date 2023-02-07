@@ -61,6 +61,17 @@ defmodule Oasis.Validator do
     |> process_media_type(media_type, use_in, name, value)
   end
 
+  defp do_parse_and_validate!(%{schema: %{"type" => type}} = json_schema_root, "body", param_name, %{"_json" => value})
+    when type == "string" and is_bitstring(value)
+    when type == "number" and is_number(value)
+    when type == "integer" and is_integer(value)
+    when type == "array" and is_list(value)
+    when type == "boolean" and is_boolean(value) do
+    # Since `Plug.Parsers.JSON` parses a non-map body content into a "_json" key to allow proper param merging, here
+    # will unwrap the "_json" key and format the input body params as a matched type to the defined OpenAPI specification.
+    do_parse_and_validate!(json_schema_root, "body", param_name, value)
+  end
+
   defp do_parse_and_validate!(%{schema: schema} = json_schema_root, use_in, param_name, value) do
     try do
       Oasis.Parser.parse(schema, value)
