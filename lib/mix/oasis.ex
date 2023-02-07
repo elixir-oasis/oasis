@@ -21,7 +21,34 @@ defmodule Mix.Oasis do
           end
         end)
 
-      Inspect.Map.inspect(pruned, Code.Identifier.inspect_as_atom(module), opts)
+      inspect_as_struct(pruned, inspect_atom_2_literal(module), opts)
+    end
+
+    if Code.ensure_loaded?(Macro) and function_exported?(Macro, :inspect_atom, 2) do
+      # above elixir 1.14
+      defp inspect_atom_2_literal(module), do: Macro.inspect_atom(:literal, module)
+    end
+
+    if Code.ensure_loaded?(Code.Identifier) and
+         function_exported?(Code.Identifier, :inspect_as_atom, 1) do
+      # below elixir 1.14
+      defp inspect_atom_2_literal(module), do: Code.Identifier.inspect_as_atom(module)
+    end
+
+    if Code.ensure_loaded?(Inspect.Map) and function_exported?(Inspect.Map, :inspect, 4) do
+      # above elixir 1.14
+      defp inspect_as_struct(map, struct_module_name, opts) do
+        # struct of `infos` refers to:
+        # https://github.com/elixir-lang/elixir/blob/v1.14/lib/elixir/lib/inspect.ex#L594
+        infos = map |> Map.keys() |> Enum.map(&%{field: &1})
+        Inspect.Map.inspect(map, struct_module_name, infos, opts)
+      end
+    end
+
+    if Code.ensure_loaded?(Inspect.Map) and function_exported?(Inspect.Map, :inspect, 3) do
+      # below elixir 1.14
+      defp inspect_as_struct(map, struct_module_name, opts),
+        do: Inspect.Map.inspect(map, struct_module_name, opts)
     end
   end
 
