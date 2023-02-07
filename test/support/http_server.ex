@@ -75,6 +75,10 @@ defmodule Oasis.HTTPServer.PlugRouter do
     to: Oasis.Gen.Plug.PreTestPostMultipart
   )
 
+  post("/test_post_json",
+    to: Oasis.Gen.Plug.PreTestPostJSON
+  )
+
   post("/test_post_non_validate",
     to: Oasis.Gen.Plug.TestPostNonValidate
   )

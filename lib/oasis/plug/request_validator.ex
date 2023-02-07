@@ -87,26 +87,44 @@ defmodule Oasis.Plug.RequestValidator do
   end
 
   defp process_body(
-         %{body_params: body_params, req_headers: req_headers, params: params} = conn,
+         %{body_params: %{"_json" => _body_params}, params: params} = conn,
          body_schema
        )
        when is_map(body_schema) do
 
-    matched_schema =
-      req_headers
-      |> find_content_type()
-      |> schema_may_match_by_request(body_schema)
+    body_params = parse_and_validate_body_params(conn, body_schema)
 
-    body_params =
-      Oasis.Validator.parse_and_validate!(matched_schema, "body", "body_request", body_params)
+    if is_map(body_params) do
+      # Maybe the defined schema specification use the "_json" key as a property of an object.
+      params = Map.merge(params, body_params)
+      %{conn | body_params: body_params, params: params}
+    else
+      %{conn | body_params: body_params, params: body_params}
+    end
+  end
 
-    params = params |> Map.merge(body_params)
+  defp process_body(
+         conn,
+         body_schema
+       )
+       when is_map(body_schema) do
+
+    body_params = parse_and_validate_body_params(conn, body_schema)
+
+    params = conn.params |> Map.merge(body_params)
 
     %{conn | body_params: body_params, params: params}
   end
 
   defp process_body(conn, _) do
     conn
+  end
+
+  defp parse_and_validate_body_params(%{body_params: body_params, req_headers: req_headers}, body_schema) do
+    req_headers
+    |> find_content_type()
+    |> schema_may_match_by_request(body_schema)
+    |> Oasis.Validator.parse_and_validate!("body", "body_request", body_params)
   end
 
   defp parse_and_validate(schemas, input_params, use_in) when is_map(input_params) do
