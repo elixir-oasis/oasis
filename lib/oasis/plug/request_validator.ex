@@ -104,14 +104,14 @@ defmodule Oasis.Plug.RequestValidator do
   end
 
   defp process_body(
-         conn,
+         %{params: params} = conn,
          body_schema
        )
        when is_map(body_schema) do
 
     body_params = parse_and_validate_body_params(conn, body_schema)
 
-    params = conn.params |> Map.merge(body_params)
+    params = Map.merge(params, body_params)
 
     %{conn | body_params: body_params, params: params}
   end
