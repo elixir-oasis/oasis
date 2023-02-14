@@ -1,10 +1,17 @@
 # Changelog
 
+## v0.5.1 (2023-02-14)
+
+* Fix to ensure validation and parse working when request header content type with charset ([issue#15](https://github.com/elixir-oasis/oasis/issues/15))
+* Fix to adapt request body (via `Plug.Parsers.JSON`) validation in a `"_json"` key wrapper ([issue#19](https://github.com/elixir-oasis/oasis/issues/19))
+* Adapt to use `conn.host` for HMAC authorization when use Plug `"1.14.0"` ([PR#18](https://github.com/elixir-oasis/oasis/pull/18))
+* Update compile compatibility with Elixir `~> 1.14` ([PR#21](https://github.com/elixir-oasis/oasis/pull/21))
+
 ## v0.5.0 (2022-07-21)
 
 * Fix test failed in OTP24
-* Add HMAC based authentication implement ([#8](https://github.com/elixir-oasis/oasis/issues/8))
-* Some fixing and enhancement ([#12](https://github.com/elixir-oasis/oasis/pull/12))
+* Add HMAC based authentication implement ([issue#8](https://github.com/elixir-oasis/oasis/issues/8))
+* Some fixing and enhancement ([PR#12](https://github.com/elixir-oasis/oasis/pull/12))
 
 ## v0.4.3 (2021-05-13)
 
