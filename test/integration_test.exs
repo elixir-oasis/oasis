@@ -498,6 +498,12 @@ defmodule Oasis.IntegrationTest do
     start_supervised!({Finch, name: TestFinch})
 
     headers = [{"content-type", "application/json"}]
+    body = "[{\"id2\":1,\"name2\":\"hello\"}]"
+
+    assert {:ok, response} = Finch.build(:post, "#{url}/test_post_json", headers, body) |> Finch.request(TestFinch)
+    assert response.status == 400 and
+             response.body == "Find body parameter `body_request` with error: Required properties id, name were not present."
+
     body = "[{\"id\":1,\"name\":\"hello\"}]"
 
     assert {:ok, response} = Finch.build(:post, "#{url}/test_post_json", headers, body) |> Finch.request(TestFinch)

@@ -8,12 +8,10 @@ defmodule Oasis.Parser do
   def parse(%{"type" => "null"}, nil), do: nil
 
   def parse(%{"type" => "array"} = type, value) when is_list(value) do
-    # post request body as :urlencoded or :multipart
     do_parse_array(type, value)
   end
 
   def parse(%{"type" => "object"} = type, value) when is_map(value) do
-    # post request body as :urlencoded or :multipart
     do_parse_object(type, value)
   end
 

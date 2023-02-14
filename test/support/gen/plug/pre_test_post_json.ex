@@ -22,7 +22,8 @@ defmodule Oasis.Gen.Plug.PreTestPostJSON do
                 "properties" => %{
                   "id" => %{"type" => "integer"},
                   "name" => %{"type" => "string"}
-                }
+                },
+                "required" => ["id", "name"],
               },
               "type" => "array"
             }
